@@ -930,7 +930,7 @@ class EasyHybridMain(EasyHybridConfig, MainMenu, MainToolBar):
 
         self.window.show_all()
         if len (sys.argv) > 1:
-            self.open_file(sys.argv[1])
+            self.import_file_to_system(sys.argv[1])
         gtk.main()                                                              
         
     def run(self):

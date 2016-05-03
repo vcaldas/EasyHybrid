@@ -105,8 +105,8 @@ class GLCanvas(gtkgl.DrawingArea):
         # gluPerspective
         self.fovy   = 30.0
         self.aspect = 0.0
-        self.zNear  = 2.1
-        self.zFar   = 9.0
+        self.zNear  = 0.1
+        self.zFar   = 10.0
         #--------------------------------------------------------------#
 
 
@@ -293,27 +293,33 @@ class GLCanvas(gtkgl.DrawingArea):
                 x, y, width, height = self.get_allocation()
                 ax, ay, az = 0, 0, dy
                 
-                viewport = glGetIntegerv(GL_VIEWPORT)
-                angle = math.sqrt(ax**2+ay**2+az**2)/float(viewport[2]+1)*180.0
-                inv   = matrix(glGetDoublev(GL_MODELVIEW_MATRIX)).I
                 
+                modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+                glLoadIdentity()
+                inv   = matrix(glGetDoublev(GL_MODELVIEW_MATRIX)).I
                 bx = (inv[0,0]*ax + inv[1,0]*ay + inv[2,0]*az)/10
                 by = (inv[0,1]*ax + inv[1,1]*ay + inv[2,1]*az)/10
                 bz = (inv[0,2]*ax + inv[1,2]*ay + inv[2,2]*az)/10
                 
                 
                 #px, py, pz = self._pos(x,y) # to change the _zprReferencePoint
-                self._apply(glTranslatef, bx,by,bz)
-                
-                print bz
+                #bz = dy
+                #self._apply(glTranslatef, 0,0,bz)
+                self._apply(glTranslatef,bx,by,bz)
+                glMultMatrixd(modelview)
+
+
+
+
+
                 glMatrixMode(GL_PROJECTION)
                 glLoadIdentity()
-                #self.zNear     += -bz
+                self.zNear     += -bz
                 self.zFar      += -bz
                 self.fog_start += -bz
                 self.fog_end   += -bz
                 
-                print self.zNear, self.zFar, self.fog_start, self.fog_end, self.zNear - self.zFar, self.fog_start - self.fog_end 
+                self.PrintCameraStatus()
                 gluPerspective(self.fovy, float(width)/float(height), self.zNear, self.zFar)
                 glFogf(GL_FOG_START ,  self.fog_start)
                 glFogf(GL_FOG_END   ,  self.fog_end  )
@@ -366,9 +372,14 @@ class GLCanvas(gtkgl.DrawingArea):
 
             elif self._mouseRotate:
                 ax, ay, az = dy, dx, 0.
+                
                 viewport = glGetIntegerv(GL_VIEWPORT)
+                #print viewport
+                
                 angle = math.sqrt(ax**2+ay**2+az**2)/float(viewport[2]+1)*180.0
                 inv = matrix(glGetDoublev(GL_MODELVIEW_MATRIX)).I
+
+                #print inv
                 bx = (inv[0,0]*ax + inv[1,0]*ay + inv[2,0]*az)#*1000
                 by = (inv[0,1]*ax + inv[1,1]*ay + inv[2,1]*az)#*1000
                 bz = (inv[0,2]*ax + inv[1,2]*ay + inv[2,2]*az)#*1000
@@ -382,10 +393,8 @@ class GLCanvas(gtkgl.DrawingArea):
             elif self._mousePan:
                 px, py, pz = self._pos(x,y);
                 modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-                #px  = px*10
-                #py  = py*10
-                
-                #pz  = pz*200
+                px  = px*(self.zFar/10)
+                py  = py*(self.zFar/10)
                 
                 glLoadIdentity()
                 glTranslatef(px-self._dragPosX, py-self._dragPosY, pz-self._dragPosZ)
@@ -427,7 +436,7 @@ class GLCanvas(gtkgl.DrawingArea):
             
             
             #if self.zNear >= 0.1:
-            #self.zNear     -= 0.2
+            self.zNear     -= 0.2
             self.zFar      += 0.2
             self.fog_start += 0.2
             self.fog_end   += 0.2
@@ -443,15 +452,15 @@ class GLCanvas(gtkgl.DrawingArea):
                 #self.zFar  = 0.4
             #self.zNear     += 0.2
             else:
-                #self.zNear     += 0.2
+                self.zNear     += 0.2
                 self.zFar      -= 0.2
                 self.fog_start -= 0.2
                 self.fog_end   -= 0.2
 
             #self._right -= 1.05
         
-        
-        print "self.zNear", self.zNear, "self.zFar ", self.zFar, 'fog_start', self.fog_start
+        self.PrintCameraStatus()
+        #print "self.zNear", self.zNear, "self.zFar ", self.zFar, 'fog_start', self.fog_start
         
         with self.open_context(True):
             #------------------------------#
@@ -578,34 +587,52 @@ class GLCanvas(gtkgl.DrawingArea):
                 
         #-----------------------------------------------------------------------------------------#                                                                                          
         if self._mousePan2:                                                                       #   modificado por mim 
-            #print "gostosao"                                                                     #
             with self.open_context():                                                             #
                 nearest, hits =	self._pick(x,self.get_allocation().height-1-y,3,3,event)          #
                 self.pick(event,nearest,hits) # None if nothing hit                               #
         #-----------------------------------------------------------------------------------------#	                                                                                      
         self.queue_draw()
-        
+       
+        #------------------------------------------------------------------------------#
+        if event.button == 3 and event.type == gtk.gdk._2BUTTON_PRESS:                 #
+            #print event.button
+            nearest, hits =	self._pick(x,self.get_allocation().height-1-y,3,3,event)   #      # Double Click left button 
+            self.pick(event,nearest,hits) # None if nothing hit                        #                                                                 
+        #------------------------------------------------------------------------------#
+       
+       
+    
     def _keyPress    (self,widget,event):
         print event
 
     def pick(self,event,nearest,hits):
-        print "picked",nearest
+        
         for hit in hits:
             print hit.near, hit.far, hit.names
 
-        if nearest != []:
+        if event.button == 1:
+            if nearest != []:
+                x = self.zero[nearest[0]][0]
+                y = self.zero[nearest[0]][1]
+                z = self.zero[nearest[0]][2]
+                print x,y,z
+                self._zprReferencePoint = [x,  y, z, 0.]
+            else:
+                print self.x_total, self.y_total, self.z_total, self.MassReferencePoint
+                self.MassReferencePoint[0] = self.x_total
+                self.MassReferencePoint[1] = self.y_total
+                self.MassReferencePoint[2] = self.z_total
+                self._zprReferencePoint = self.MassReferencePoint
+        
+        if event.button == 3 and nearest != []:
             x = self.zero[nearest[0]][0]
             y = self.zero[nearest[0]][1]
             z = self.zero[nearest[0]][2]
-            print x,y,z
-            self._zprReferencePoint = [x,  y, z, 0.]
-        else:
-            print self.x_total, self.y_total, self.z_total, self.MassReferencePoint
-            self.MassReferencePoint[0] = self.x_total
-            self.MassReferencePoint[1] = self.y_total
-            self.MassReferencePoint[2] = self.z_total
-
-            self._zprReferencePoint = self.MassReferencePoint
+            
+            
+            
+            print "picked", nearest, x, y, z 
+            
         
     def _pos(self,x,y):
         """
@@ -659,3 +686,10 @@ class GLCanvas(gtkgl.DrawingArea):
             else:
                 glFlush()
         return True
+    
+    def PrintCameraStatus (self, log = True):
+        """ Function doc """
+        if log:
+            print 'zNear = ', self.zNear, 'zFar = ',   self.zFar, 'deltaZ = ', self.zNear - self.zFar, 'fog_start = ', self.fog_start, 'fog_end = ', self.fog_end, 'self.fog_end, deltaFog = ', self.fog_start - self.fog_end 
+        else:
+            pass 
