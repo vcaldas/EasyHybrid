@@ -233,6 +233,14 @@ class GLCanvas(gtkgl.DrawingArea):
         glEnable(GL_LIGHT2)
         glEnable(GL_LIGHTING)
         glEnable(GL_DEPTH_TEST)
+        
+        #  Antialiased lines
+        glEnable (GL_LINE_SMOOTH)
+        glEnable (GL_BLEND)
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
+        #glLineWidth (10.5)
+
 
     def _reshape(self,widget,event):
         assert(self == widget) 
@@ -295,21 +303,17 @@ class GLCanvas(gtkgl.DrawingArea):
                 
                 
                 modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+                #scale      = (modelview[3][2]*-1)
+                line_width = 100/self.zFar
+                #print scale
                 glLoadIdentity()
                 inv   = matrix(glGetDoublev(GL_MODELVIEW_MATRIX)).I
-                bx = (inv[0,0]*ax + inv[1,0]*ay + inv[2,0]*az)/10
-                by = (inv[0,1]*ax + inv[1,1]*ay + inv[2,1]*az)/10
-                bz = (inv[0,2]*ax + inv[1,2]*ay + inv[2,2]*az)/10
+                bx = (inv[0,0]*ax + inv[1,0]*ay + inv[2,0]*az)/10#(scale)
+                by = (inv[0,1]*ax + inv[1,1]*ay + inv[2,1]*az)/10#(scale)
+                bz = (inv[0,2]*ax + inv[1,2]*ay + inv[2,2]*az)/10#(scale)
                 
-                
-                #px, py, pz = self._pos(x,y) # to change the _zprReferencePoint
-                #bz = dy
-                #self._apply(glTranslatef, 0,0,bz)
                 self._apply(glTranslatef,bx,by,bz)
                 glMultMatrixd(modelview)
-
-
-
 
 
                 glMatrixMode(GL_PROJECTION)
@@ -320,10 +324,12 @@ class GLCanvas(gtkgl.DrawingArea):
                 self.fog_end   += -bz
                 
                 self.PrintCameraStatus()
+                
                 gluPerspective(self.fovy, float(width)/float(height), self.zNear, self.zFar)
                 glFogf(GL_FOG_START ,  self.fog_start)
                 glFogf(GL_FOG_END   ,  self.fog_end  )
                 
+                glLineWidth(line_width)
                 #x = self._zprReferencePoint[0]
                 #y = self._zprReferencePoint[1]
                 #z = self._zprReferencePoint[2]
@@ -393,9 +399,11 @@ class GLCanvas(gtkgl.DrawingArea):
             elif self._mousePan:
                 px, py, pz = self._pos(x,y);
                 modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-                px  = px*(self.zFar/10)
-                py  = py*(self.zFar/10)
-                
+                scale = (modelview[3][2]*-1)
+                #px  = px*(self.zFar/10)
+                #py  = py*(self.zFar/10)
+                px  = px*scale/10
+                py  = py*scale/10
                 glLoadIdentity()
                 glTranslatef(px-self._dragPosX, py-self._dragPosY, pz-self._dragPosZ)
                 glMultMatrixd(modelview)
@@ -625,15 +633,26 @@ class GLCanvas(gtkgl.DrawingArea):
                 self._zprReferencePoint = self.MassReferencePoint
         
         if event.button == 3 and nearest != []:
-            x = self.zero[nearest[0]][0]
-            y = self.zero[nearest[0]][1]
-            z = self.zero[nearest[0]][2]
+            px = self.zero[nearest[0]][0]
+            py = self.zero[nearest[0]][1]
+            pz = self.zero[nearest[0]][2]
+            print px,py,pz
+            px = 10.0 #self.MassReferencePoint[0]
+            py = 10.0 #self.MassReferencePoint[1]
+            pz = 10.0 #self.MassReferencePoint[2] + 10
+
+            modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+            print modelview
+            glLoadIdentity()
+            glTranslatef(px-self._dragPosX, 
+                         py-self._dragPosY, 
+                         pz-self._dragPosZ)
             
+            #print glGetDoublev(GL_MODELVIEW_MATRIX)
+            #self._apply(glTranslatef,  px-self._dragPosX, py-self._dragPosY,  pz-self._dragPosZ)
+            #print glGetDoublev(GL_MODELVIEW_MATRIX)
+            self.queue_draw()
             
-            
-            print "picked", nearest, x, y, z 
-            
-        
     def _pos(self,x,y):
         """
         Use the ortho projection and viewport information

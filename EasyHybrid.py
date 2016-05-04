@@ -186,7 +186,7 @@ class GLAreaDraw:
         a = self.data.pos[0][bond[0]]
         b = self.data.pos[0][bond[1]]
        
-        glLineWidth(1.5)
+        #glLineWidth(1.5)
         glPushMatrix()
 
         ''' calculating the middle point between the two bonds'''
