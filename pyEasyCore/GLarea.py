@@ -240,7 +240,7 @@ class GLCanvas(gtkgl.DrawingArea):
         glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
         #glLineWidth (10.5)
-
+        self._apply(glTranslatef,  0, 0,  5)
 
     def _reshape(self,widget,event):
         assert(self == widget) 
@@ -304,13 +304,15 @@ class GLCanvas(gtkgl.DrawingArea):
                 
                 modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
                 #scale      = (modelview[3][2]*-1)
-                line_width = 100/self.zFar
+                
+                #line_width = 100/self.zFar
+                
                 #print scale
                 glLoadIdentity()
                 inv   = matrix(glGetDoublev(GL_MODELVIEW_MATRIX)).I
-                bx = (inv[0,0]*ax + inv[1,0]*ay + inv[2,0]*az)/10#(scale)
-                by = (inv[0,1]*ax + inv[1,1]*ay + inv[2,1]*az)/10#(scale)
-                bz = (inv[0,2]*ax + inv[1,2]*ay + inv[2,2]*az)/10#(scale)
+                bx = (inv[0,0]*ax + inv[1,0]*ay + inv[2,0]*az)/5#(self.zFar/10)
+                by = (inv[0,1]*ax + inv[1,1]*ay + inv[2,1]*az)/5#(self.zFar/10)
+                bz = (inv[0,2]*ax + inv[1,2]*ay + inv[2,2]*az)/5#(self.zFar/10)
                 
                 self._apply(glTranslatef,bx,by,bz)
                 glMultMatrixd(modelview)
@@ -324,12 +326,15 @@ class GLCanvas(gtkgl.DrawingArea):
                 self.fog_end   += -bz
                 
                 self.PrintCameraStatus()
-                
+                ##------------------------------#
+                ##        gluPerspective        #
+                ##------------------------------#
                 gluPerspective(self.fovy, float(width)/float(height), self.zNear, self.zFar)
                 glFogf(GL_FOG_START ,  self.fog_start)
                 glFogf(GL_FOG_END   ,  self.fog_end  )
                 
-                glLineWidth(line_width)
+                #glLineWidth(line_width)
+                
                 #x = self._zprReferencePoint[0]
                 #y = self._zprReferencePoint[1]
                 #z = self._zprReferencePoint[2]
@@ -399,13 +404,16 @@ class GLCanvas(gtkgl.DrawingArea):
             elif self._mousePan:
                 px, py, pz = self._pos(x,y);
                 modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-                scale = (modelview[3][2]*-1)
+                #scale = (modelview[3][2]*-1)
                 #px  = px*(self.zFar/10)
                 #py  = py*(self.zFar/10)
-                px  = px*scale/10
-                py  = py*scale/10
+                px  = px 
+                py  = py 
+                
                 glLoadIdentity()
-                glTranslatef(px-self._dragPosX, py-self._dragPosY, pz-self._dragPosZ)
+                glTranslatef((px-self._dragPosX)*(self.zFar)/10, 
+                             (py-self._dragPosY)*(self.zFar)/10, 
+                             (pz-self._dragPosZ)*(self.zFar)/10)
                 glMultMatrixd(modelview)
 
                 '''
@@ -567,15 +575,15 @@ class GLCanvas(gtkgl.DrawingArea):
         
         #print event
         
-        self._mouseRotate = left  and not (middle or right)
+        self._mouseRotate = left   and not (middle or right)
 
-        self._mouseZoom   = right and not (middle or left) #middle or (left and right)
+        self._mouseZoom   = right  and not (middle or left) #middle or (left and right)
         
         self._mousePan    = middle and not (right or left) #right and self.event_masked(event,gdk.SHIFT_MASK) #right and self.event_masked(event,gdk.CONTROL_MASK)
         
-        self._mousePan2   = left and self.event_masked(event,gdk.CONTROL_MASK)
+        #self._mousePan2   = left   and self.event_masked(event,gdk.CONTROL_MASK)
 
-        test              = middle and self.event_masked(event,gdk.SHIFT_MASK)
+        #test              = middle and self.event_masked(event,gdk.SHIFT_MASK)
         
 
         
@@ -588,18 +596,15 @@ class GLCanvas(gtkgl.DrawingArea):
             nearest, hits =	self._pick(x,self.get_allocation().height-1-y,3,3,event)   #      # Double Click left button 
             self.pick(event,nearest,hits) # None if nothing hit                        #                                                                 
         #------------------------------------------------------------------------------#
-        if test:
-            with self.open_context():                                                            
-                nearest, hits =	self._pick(x,self.get_allocation().height-1-y,3,3,event)         
-                self.pick(event,nearest,hits) # None if nothing hit                              
+                           
                 
-        #-----------------------------------------------------------------------------------------#                                                                                          
-        if self._mousePan2:                                                                       #   modificado por mim 
-            with self.open_context():                                                             #
-                nearest, hits =	self._pick(x,self.get_allocation().height-1-y,3,3,event)          #
-                self.pick(event,nearest,hits) # None if nothing hit                               #
-        #-----------------------------------------------------------------------------------------#	                                                                                      
-        self.queue_draw()
+        ##-----------------------------------------------------------------------------------------#                                                                                          
+        #if self._mousePan2:                                                                       #   modificado por mim 
+        #    with self.open_context():                                                             #
+        #        nearest, hits =	self._pick(x,self.get_allocation().height-1-y,3,3,event)          #
+        #        self.pick(event,nearest,hits) # None if nothing hit                               #
+        ##-----------------------------------------------------------------------------------------#	                                                                                      
+        #self.queue_draw()
        
         #------------------------------------------------------------------------------#
         if event.button == 3 and event.type == gtk.gdk._2BUTTON_PRESS:                 #
@@ -637,21 +642,35 @@ class GLCanvas(gtkgl.DrawingArea):
             py = self.zero[nearest[0]][1]
             pz = self.zero[nearest[0]][2]
             print px,py,pz
-            px = 10.0 #self.MassReferencePoint[0]
-            py = 10.0 #self.MassReferencePoint[1]
-            pz = 10.0 #self.MassReferencePoint[2] + 10
+            #px = 10.0 #self.MassReferencePoint[0]
+            #py = 10.0 #self.MassReferencePoint[1]
+            #pz = 10.0 #self.MassReferencePoint[2] + 10
 
-            modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-            print modelview
-            glLoadIdentity()
-            glTranslatef(px-self._dragPosX, 
-                         py-self._dragPosY, 
-                         pz-self._dragPosZ)
             
-            #print glGetDoublev(GL_MODELVIEW_MATRIX)
-            #self._apply(glTranslatef,  px-self._dragPosX, py-self._dragPosY,  pz-self._dragPosZ)
-            #print glGetDoublev(GL_MODELVIEW_MATRIX)
-            self.queue_draw()
+            
+            with self.open_context(True):
+                #------------------------------#
+                #        gluPerspective        #
+                #------------------------------#
+                x, y, width, height = self.get_allocation()
+                #modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+                #print modelview
+                #glLoadIdentity()
+                #glTranslatef(10, 
+                #             10, 
+                #             10)
+                
+                #glTranslatef(px-self._dragPosX, 
+                #             py-self._dragPosY, 
+                #             pz-self._dragPosZ)
+                #
+                #print glGetDoublev(GL_MODELVIEW_MATRIX)
+                self._apply(glTranslatef,  px-self._dragPosX, py-self._dragPosY,  pz-self._dragPosZ)
+                #self._apply(glTranslatef, 0, 0,  1.1)
+
+                
+                #print glGetDoublev(GL_MODELVIEW_MATRIX)
+                self.queue_draw()
             
     def _pos(self,x,y):
         """
