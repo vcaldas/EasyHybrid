@@ -653,9 +653,16 @@ class GLCanvas(gtkgl.DrawingArea):
                 #        gluPerspective        #
                 #------------------------------#
                 x, y, width, height = self.get_allocation()
+                
+                
+                modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+                #print modelview
+                centro  =  self.zFar - self.zNear
+                
+                
                 #modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
                 #print modelview
-                #glLoadIdentity()
+                glLoadIdentity()
                 #glTranslatef(10, 
                 #             10, 
                 #             10)
@@ -665,7 +672,7 @@ class GLCanvas(gtkgl.DrawingArea):
                 #             pz-self._dragPosZ)
                 #
                 #print glGetDoublev(GL_MODELVIEW_MATRIX)
-                self._apply(glTranslatef,  px-self._dragPosX, py-self._dragPosY,  pz-self._dragPosZ)
+                self._apply(glTranslatef,  0, 0,  centro - pz)
                 #self._apply(glTranslatef, 0, 0,  1.1)
 
                 
