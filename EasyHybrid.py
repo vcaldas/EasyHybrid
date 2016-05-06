@@ -542,7 +542,8 @@ class MainMenu(object):
         
     def on_imagemenuitem_save_activate (self, wigdet):
         print wigdet
-
+        self.orient_molecule()
+        
     def on_imagemenuitem_Save_as_activate (self, wigdet):
         print wigdet
 
@@ -719,11 +720,13 @@ class EasyMolActions:
         """ Class initialiser """
         pass
     
-    def orient_molecule (self, widget):
+    def orient_molecule (self):
         """ Function doc """
         mass_center = self.pDynamoSession.easymol_objects[0].mass_center
+        print mass_center
         #print mass_center
-        self.zpr._orient(mass_center)
+        self.zpr._center_on_atom(mass_center)
+
     
 class EasyHybridConfig(object):
     """ Class doc """
@@ -731,24 +734,27 @@ class EasyHybridConfig(object):
         """ Class initialiser """
         pass
 
-class EasyHybridMain(EasyHybridConfig, MainMenu, MainToolBar):
+class EasyHybridMain(EasyHybridConfig, EasyMolActions, MainMenu, MainToolBar):
+    
 
     def open_New_Project_dialog (self):
         """ Function doc """
         self._NewProjectDialog.dialog.run()
         self._NewProjectDialog.dialog.hide()    
-    
+        
     def open_file (self):
         """ Function doc """
         _file          = FileChooser  (path        = None, 
                                        main_window = self.window)
         self.import_file_to_system(_file)
+
         
     def import_file_to_system (self, _file):
         """ Function doc """
         self.pDynamoSession.load_new_system(filename = _file)
         self.show_EasyMol_objects()
-    
+        self.orient_molecule()
+        
     def show_EasyMol_objects(self):
         """ Function doc """
         print "aqui1!"

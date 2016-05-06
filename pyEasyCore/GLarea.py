@@ -33,7 +33,7 @@ import math
 import numpy
 from numpy import matrix
 import sys
-
+import time
 #------------------------------------------------------------------------------
 
 
@@ -111,8 +111,8 @@ class GLCanvas(gtkgl.DrawingArea):
 
 
         #--------------------------------------------------------------#
-        self.fog_start = 5
-        self.fog_end   = 10
+        self.fog_start = 7
+        self.fog_end   = 11
         #--------------------------------------------------------------#
         
         
@@ -131,7 +131,8 @@ class GLCanvas(gtkgl.DrawingArea):
         self._dragPosX    = self._dragPosY  = self._dragPosZ = 0.      #
         self._mouseRotate = self._mouseZoom = self._mousePan = False   #
         #--------------------------------------------------------------#
-
+        
+        self.line_width = 3
 
     class _Context:
         def __init__(self,widget):
@@ -239,8 +240,13 @@ class GLCanvas(gtkgl.DrawingArea):
         glEnable (GL_BLEND)
         glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
-        #glLineWidth (10.5)
-        self._apply(glTranslatef,  0, 0,  5)
+        
+        #---------------------------------------------------------------
+        self.line_width_refresh()
+        #---------------------------------------------------------------
+        
+        #glLineWidth (2.5)
+        #self._apply(glTranslatef,  0, 0,  5)
 
     def _reshape(self,widget,event):
         assert(self == widget) 
@@ -297,26 +303,35 @@ class GLCanvas(gtkgl.DrawingArea):
                 xi, yi, width, height = self.get_allocation()
                 s = math.exp(float(dy)*0.01)
                 self._apply(glScalef,s,s,s)
-                '''
+                #self.zNear     += +s/10
+                #self.zFar      += +s/10
+                #self.fog_start += +s/10
+                #self.fog_end   += +s/10
+                #gluPerspective(self.fovy, float(width)/float(height), self.zNear, self.zFar)
+                #glFogf(GL_FOG_START ,  self.fog_start)
+                #glFogf(GL_FOG_END   ,  self.fog_end  )
+                #'''
+                
+                
+                #'''
                 x, y, width, height = self.get_allocation()
                 ax, ay, az = 0, 0, dy
                 
-                
                 modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-                #scale      = (modelview[3][2]*-1)
+                self.line_width_refresh()
                 
-                #line_width = 100/self.zFar
-                
+                delta = ((self.zFar - self.zNear)/2)+ self.zNear
+                #delta = math.exp(delta)*0.01
+                delta = delta/200
                 #print scale
                 glLoadIdentity()
                 inv   = matrix(glGetDoublev(GL_MODELVIEW_MATRIX)).I
-                bx = (inv[0,0]*ax + inv[1,0]*ay + inv[2,0]*az)/5#(self.zFar/10)
-                by = (inv[0,1]*ax + inv[1,1]*ay + inv[2,1]*az)/5#(self.zFar/10)
-                bz = (inv[0,2]*ax + inv[1,2]*ay + inv[2,2]*az)/5#(self.zFar/10)
+                bx = (inv[0,0]*ax + inv[1,0]*ay + inv[2,0]*az)/(1/(delta))
+                by = (inv[0,1]*ax + inv[1,1]*ay + inv[2,1]*az)/(1/(delta))
+                bz = (inv[0,2]*ax + inv[1,2]*ay + inv[2,2]*az)/(1/(delta))
                 
                 self._apply(glTranslatef,bx,by,bz)
                 glMultMatrixd(modelview)
-
 
                 glMatrixMode(GL_PROJECTION)
                 glLoadIdentity()
@@ -324,61 +339,34 @@ class GLCanvas(gtkgl.DrawingArea):
                 self.zFar      += -bz
                 self.fog_start += -bz
                 self.fog_end   += -bz
-                
                 self.PrintCameraStatus()
+                
+                
+                
                 ##------------------------------#
                 ##        gluPerspective        #
                 ##------------------------------#
                 gluPerspective(self.fovy, float(width)/float(height), self.zNear, self.zFar)
                 glFogf(GL_FOG_START ,  self.fog_start)
                 glFogf(GL_FOG_END   ,  self.fog_end  )
-                
-                #glLineWidth(line_width)
-                
-                #x = self._zprReferencePoint[0]
-                #y = self._zprReferencePoint[1]
-                #z = self._zprReferencePoint[2]
+                #'''
+
+                '''
+                #------------------------------#
+                #            glOrtho           #
+                #------------------------------#
+                x, y, width, height = self.get_allocation()
+                glMatrixMode(GL_PROJECTION)
+                glLoadIdentity()
+                glOrtho(self._left, 
+                        self._right,
+                        self._bottom, 
+                        self._top, 
+                        self.zNear, 
+                        self.zFar)
+                #'''
                 changed = True
-                #print self._zprReferencePoint
-                #self._zprReferencePoint = [x , y , z + bz, 0.]
-                #print self._zprReferencePoint                
-                
-                
-                ##-------------------------------------------------------------------------------
-                #self.zNear     -= bz
-                #self.zFar      -= bz
-                #self.fog_start -= bz
-                #self.fog_end   -= bz
-                ##------------------------------#
-                ##        gluPerspective        #
-                ##------------------------------#
-                #x, y, width, height = self.get_allocation()
-                #glMatrixMode(GL_PROJECTION)
-                #glLoadIdentity()
-                #gluPerspective(self.fovy, float(width)/float(height), self.zNear,self.zFar)
-                #glFogf(GL_FOG_START ,  self.fog_start)
-                #glFogf(GL_FOG_END   ,  self.fog_end)
-                #
-                #'''
-                ##------------------------------#
-                ##            glOrtho           #
-                ##------------------------------#
-                #x, y, width, height = self.get_allocation()
-                #glMatrixMode(GL_PROJECTION)
-                #glLoadIdentity()
-                #glOrtho(self._left, 
-                #        self._right,
-                #        self._bottom, 
-                #        self._top, 
-                #        self._zNear, 
-                #        self._zFar)
-                #'''
-                ##glFogf(GL_FOG_START,self._zNear)
-                ##glFogf(GL_FOG_END,  self._zFar)
-                ##gluLookAt (0.0, 0.0, 50.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
-                #
-                #self.queue_draw()
-                ##-------------------------------------------------------------------------------
+
 
 
             elif self._mouseRotate:
@@ -479,6 +467,7 @@ class GLCanvas(gtkgl.DrawingArea):
         #print "self.zNear", self.zNear, "self.zFar ", self.zFar, 'fog_start', self.fog_start
         
         with self.open_context(True):
+            #'''
             #------------------------------#
             #        gluPerspective        #
             #------------------------------#
@@ -488,6 +477,7 @@ class GLCanvas(gtkgl.DrawingArea):
             gluPerspective(self.fovy, float(width)/float(height), self.zNear,self.zFar)
             glFogf(GL_FOG_START ,  self.fog_start)
             glFogf(GL_FOG_END   ,  self.fog_end)
+            #'''
             
             '''
             #------------------------------#
@@ -500,9 +490,11 @@ class GLCanvas(gtkgl.DrawingArea):
                     self._right,
                     self._bottom, 
                     self._top, 
-                    self._zNear, 
-                    self._zFar)
-            '''
+                    self.zNear, 
+                    self.zFar)
+            glFogf(GL_FOG_START ,  self.fog_start)
+            glFogf(GL_FOG_END   ,  self.fog_end)
+            #'''
             #glFogf(GL_FOG_START,self._zNear)
             #glFogf(GL_FOG_END,  self._zFar)
             #gluLookAt (0.0, 0.0, 50.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
@@ -515,35 +507,7 @@ class GLCanvas(gtkgl.DrawingArea):
         glTranslatef(*map(lambda x:-x,self._zprReferencePoint[0:3]))
 
     
-    def _orient (self, mass_center):
-        """ Function doc  - nao funciona"""
-        #px, py, pz = self._pos(x,y);
-        px = mass_center[0]
-        py = mass_center[1]
-        pz = mass_center[2] + 10
 
-        modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-        print modelview
-        #glLoadIdentity()
-        
-        #self._apply(glTranslatef,  px-self._dragPosX, py-self._dragPosY,  pz-self._dragPosZ)
-        glTranslatef(px-self._dragPosX, 
-                     py-self._dragPosY, 
-                     pz-self._dragPosZ)
-        print glGetDoublev(GL_MODELVIEW_MATRIX)
-        
-        self._apply(glTranslatef,  px-self._dragPosX, py-self._dragPosY,  pz-self._dragPosZ)
-        print glGetDoublev(GL_MODELVIEW_MATRIX)
-        self.queue_draw()
-        #modelview2 = glGetDoublev(GL_MODELVIEW_MATRIX)
-        #print modelview2
-        #glMultMatrixd(modelview)
-        #
-        #self._dragPosX = px
-        #self._dragPosY = py
-        #self._dragPosZ = pz
-        ##changed = True
-        #self.queue_draw()
         
     @classmethod
     def event_masked(cls,event,mask):
@@ -630,6 +594,23 @@ class GLCanvas(gtkgl.DrawingArea):
                 z = self.zero[nearest[0]][2]
                 print x,y,z
                 self._zprReferencePoint = [x,  y, z, 0.]
+                atom_position = [x,y,z]
+                
+                n        = 1000
+                counter  = 0
+                atom_position = [x/n,y/n,z/n]
+                #for step in range(0,n):
+                #    glutIdleFunc(self._center_on_atom(atom_position))
+                self._center_on_atom(atom_position)
+                
+                #start_time = time.time()
+                #while counter <= 0:
+                #    if time.time() - start_time >= 1:
+                #        print 1
+                #        counter += 1
+                #        start_time = time.time()
+                
+                #self._center_on_atom(atom_position)
             else:
                 print self.x_total, self.y_total, self.z_total, self.MassReferencePoint
                 self.MassReferencePoint[0] = self.x_total
@@ -641,7 +622,8 @@ class GLCanvas(gtkgl.DrawingArea):
             px = self.zero[nearest[0]][0]
             py = self.zero[nearest[0]][1]
             pz = self.zero[nearest[0]][2]
-            print px,py,pz
+            #print px,py,pz
+            atom_position = [px, py, pz]
             #px = 10.0 #self.MassReferencePoint[0]
             #py = 10.0 #self.MassReferencePoint[1]
             #pz = 10.0 #self.MassReferencePoint[2] + 10
@@ -653,31 +635,7 @@ class GLCanvas(gtkgl.DrawingArea):
                 #        gluPerspective        #
                 #------------------------------#
                 x, y, width, height = self.get_allocation()
-                
-                
-                modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-                #print modelview
-                centro  =  self.zFar - self.zNear
-                
-                
-                #modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-                #print modelview
-                glLoadIdentity()
-                #glTranslatef(10, 
-                #             10, 
-                #             10)
-                
-                #glTranslatef(px-self._dragPosX, 
-                #             py-self._dragPosY, 
-                #             pz-self._dragPosZ)
-                #
-                #print glGetDoublev(GL_MODELVIEW_MATRIX)
-                self._apply(glTranslatef,  0, 0,  centro - pz)
-                #self._apply(glTranslatef, 0, 0,  1.1)
-
-                
-                #print glGetDoublev(GL_MODELVIEW_MATRIX)
-                self.queue_draw()
+                #self._center_on_atom(atom_position)
             
     def _pos(self,x,y):
         """
@@ -732,9 +690,39 @@ class GLCanvas(gtkgl.DrawingArea):
                 glFlush()
         return True
     
+    def _center_on_atom (self, atom_position):
+        """ Function doc  - nao funciona"""
+        center =  self.zFar - self.zNear
+        print center
+        #px = 0                            #atom_position[0]
+        #py = 0                            #atom_position[1]
+        #pz = 0 - (self.zNear+(center/2))  #atom_position[2] - center
+
+        px = (atom_position[0]*-1)
+        py = (atom_position[1]*-1)
+        pz = (atom_position[2]*-1) - (self.zNear+(center/2))
+
+        print 'px = ', px, 'py = ', py, 'pz = ',pz 
+        with self.open_context(True):
+            modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+            print modelview
+            glLoadIdentity()
+            self._apply(glTranslatef, px, py, pz)
+            print glGetDoublev(GL_MODELVIEW_MATRIX)
+            glMultMatrixd(modelview)
+            self.queue_draw()
+            #glutSwapBuffers()
+    
     def PrintCameraStatus (self, log = True):
         """ Function doc """
         if log:
             print 'zNear = ', self.zNear, 'zFar = ',   self.zFar, 'deltaZ = ', self.zNear - self.zFar, 'fog_start = ', self.fog_start, 'fog_end = ', self.fog_end, 'self.fog_end, deltaFog = ', self.fog_start - self.fog_end 
         else:
             pass 
+
+    def line_width_refresh(self):
+        """ Function doc """
+        deltaZ =  self.zFar - self.zNear
+        centro =  0 + (self.zNear+(deltaZ/2))  #mass_center[2] - centro
+        line_width = (self.line_width)/(centro/10)
+        glLineWidth(line_width)
