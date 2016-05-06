@@ -342,11 +342,13 @@ class GLCanvas(gtkgl.DrawingArea):
                 self.PrintCameraStatus()
                 
                 
-                
                 ##------------------------------#
                 ##        gluPerspective        #
                 ##------------------------------#
-                gluPerspective(self.fovy, float(width)/float(height), self.zNear, self.zFar)
+                if self.zNear >= 0.1:
+                    gluPerspective(self.fovy, float(width)/float(height), self.zNear, self.zFar)
+                else: 
+                    gluPerspective(self.fovy, float(width)/float(height), 0.1, self.zFar)
                 glFogf(GL_FOG_START ,  self.fog_start)
                 glFogf(GL_FOG_END   ,  self.fog_end  )
                 #'''
@@ -474,7 +476,12 @@ class GLCanvas(gtkgl.DrawingArea):
             x, y, width, height = self.get_allocation()
             glMatrixMode(GL_PROJECTION)
             glLoadIdentity()
-            gluPerspective(self.fovy, float(width)/float(height), self.zNear,self.zFar)
+            if self.zNear >= 0.1:
+                gluPerspective(self.fovy, float(width)/float(height), self.zNear, self.zFar)
+            else: 
+                gluPerspective(self.fovy, float(width)/float(height), 0.1, self.zFar)
+            
+            #gluPerspective(self.fovy, float(width)/float(height), self.zNear,self.zFar)
             glFogf(GL_FOG_START ,  self.fog_start)
             glFogf(GL_FOG_END   ,  self.fog_end)
             #'''
