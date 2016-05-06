@@ -587,7 +587,8 @@ class GLCanvas(gtkgl.DrawingArea):
        
     
     def _keyPress    (self,widget,event):
-        print event
+        with self.open_context(True):
+	    print event
 
     def pick(self,event,nearest,hits):
         
