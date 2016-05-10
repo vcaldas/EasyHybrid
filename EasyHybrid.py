@@ -38,6 +38,19 @@ except:
         print "try: sudo apt-get install  pyOpenGL - mudar essa msg"
 #------------------------------------------------------------------------------
 
+
+'''
+#-----------------------------------------------------------------------------
+for name in (GL_VENDOR,GL_RENDERER,GL_SHADING_LANGUAGE_VERSION,GL_EXTENSIONS):
+    print name,glGetString(name)
+print glGetString(GL_VERSION)
+print glGetString(GL_RENDERER)
+print glGetString(GL_VENDOR)
+print "\n\n"
+#-----------------------------------------------------------------------------
+'''
+
+
 import os
 #PYOPENMOL = os.environ.get('PYOPENMOL_ROOT')
 #print PYOPENMOL
@@ -757,7 +770,7 @@ class EasyHybridMain(EasyHybridConfig, EasyMolActions, MainMenu, MainToolBar):
         
     def show_EasyMol_objects(self):
         """ Function doc """
-        print "aqui1!"
+        #print "aqui1!"
         for easymol_object in self.pDynamoSession.easymol_objects:
             if easymol_object.activate:
                 
@@ -928,11 +941,6 @@ class EasyHybridMain(EasyHybridConfig, EasyMolActions, MainMenu, MainToolBar):
         #---------------------------------------------------------------
         self.pDynamoSession = pDynamoSession(self)
         #---------------------------------------------------------------
-
-        
-
-
-
 
         self.window.show_all()
         if len (sys.argv) > 1:

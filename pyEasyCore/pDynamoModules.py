@@ -3,6 +3,8 @@ from pBabel           import *
 from pCore            import *
 from pMolecule        import *
 from pMoleculeScripts import *
+from EasyMol          import EasyMolObject
+
 
 #------------------------------------------------------------------------------
 from AtomTypes import ATOMTYPES
@@ -18,30 +20,6 @@ def GetFileType(filename):
 
 
 
-
-class EasyMol_Object():
-    """ Class doc """
-    
-    def __init__ (self, label = 'NewObject'):
-        """ Class initialiser """
-        self.activate    = True
-        self.label       = label
-                         
-        #self.data       = None
-        self.pos         = []
-        self.a_color     = None
-        self.a_name      = None
-        self.a_symbol    = None
-        self.a_number    = None
-        self.a_charge    = None
-        self.mass_center = [0,0,0]
-        
-        self.sphere   = None
-        self.stick    = None
-        self.vdw      = None
-        self.lines    = None
-        self.a_size   = None
-        self.bonds    = None
         
 
 
@@ -195,7 +173,6 @@ class NewProject(object):
         else:
             print 'EasyHybridMain = None'
         #self.From_PDYNAMO_to_EasyHybrid(type_='new')
-
     def DeleteActualProject (self):
         """ Function doc """
         pass
@@ -266,7 +243,7 @@ class pDynamoSession(NewProject):
     def __init__ (self, EasyHybridMain = None):
         
         self.EasyHybridMain = EasyHybridMain
-        print EasyHybridMain , 'aqui'
+        #print EasyHybridMain , 'aqui'
         #-----------------------------------------------
         self.system                 = None     # a pdynamo system itself
         self.settings               = {}
@@ -284,6 +261,7 @@ class pDynamoSession(NewProject):
         self.mass_center = [0,0,0]
         #-------------------------------------------
         self.dualLog  = None         
+    
     def load_coordinate_file_as_new_system(self, filename, dualLog=None):
         #self.settings['prune_table']= []
         #self.settings['fix_table']  = []
@@ -398,32 +376,31 @@ class pDynamoSession(NewProject):
         self.load_coordinate_file_as_new_system(filename = filename, dualLog=None)
         self.system.Summary()
         
-        easymol_object = EasyMol_Object()
+        easymol_object = EasyMolObject()
         self.building_atom_matrix(easymol_object = easymol_object)
         self.build_bonds         (easymol_object =easymol_object)
         easymol_object.activate =True
         self.easymol_objects.append(easymol_object)
         print len(self.easymol_objects)
-        
-
-                
+                    
     def building_atom_matrix (self, easymol_object =  None):
         """ Function doc """
         import numpy as np
         xyz         = self.system.coordinates3
         m_size      = self.system.coordinates3.size/3
         
+        
         self.data   = np.zeros(m_size, [('a_position', np.float32, 3),
-                                 ('a_color'   , np.float32, 3),
-                                 ('a_name'    , np.str,     1),
-                                 ('a_symbol'  , np.str,     1),
-                                 ('a_number'  , np.float32, 1),
-                                 ('a_charge'  , np.float32, 1),
-                                 ('sphere'    , np.bool,  True),
-                                 ('stick'     , np.bool,  True),
-                                 ('vdw'       , np.bool,  True),
-                                 ('line'      , np.bool,  True),
-                                 ('a_size'    , np.float32, 1)])
+                                        ('a_color'   , np.float32, 3),
+                                        ('a_name'    , np.str,     1),
+                                        ('a_symbol'  , np.str,     1),
+                                        ('a_number'  , np.float32, 1),
+                                        ('a_charge'  , np.float32, 1),
+                                        ('sphere'    , np.bool,  True),
+                                        ('stick'     , np.bool,  True),
+                                        ('vdw'       , np.bool,  True),
+                                        ('line'      , np.bool,  True),
+                                        ('a_size'    , np.float32, 1)])
         
         for index in range(m_size):
             self.data['a_position'][index][0] = xyz[index][0]
@@ -434,6 +411,7 @@ class pDynamoSession(NewProject):
             self.mass_center[2] += xyz[index][2]
           
             #-----    S P H E R E S    -----
+            
             if index in self.settings['qc_table']:
                 self.data['sphere'][index] = True
             
@@ -636,3 +614,10 @@ class pDynamoSession(NewProject):
         #print '----------------------depois-----------------------'
         #pprint (self.settings)
 
+def __main__ ():
+    """ Function doc """
+    print 11
+    session  = pDynamoSession()
+    session.load_new_system (filename = '/home/fernando/programs/EasyHybrid/cyclohexane.pkl')
+if __main__:
+    __main__()

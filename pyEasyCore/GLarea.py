@@ -133,7 +133,8 @@ class GLCanvas(gtkgl.DrawingArea):
         #--------------------------------------------------------------#
         
         self.line_width = 3
-
+        
+   
     class _Context:
         def __init__(self,widget):
             self._widget = widget
