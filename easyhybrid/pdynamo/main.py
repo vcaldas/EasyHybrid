@@ -396,10 +396,10 @@ class pDynamoSession(NewProject):
                                         ('a_symbol'  , np.str,     1),
                                         ('a_number'  , np.float32, 1),
                                         ('a_charge'  , np.float32, 1),
-                                        ('sphere'    , np.bool,  True),
-                                        ('stick'     , np.bool,  True),
-                                        ('vdw'       , np.bool,  True),
-                                        ('line'      , np.bool,  True),
+                                        ('sphere'    , np.bool, 1),
+                                        ('stick'     , np.bool, 1),
+                                        ('vdw'       , np.bool, 1),
+                                        ('line'      , np.bool, 1),
                                         ('a_size'    , np.float32, 1)])
         
         for index in range(m_size):
