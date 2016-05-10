@@ -83,12 +83,12 @@ class GLCanvas(gtkgl.DrawingArea):
         # glLookAt                                                     # 
         self.eyeX    = 0.0                                             #
         self.eyeY    = 0.0                                             #
-        self.eyeZ    = 20.0                                            #
-        self.CenterX = 5.0                                             #
-        self.CenterY = 5.0                                             #
-        self.CenterZ = 5.0                                             #
+        self.eyeZ    = 0.0                                             #
+        self.centerX = 0.0                                             #
+        self.centerY = 0.0                                             #
+        self.centerZ = -1.0                                            #
         self.upX     = 0.0                                             #
-        self.upY     = 0.0                                             #
+        self.upY     = 1.0                                             #
         self.upZ     = 0.0                                             #
         #--------------------------------------------------------------#
         
@@ -244,7 +244,12 @@ class GLCanvas(gtkgl.DrawingArea):
         #---------------------------------------------------------------
         self.line_width_refresh()
         #---------------------------------------------------------------
-        
+	with self.open_context(True):
+	    gluLookAt(self.eyeX, self.eyeY, self.eyeZ, 
+		      self.centerX, self.centerY, self.centerZ,
+		      self.upX, self.upY, self.upZ)
+	    self.queue_draw()
+	
         #glLineWidth (2.5)
         #self._apply(glTranslatef,  0, 0,  5)
 
@@ -406,7 +411,7 @@ class GLCanvas(gtkgl.DrawingArea):
                              (pz-self._dragPosZ)*(self.zFar)/10)
                 glMultMatrixd(modelview)
 
-                '''
+                #'''
                 x = self._zprReferencePoint[0]
                 y = self._zprReferencePoint[1]
                 z = self._zprReferencePoint[2]
@@ -416,7 +421,7 @@ class GLCanvas(gtkgl.DrawingArea):
                                            y - (py-self._dragPosY), 
                                            z - (pz-self._dragPosZ), 0.]
                 print self._zprReferencePoint
-                '''
+                #'''
                 self._dragPosX = px
                 self._dragPosY = py
                 self._dragPosZ = pz
@@ -504,7 +509,7 @@ class GLCanvas(gtkgl.DrawingArea):
             #'''
             #glFogf(GL_FOG_START,self._zNear)
             #glFogf(GL_FOG_END,  self._zFar)
-            #gluLookAt (0.0, 0.0, 50.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+            #gluLookAt(0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0)
             
             self.queue_draw()
     
@@ -564,8 +569,8 @@ class GLCanvas(gtkgl.DrawingArea):
 
         #------------------------------------------------------------------------------#
         if event.button == 1 and event.type == gtk.gdk._2BUTTON_PRESS:                 #
-            nearest, hits =	self._pick(x,self.get_allocation().height-1-y,3,3,event)   #      # Double Click left button 
-            self.pick(event,nearest,hits) # None if nothing hit                        #                                                                 
+            nearest, hits =	self._pick(x,self.get_allocation().height-1-y,3,3,event)   #      # Double Click left button             
+            self.pick(event,nearest,hits) # None if nothing hit                        #    
         #------------------------------------------------------------------------------#
                            
                 
@@ -578,55 +583,51 @@ class GLCanvas(gtkgl.DrawingArea):
         #self.queue_draw()
        
         #------------------------------------------------------------------------------#
-        if event.button == 3 and event.type == gtk.gdk._2BUTTON_PRESS:                 #
-            #print event.button
-            nearest, hits =	self._pick(x,self.get_allocation().height-1-y,3,3,event)   #      # Double Click left button 
-            self.pick(event,nearest,hits) # None if nothing hit                        #                                                                 
+        #if event.button == 2 and event.type == gtk.gdk.BUTTON_PRESS:
+        if event.button == 2 and event.type == gtk.gdk.BUTTON_PRESS:
+	    nearest, hits = self._pick(x,self.get_allocation().height-1-y,3,3,event)
+            self.pick(event,nearest,hits) # None if nothing hit
+	    
+        #    #print event.button
+        #    nearest, hits =	self._pick(x,self.get_allocation().height-1-y,3,3,event)   #      # Double Click left button 
+        #    self.pick(event,nearest,hits) # None if nothing hit                        #                                                                 
         #------------------------------------------------------------------------------#
+	
+	if event.button == 3 and event.type == gtk.gdk._2BUTTON_PRESS:
+	    print 'clic derecho?'
+	    self.reset_cam()
        
        
     
     def _keyPress    (self,widget,event):
         with self.open_context(True):
-	    print event
+	    pass
+	    #print event
 
     def pick(self,event,nearest,hits):
         
-        for hit in hits:
-            print hit.near, hit.far, hit.names
-
-        if event.button == 1:
-            if nearest != []:
-                x = self.zero[nearest[0]][0]
-                y = self.zero[nearest[0]][1]
-                z = self.zero[nearest[0]][2]
-                print x,y,z
-                self._zprReferencePoint = [x,  y, z, 0.]
-                atom_position = [x,y,z]
-                
-                n        = 1000
-                counter  = 0
-                atom_position = [x/n,y/n,z/n]
-                #for step in range(0,n):
-                #    glutIdleFunc(self._center_on_atom(atom_position))
-                self._center_on_atom(atom_position)
-                
-                #start_time = time.time()
-                #while counter <= 0:
-                #    if time.time() - start_time >= 1:
-                #        print 1
-                #        counter += 1
-                #        start_time = time.time()
-                
-                #self._center_on_atom(atom_position)
-            else:
-                print self.x_total, self.y_total, self.z_total, self.MassReferencePoint
+        #for hit in hits:
+        #    print hit.near, hit.far, hit.names
+	#print nearest
+        if event.button == 1 or event.button == 2:
+	    pass
+	    if nearest != []:
+		x = self.zero[nearest[0]][0]
+		y = self.zero[nearest[0]][1]
+		z = self.zero[nearest[0]][2]
+		atom_pos = [x, y, z]
+		self.MassReferencePoint = [x, y, z, 0.0]
+                self._zprReferencePoint = self.MassReferencePoint
+		self._center_on_atom(atom_pos)
+	    else:
+		self.print_camera_pos()
                 self.MassReferencePoint[0] = self.x_total
                 self.MassReferencePoint[1] = self.y_total
                 self.MassReferencePoint[2] = self.z_total
                 self._zprReferencePoint = self.MassReferencePoint
-        
+	
         if event.button == 3 and nearest != []:
+	    #print 'event==3?'
             px = self.zero[nearest[0]][0]
             py = self.zero[nearest[0]][1]
             pz = self.zero[nearest[0]][2]
@@ -635,6 +636,7 @@ class GLCanvas(gtkgl.DrawingArea):
             #px = 10.0 #self.MassReferencePoint[0]
             #py = 10.0 #self.MassReferencePoint[1]
             #pz = 10.0 #self.MassReferencePoint[2] + 10
+	
 
             
             
@@ -698,33 +700,44 @@ class GLCanvas(gtkgl.DrawingArea):
                 glFlush()
         return True
     
-    def _center_on_atom (self, atom_position):
-        """ Function doc  - nao funciona"""
-        center =  self.zFar - self.zNear
-        print center
-        #px = 0                            #atom_position[0]
-        #py = 0                            #atom_position[1]
-        #pz = 0 - (self.zNear+(center/2))  #atom_position[2] - center
-
-        px = (atom_position[0]*-1)
-        py = (atom_position[1]*-1)
-        pz = (atom_position[2]*-1) - (self.zNear+(center/2))
-
-        print 'px = ', px, 'py = ', py, 'pz = ',pz 
-        with self.open_context(True):
-            modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-            print modelview
-            glLoadIdentity()
-            self._apply(glTranslatef, px, py, pz)
-            print glGetDoublev(GL_MODELVIEW_MATRIX)
-            glMultMatrixd(modelview)
-            self.queue_draw()
-            #glutSwapBuffers()
+    def print_camera_pos(self):
+	crd_xyz = self.get_pos_cam()
+	print crd_xyz[0], crd_xyz[1], crd_xyz[2], '<-- pos camara en XYZ'
+	print self.eyeX, self.eyeY, self.eyeZ, '<-- pos self.eyes'
+    
+    def get_pos_cam(self):
+	""" Returns the position of the camera in XYZ coordinates
+	    The type of data returned is 'numpy.ndarray'.
+	"""
+	buffer = glGetDoublev(GL_MODELVIEW_MATRIX)
+	crd_xyz = -1 * numpy.mat(buffer[:3,:3]) * numpy.mat(buffer[3,:3]).T
+	return crd_xyz.A1
+        
+    def _center_on_atom(self, atom_pos):
+        """ Only change the center of viewpoint of the camera.
+	    It does not change (yet) the position of the camera.
+	    
+	    atom_pos is a vector containing the XYZ coordinates
+	    of the selected atom.
+	"""
+        atom_x = atom_pos[0]
+	atom_y = atom_pos[1]
+	atom_z = atom_pos[2]
+	pos_cam = self.get_pos_cam()
+	self.eyeX = pos_cam[0]
+	self.eyeY = pos_cam[1]
+	self.eyeZ = pos_cam[2]
+	
+	with self.open_context(True):
+	    glLoadIdentity()
+	    gluLookAt(self.eyeX, self.eyeX, self.eyeZ, atom_x, atom_y, atom_z, 0, 1, 0)
+	    self.queue_draw()
     
     def PrintCameraStatus (self, log = True):
         """ Function doc """
         if log:
-            print 'zNear = ', self.zNear, 'zFar = ',   self.zFar, 'deltaZ = ', self.zNear - self.zFar, 'fog_start = ', self.fog_start, 'fog_end = ', self.fog_end, 'self.fog_end, deltaFog = ', self.fog_start - self.fog_end 
+	    pass
+            #print 'zNear = ', self.zNear, 'zFar = ',   self.zFar, 'deltaZ = ', self.zNear - self.zFar, 'fog_start = ', self.fog_start, 'fog_end = ', self.fog_end, 'self.fog_end, deltaFog = ', self.fog_start - self.fog_end 
         else:
             pass 
 
