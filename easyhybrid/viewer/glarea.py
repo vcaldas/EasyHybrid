@@ -417,11 +417,14 @@ class GLCanvas(gtkgl.DrawingArea):
                 y = self._zprReferencePoint[1]
                 z = self._zprReferencePoint[2]
                 
-                print self._zprReferencePoint
-                self._zprReferencePoint = [x - (px-self._dragPosX),  
-                                           y - (py-self._dragPosY), 
-                                           z - (pz-self._dragPosZ), 0.]
-                print self._zprReferencePoint
+		#print self._dragPosX, '<-- pos X'
+		#print self._dragPosY, '<-- pos Y'
+		#print self._dragPosZ, '<-- pos Z'
+                #print self._zprReferencePoint, '<-- zpr antes'
+                #self._zprReferencePoint = [x - (px-self._dragPosX),
+                #                           y - (py-self._dragPosY),
+                #                           z - (pz-self._dragPosZ), 0.]
+                #print self._zprReferencePoint, '<-- zpr despues'
                 #'''
                 self._dragPosX = px
                 self._dragPosY = py
@@ -588,6 +591,7 @@ class GLCanvas(gtkgl.DrawingArea):
         if event.button == 2 and event.type == gtk.gdk.BUTTON_PRESS:
 	    nearest, hits = self._pick(x,self.get_allocation().height-1-y,3,3,event)
             self.pick(event,nearest,hits) # None if nothing hit
+	    #print self._dragPosX, self._dragPosY, self._dragPosZ, '<-- drag pos'
 	    
         #    #print event.button
         #    nearest, hits =	self._pick(x,self.get_allocation().height-1-y,3,3,event)   #      # Double Click left button 
@@ -595,8 +599,7 @@ class GLCanvas(gtkgl.DrawingArea):
         #------------------------------------------------------------------------------#
 	
 	if event.button == 3 and event.type == gtk.gdk._2BUTTON_PRESS:
-	    print 'clic derecho?'
-	    self.reset_cam()
+	    self.print_camera_pos()
        
        
     
@@ -611,7 +614,6 @@ class GLCanvas(gtkgl.DrawingArea):
         #    print hit.near, hit.far, hit.names
 	#print nearest
         if event.button == 1 or event.button == 2:
-	    pass
 	    if nearest != []:
 		x = self.zero[nearest[0]][0]
 		y = self.zero[nearest[0]][1]
@@ -621,11 +623,13 @@ class GLCanvas(gtkgl.DrawingArea):
                 self._zprReferencePoint = self.MassReferencePoint
 		self._center_on_atom(atom_pos)
 	    else:
-		self.print_camera_pos()
-                self.MassReferencePoint[0] = self.x_total
-                self.MassReferencePoint[1] = self.y_total
-                self.MassReferencePoint[2] = self.z_total
-                self._zprReferencePoint = self.MassReferencePoint
+		pass
+		#print self.get_allocation(), '<-- ubicacion'
+		#self.print_camera_pos()
+                #self.MassReferencePoint[0] = self.x_total
+                #self.MassReferencePoint[1] = self.y_total
+                #self.MassReferencePoint[2] = self.z_total
+                #self._zprReferencePoint = self.MassReferencePoint
 	
         if event.button == 3 and nearest != []:
 	    #print 'event==3?'
@@ -702,18 +706,25 @@ class GLCanvas(gtkgl.DrawingArea):
         return True
     
     def print_camera_pos(self):
-	crd_xyz = self.get_pos_cam()
+	crd_xyz = self.get_cam_pos()
 	print crd_xyz[0], crd_xyz[1], crd_xyz[2], '<-- pos camara en XYZ'
-	print self.eyeX, self.eyeY, self.eyeZ, '<-- pos self.eyes'
+	print self.zNear, self.zFar, '<-- zNear y zFar rexpect'
+	#print self.eyeX, self.eyeY, self.eyeZ, '<-- pos self.eyes'
     
-    def get_pos_cam(self):
+    def get_cam_pos(self):
 	""" Returns the position of the camera in XYZ coordinates
 	    The type of data returned is 'numpy.ndarray'.
 	"""
 	buffer = glGetDoublev(GL_MODELVIEW_MATRIX)
 	crd_xyz = -1 * numpy.mat(buffer[:3,:3]) * numpy.mat(buffer[3,:3]).T
 	return crd_xyz.A1
-        
+    
+    def get_euclidean(self, pA, pB):
+	return math.sqrt( (pB[0]-pA[0])**2 +
+			  (pB[1]-pA[1])**2 +
+			  (pB[2]-pA[2])**2
+			)
+    
     def _center_on_atom(self, atom_pos):
         """ Only change the center of viewpoint of the camera.
 	    It does not change (yet) the position of the camera.
@@ -724,15 +735,52 @@ class GLCanvas(gtkgl.DrawingArea):
         atom_x = atom_pos[0]
 	atom_y = atom_pos[1]
 	atom_z = atom_pos[2]
-	pos_cam = self.get_pos_cam()
-	self.eyeX = pos_cam[0]
-	self.eyeY = pos_cam[1]
-	self.eyeZ = pos_cam[2]
-	
+	cam_pos = self.get_cam_pos()
+	cam_x = cam_pos[0]
+	cam_y = cam_pos[1]
+	cam_z = cam_pos[2]
+	print atom_pos, '<-- pos atomo'
+	print cam_pos, '<-- pos camara'
+	print self.get_euclidean(cam_pos, atom_pos), '<-- dist atom-cam'
 	with self.open_context(True):
+	    glMatrixMode(GL_MODELVIEW)
+	    #while abs(atom_x-cam_x) > 0.1 or abs(atom_y-cam_y) > 0.1:
+		#if atom_x-cam_x > 0:
+		#    cam_x += 0.1
+		#elif atom_x-cam_x < 0:
+		#    cam_x -= 0.1
+		#if atom_y-cam_y > 0:
+		#    cam_y += 0.1
+		#elif atom_y-cam_y < 0:
+		#    cam_y -= 0.1
+		##self._redisplay(cam_pos, [cam_x, cam_y, cam_z])
+		#glLoadIdentity()
+		#gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], cam_x, cam_y, atom_z, 0, 1, 0)
+		#
+		##glutPostRedisplay()
+		##self.draw()
+		##sleep(0.01)
+		##while gtk.events_pending():
+		##    gtk.main_iteration_do(True)
+		##print 'Entra aca???'
+	    
 	    glLoadIdentity()
-	    gluLookAt(self.eyeX, self.eyeX, self.eyeZ, atom_x, atom_y, atom_z, 0, 1, 0)
+	    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], atom_x, atom_y, atom_z, 0, 1, 0)
+	    modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+	    vec_dir = modelview[:3, 2]
+	    print vec_dir, '<-- vector dir camara'
+	    if self.get_euclidean(cam_pos, atom_pos) > 15:
+		new_cam_pos = 15 * vec_dir
+		glLoadIdentity()
+		gluLookAt(new_cam_pos[0], new_cam_pos[1], new_cam_pos[2], atom_x, atom_y, atom_z, 0, 1, 0)
+	    #elif get_euclidean(cam_pos, atom_pos) < 5:
+	    else:
+		new_cam_pos = 15 * vec_dir
+		print new_cam_pos, '<-- new vector dir camara'
+		glLoadIdentity()
+		gluLookAt(new_cam_pos[0], new_cam_pos[1], new_cam_pos[2], atom_x, atom_y, atom_z, 0, 1, 0)
 	    self.queue_draw()
+	print '##########################################################################'
     
     def PrintCameraStatus (self, log = True):
         """ Function doc """
