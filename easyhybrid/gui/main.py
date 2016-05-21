@@ -259,12 +259,12 @@ class GLAreaDraw:
         if self.data == None:
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
             #glClearColor(0.7, 0.7, 0.7, 1.0)     # -  CLARO
-            glClearColor(0.1, 0.1, 0.1, 1.0)     # -  CLARO
+            glClearColor(0.0, 0.0, 0.0, 1.0)     # -  CLARO
 
         else:
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
             #glClearColor(0.7, 0.7, 0.7, 1.0)     # -  CLARO
-            glClearColor(0.1, 0.1, 0.1, 1.0)     # -  CLARO
+            glClearColor(0.0, 0.0, 0.0, 1.0)     # -  CLARO
 
             glCallList(self.lista,GL_COMPILE)
             glCallList(self.lista_bonds,GL_COMPILE)
@@ -705,7 +705,7 @@ class EasyMolActions:
         mass_center = self.pDynamoSession.easymol_objects[0].mass_center
         print mass_center
         #print mass_center
-        self.zpr._center_on_atom(mass_center)
+        self.zpr._center_on_atom_anim(mass_center)
 
     
 class EasyHybridConfig(object):

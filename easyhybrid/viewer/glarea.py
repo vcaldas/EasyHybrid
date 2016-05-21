@@ -133,6 +133,7 @@ class GLCanvas(gtkgl.DrawingArea):
         self._dragPosX_R  = self._dragPosY_R = 0
         self._mouseRotate = self._mouseZoom = self._mousePan = False   #
         self._dragging = False
+	self._target_point = self._zprReferencePoint[:3]
 	#--------------------------------------------------------------#
         
         self.line_width = 3
@@ -176,7 +177,7 @@ class GLCanvas(gtkgl.DrawingArea):
                 import traceback
                 traceback.print_exception(exc_type,exc_value,exc_traceback)
             return True # suppress
-                 
+    
     def open_context(self,persist_matrix_changes = False):
         if not hasattr(self,"_context"):
             self._context = self._Context(self)
@@ -616,22 +617,23 @@ class GLCanvas(gtkgl.DrawingArea):
 		self._dragging = False
 	
 	if event.button == 3 and event.type == gtk.gdk._2BUTTON_PRESS:
-	    #pass
 	    self.print_camera_pos()
-	    glMatrixMode(GL_MODELVIEW)
-	    modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-	    print modelview, '<== modelview matrix'
-
+	    cam_pos = self.get_cam_pos()
+	    zpr = self._zprReferencePoint[:3]
+	    print zpr, '<-- zpr point'
+	    vecZ = glGetDoublev(GL_PROJECTION_MATRIX)
+	    vecZ = vecZ[:3, 2]
+	    zpr_cam = self.unit_vector([zpr[0]-cam_pos[0], zpr[1]-cam_pos[1], zpr[2]-cam_pos[2]])
+	    print zpr_cam, '<-- vector zpr-cam'
+	    print vecZ, '<-- vectorZ'
+            
+    
     def _keyPress    (self,widget,event):
         with self.open_context(True):
 	    pass
 	    #print event
 
     def pick(self,event,nearest,hits):
-        
-        #for hit in hits:
-        #    print hit.near, hit.far, hit.names
-	#print nearest
         if event.button == 1 or event.button == 2:
 	    if nearest != []:
 		x = self.zero[nearest[0]][0]
@@ -639,10 +641,10 @@ class GLCanvas(gtkgl.DrawingArea):
 		z = self.zero[nearest[0]][2]
 		atom_pos = [x, y, z]
 		self.MassReferencePoint = [x, y, z, 0.0]
+		#self._center_on_atom(atom_pos)
+		self._center_on_atom_anim(atom_pos)
                 self._zprReferencePoint = self.MassReferencePoint
-		self._center_on_atom(atom_pos)
-		#self._center_on_atom_rot(atom_pos)
-	
+		self._target_point = atom_pos
         if event.button == 3 and nearest != []:
 	    #print 'event==3?'
             px = self.zero[nearest[0]][0]
@@ -691,6 +693,8 @@ class GLCanvas(gtkgl.DrawingArea):
         glMultMatrixd(projection)        
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
+	#print event, '<-- es el evento'
+	#print self, '<-- es self'
         self.draw(event)
         glPopMatrix()
         hits = glRenderMode(GL_RENDER)
@@ -704,6 +708,8 @@ class GLCanvas(gtkgl.DrawingArea):
         glMatrixMode(GL_PROJECTION)
         glPopMatrix() # restore projection matrix 
         glMatrixMode(GL_MODELVIEW)
+	#print nearest, '<-- nearest 1'
+	#print hits, '<-- hits 1'
         return (nearest, hits)
 
     def _draw(self,widget,event):
@@ -717,11 +723,64 @@ class GLCanvas(gtkgl.DrawingArea):
                 glFlush()
         return True
     
+    def idle():
+	glutPostRedisplay()
+    
+    def _display(self):
+	if self._inic == self._cycles:
+	    return
+	else:
+	    glClearColor(0.0, 0.0, 0.0, 0)
+	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+	    gluLookAt(self._cam_pos[0], self._cam_pos[1], self._cam_pos[2],
+		      self._zpr[0]+self._toAdd, self._zpr[1]+self._toAdd, self._zpr[2]+self._toAdd,
+		      self._axis[0], self._axis[1], self._axis[2])
+	    glutSwapBuffers()
+	    self._inic += 1
+	    self._toAdd *= self._inic
+	#with self.open_context(True):
+	#    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+	#    glPushMatrix()
+	#    glMatrixMode(GL_MODELVIEW)
+	#    glLoadIdentity()
+	#    cam_pos = self.get_cam_pos()
+	#    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
+	#	      targ[0], targ[1], targ[2],
+	#	      axis[0], axis[1], axis[2])
+	#    glPopMatrix()
+	#    glutSwapBuffers()
+	#    glutIdleFunc(self.idle)
+	#glClear(GL_COLOR_BUFFER_BIT);
+	#with self.open_context(True) as cont:
+	#    if not self.gl_begin(cont.ctx):
+	#	return
+	#    glClearColor(0.0, 0.0, 0.0, 0.0);
+	#    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
+	#	      self.to_look[0], self.to_look[1], self.to_look[2],
+	#	      0, 1, 0)
+	#    
+	#    self.gl_end()
+    
+    def _transition(self):
+	eye = self._zprReferencePoint[:3]
+	dist = self.get_euclidean(eye, self._temp_atom_pos)
+	cycles = int(dist + 1)
+	dist = float(dist/cycles)
+	for i in range(1, cycles):
+	    vec_dir = self.unit_vector([self._temp_atom_pos[0]-eye[0], self._temp_atom_pos[1]-eye[1], self._temp_atom_pos[2]-eye[2]])
+	    to_add = [i*dist*vec_dir[0], i*dist*vec_dir[1], i*dist*vec_dir[2]]
+	    self._to_look = [eye[0]+to_add[0], eye[1]+to_add[1], eye[2]+to_add[2]]
+	    glutPostRedisplay()
+	glutTimerFunc(1, self._transition(), 0)
+    
     def print_camera_pos(self):
+	""" Useless function.
+	"""
+	camMat = glGetDoublev(GL_MODELVIEW_MATRIX)
 	crd_xyz = self.get_cam_pos()
+	print camMat, '<-- matriz cam'
 	print crd_xyz[0], crd_xyz[1], crd_xyz[2], '<-- pos camara en XYZ'
-	print self.zNear, self.zFar, '<-- zNear y zFar respect'
-	#print self.eyeX, self.eyeY, self.eyeZ, '<-- pos self.eyes'
+	#print self.zNear, self.zFar, '<-- zNear y zFar respect'
     
     def get_cam_pos(self):
 	""" Returns the position of the camera in XYZ coordinates
@@ -732,49 +791,53 @@ class GLCanvas(gtkgl.DrawingArea):
 	return crd_xyz.A1
     
     def get_euclidean(self, pA, pB):
+	if len(pA) == 1:
+	    pA = [pA[0], 0, 0]
+	if len(pA) == 2:
+	    pA = [pA[0], pA[1], 0]
+	if len(pB) == 1:
+	    pB = [pB[0], 0, 0]
+	if len(pB) == 2:
+	    pB = [pB[0], pB[1], 0]
 	return math.sqrt( (pB[0]-pA[0])**2 +
 			  (pB[1]-pA[1])**2 +
 			  (pB[2]-pA[2])**2
 			)
     
     def unit_vector(self, vector):
-	""" Returns the unit vector of the vector.  """
+	""" Returns the unit vector of the vector.
+	"""
 	return vector / numpy.linalg.norm(vector)
     
     def get_angle(self, vecA, vecB):
+	""" Docs
+	"""
 	vecA_u = self.unit_vector(vecA)
 	vecB_u = self.unit_vector(vecB)
 	return numpy.degrees(numpy.arccos(numpy.clip(numpy.dot(vecA_u, vecB_u), -1.0, 1.0)))
     
-    def _center_on_atom_rot(self, atom_pos):
-	""" Modified version of center on atom, uses glRotate instead of
-	gluLookAt
+    def get_angle_np(self, vA, vB):
+	return math.acos((vA[0]*vB[0] + vA[1]*vB[1] + vA[2]*vB[2])/
+			 (vA[0]**2 + vA[1]**2 + vA[2]**2)**0.5/
+			 (vB[0]**2 + vB[1]**2 + vB[2]**2)**0.5)
+    
+    def get_projec_angle(self, vA, vB):
+	""" Returns the angles between 2 vectors projected in the 3 planes
+	    of the XYZ coordinates system, in the order [XY, XZ, YZ].
+	    The angles returned are in degrees.
+	    
+	    vA and vB are vectors of R3.
 	"""
-	cam_pos = self.get_cam_pos()
-	with self.open_context(True):
-	    glMatrixMode(GL_MODELVIEW)
-	    modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-	    vecA = atom_pos-cam_pos
-	    #vecX = modelview[:3, 0]
-	    #vecY = modelview[:3, 1]
-	    vecZ = modelview[:3, 2]
-	    print vecZ, 'vector Z'
-	    #print atom_pos, 'pos atom'
-	    #print cam_pos, 'pos cam'
-	    #angX = self.get_angle(vecA, vecX)
-	    #angY = self.get_angle(vecA, vecY)
-	    angZ = self.get_angle(vecA, vecZ)
-	    print angZ, '<-- angulo entre vectores'
-	    glLoadIdentity()
-	    #glRotate(angX, 1, 0, 0)
-	    #glRotate(angY, 0, 1, 0)
-	    #glRotate(angZ, 0, 0, 1)
-	    glRotate(angZ, 1, 1, 1)
-	    #glRotate(angZ, atom_pos[0], atom_pos[1], atom_pos[2])
-	    #glRotate(angZ, 0, 0, atom_pos[2])
-	    glMultMatrixd(modelview)
-	    self.queue_draw()
-	
+	vA_xy = [vA[0], vA[1]]
+	vA_xz = [vA[0], vA[2]]
+	vA_yz = [vA[1], vA[2]]
+	vB_xy = [vB[0], vB[1]]
+	vB_xz = [vB[0], vB[2]]
+	vB_yz = [vB[1], vB[2]]
+	ang_vA_VB_xy = 180 - self.get_angle(vA_xy, vB_xy)
+	ang_vA_VB_xz = 180 - self.get_angle(vA_xz, vB_xz)
+	ang_vA_VB_yz = 180 - self.get_angle(vA_yz, vB_yz)
+	return [ang_vA_VB_xy, ang_vA_VB_xz, ang_vA_VB_yz]
     
     def _center_on_atom(self, atom_pos):
         """ Only change the center of viewpoint of the camera.
@@ -783,14 +846,65 @@ class GLCanvas(gtkgl.DrawingArea):
 	    atom_pos is a vector containing the XYZ coordinates
 	    of the selected atom.
 	"""
+	#OLD#cam_pos = self.get_cam_pos()
+	#OLD#with self.open_context(True):
+	#OLD#    glMatrixMode(GL_MODELVIEW)
+	#OLD#    modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+	#OLD#    up = modelview[:3, 1]
+	#OLD#    glLoadIdentity()
+	#OLD#    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
+	#OLD#	      atom_pos[0], atom_pos[1], atom_pos[2],
+	#OLD#	      up[0], up[1], up[2])
+	#OLD#    self.queue_draw()
 	cam_pos = self.get_cam_pos()
-	with self.open_context(True):
+	if self.get_euclidean(self._target_point, atom_pos) != 0:
+	    with self.open_context(True):
+		glMatrixMode(GL_MODELVIEW)
+		modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+		up = modelview[:3, 1]
+		glLoadIdentity()
+		gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
+			  atom_pos[0], atom_pos[1], atom_pos[2],
+			  up[0], up[1], up[2])
+		self.queue_draw()
+
+    def _center_on_atom_anim(self, atom_pos):
+        """ Only change the center of viewpoint of the camera.
+	    It does not change (yet) the position of the camera.
+	    
+	    atom_pos is a vector containing the XYZ coordinates
+	    of the selected atom.
+	"""
+	if self.get_euclidean(self._target_point, atom_pos) != 0:
+	    cam_pos = self.get_cam_pos()
 	    glMatrixMode(GL_MODELVIEW)
 	    modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-	    glLoadIdentity()
-	    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
-		      atom_pos[0], atom_pos[1], atom_pos[2],
-		      0, 1, 0)
+	    up = modelview[:3, 1]
+	    zpr = self._zprReferencePoint[:3]
+	    dist = self.get_euclidean(zpr, atom_pos)
+	    vec_dir = self.unit_vector([atom_pos[0]-zpr[0], atom_pos[1]-zpr[1], atom_pos[2]-zpr[2]])
+	    #print dist, '<-- distancia'
+	    #print dist/0.1, '<-- division'
+	    #print dist%0.1, '<-- resto'
+	    #print int(dist/0.1), '<-- ciclos'
+	    cycles = int(dist/0.1)
+	    to_add = float(dist/cycles)
+	    for i in range(1, cycles):
+		aum = i*to_add
+		pto = [zpr[0]+vec_dir[0]*aum, zpr[1]+vec_dir[1]*aum, zpr[2]+vec_dir[2]*aum]
+		with self.open_context(True):
+		    glMatrixMode(GL_MODELVIEW)
+		    glLoadIdentity()
+		    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
+			      pto[0], pto[1], pto[2],
+			      up[0], up[1], up[2])
+		self.window.invalidate_rect(self.allocation, False)
+		self.window.process_updates(False)
+	    if dist%0.1 > 0:
+		with self.open_context(True):
+		    glMatrixMode(GL_MODELVIEW)
+		    glLoadIdentity()
+		    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], atom_pos[0], atom_pos[1], atom_pos[2], up[0], up[1], up[2])
 	    self.queue_draw()
 
     def PrintCameraStatus (self, log = True):
