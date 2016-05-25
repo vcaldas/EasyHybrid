@@ -415,21 +415,11 @@ class GLCanvas(gtkgl.DrawingArea):
                              (py-self._dragPosY)*(self.zFar)/10, 
                              (pz-self._dragPosZ)*(self.zFar)/10)
                 glMultMatrixd(modelview)
-
-                #'''
+		
                 x = self._zprReferencePoint[0]
                 y = self._zprReferencePoint[1]
                 z = self._zprReferencePoint[2]
                 
-		#print self._dragPosX, '<-- pos X'
-		#print self._dragPosY, '<-- pos Y'
-		#print self._dragPosZ, '<-- pos Z'
-                #print self._zprReferencePoint, '<-- zpr antes'
-                #self._zprReferencePoint = [x - (px-self._dragPosX),
-                #                           y - (py-self._dragPosY),
-                #                           z - (pz-self._dragPosZ), 0.]
-                #print self._zprReferencePoint, '<-- zpr despues'
-                #'''
                 self._dragPosX = px
                 self._dragPosY = py
                 self._dragPosZ = pz
@@ -597,12 +587,6 @@ class GLCanvas(gtkgl.DrawingArea):
         if event.button == 2 and event.type == gtk.gdk.BUTTON_PRESS:
 	    self._dist_cam_zpr = self.get_euclidean(self._zprReferencePoint[:3],
 						    self.get_cam_pos())
-	    nearest, hits = self._pick(x,self.get_allocation().height-1-y,3,3,event)
-            self.pick(event,nearest,hits) # None if nothing hit
-	    
-        #    #print event.button
-        #    nearest, hits =	self._pick(x,self.get_allocation().height-1-y,3,3,event)   #      # Double Click left button 
-        #    self.pick(event,nearest,hits) # None if nothing hit                        #                                                                 
         #------------------------------------------------------------------------------#
 	if event.button == 2 and event.type == gtk.gdk.BUTTON_RELEASE:
 	    if self._dragging:
@@ -615,6 +599,9 @@ class GLCanvas(gtkgl.DrawingArea):
 		self.MassReferencePoint = [new_zpr[0], new_zpr[1], new_zpr[2], 0.0]
 		self._zprReferencePoint = self.MassReferencePoint
 		self._dragging = False
+	    else:
+		nearest, hits = self._pick(x,self.get_allocation().height-1-y,3,3,event)
+		self.pick(event,nearest,hits) # None if nothing hit
 	
 	if event.button == 3 and event.type == gtk.gdk._2BUTTON_PRESS:
 	    self.print_camera_pos()
@@ -693,8 +680,6 @@ class GLCanvas(gtkgl.DrawingArea):
         glMultMatrixd(projection)        
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
-	#print event, '<-- es el evento'
-	#print self, '<-- es self'
         self.draw(event)
         glPopMatrix()
         hits = glRenderMode(GL_RENDER)
@@ -708,8 +693,6 @@ class GLCanvas(gtkgl.DrawingArea):
         glMatrixMode(GL_PROJECTION)
         glPopMatrix() # restore projection matrix 
         glMatrixMode(GL_MODELVIEW)
-	#print nearest, '<-- nearest 1'
-	#print hits, '<-- hits 1'
         return (nearest, hits)
 
     def _draw(self,widget,event):
@@ -722,56 +705,6 @@ class GLCanvas(gtkgl.DrawingArea):
             else:
                 glFlush()
         return True
-    
-    def idle():
-	glutPostRedisplay()
-    
-    def _display(self):
-	if self._inic == self._cycles:
-	    return
-	else:
-	    glClearColor(0.0, 0.0, 0.0, 0)
-	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-	    gluLookAt(self._cam_pos[0], self._cam_pos[1], self._cam_pos[2],
-		      self._zpr[0]+self._toAdd, self._zpr[1]+self._toAdd, self._zpr[2]+self._toAdd,
-		      self._axis[0], self._axis[1], self._axis[2])
-	    glutSwapBuffers()
-	    self._inic += 1
-	    self._toAdd *= self._inic
-	#with self.open_context(True):
-	#    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-	#    glPushMatrix()
-	#    glMatrixMode(GL_MODELVIEW)
-	#    glLoadIdentity()
-	#    cam_pos = self.get_cam_pos()
-	#    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
-	#	      targ[0], targ[1], targ[2],
-	#	      axis[0], axis[1], axis[2])
-	#    glPopMatrix()
-	#    glutSwapBuffers()
-	#    glutIdleFunc(self.idle)
-	#glClear(GL_COLOR_BUFFER_BIT);
-	#with self.open_context(True) as cont:
-	#    if not self.gl_begin(cont.ctx):
-	#	return
-	#    glClearColor(0.0, 0.0, 0.0, 0.0);
-	#    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
-	#	      self.to_look[0], self.to_look[1], self.to_look[2],
-	#	      0, 1, 0)
-	#    
-	#    self.gl_end()
-    
-    def _transition(self):
-	eye = self._zprReferencePoint[:3]
-	dist = self.get_euclidean(eye, self._temp_atom_pos)
-	cycles = int(dist + 1)
-	dist = float(dist/cycles)
-	for i in range(1, cycles):
-	    vec_dir = self.unit_vector([self._temp_atom_pos[0]-eye[0], self._temp_atom_pos[1]-eye[1], self._temp_atom_pos[2]-eye[2]])
-	    to_add = [i*dist*vec_dir[0], i*dist*vec_dir[1], i*dist*vec_dir[2]]
-	    self._to_look = [eye[0]+to_add[0], eye[1]+to_add[1], eye[2]+to_add[2]]
-	    glutPostRedisplay()
-	glutTimerFunc(1, self._transition(), 0)
     
     def print_camera_pos(self):
 	""" Useless function.
@@ -846,16 +779,6 @@ class GLCanvas(gtkgl.DrawingArea):
 	    atom_pos is a vector containing the XYZ coordinates
 	    of the selected atom.
 	"""
-	#OLD#cam_pos = self.get_cam_pos()
-	#OLD#with self.open_context(True):
-	#OLD#    glMatrixMode(GL_MODELVIEW)
-	#OLD#    modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-	#OLD#    up = modelview[:3, 1]
-	#OLD#    glLoadIdentity()
-	#OLD#    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
-	#OLD#	      atom_pos[0], atom_pos[1], atom_pos[2],
-	#OLD#	      up[0], up[1], up[2])
-	#OLD#    self.queue_draw()
 	cam_pos = self.get_cam_pos()
 	if self.get_euclidean(self._target_point, atom_pos) != 0:
 	    with self.open_context(True):
@@ -882,17 +805,30 @@ class GLCanvas(gtkgl.DrawingArea):
 	    up = modelview[:3, 1]
 	    zpr = self._zprReferencePoint[:3]
 	    dist = self.get_euclidean(zpr, atom_pos)
+	    dist_cam_zpr = dist_z = self.get_euclidean(cam_pos, zpr)
 	    vec_dir = self.unit_vector([atom_pos[0]-zpr[0], atom_pos[1]-zpr[1], atom_pos[2]-zpr[2]])
-	    #print dist, '<-- distancia'
-	    #print dist/0.1, '<-- division'
-	    #print dist%0.1, '<-- resto'
-	    #print int(dist/0.1), '<-- ciclos'
-	    cycles = int(dist/0.1)
+	    zFar = self.zFar
+	    zNear = self.zNear
+	    fog_start = self.fog_start
+	    fog_end = self.fog_end
+	    cycles = int(1/.06)
 	    to_add = float(dist/cycles)
 	    for i in range(1, cycles):
 		aum = i*to_add
 		pto = [zpr[0]+vec_dir[0]*aum, zpr[1]+vec_dir[1]*aum, zpr[2]+vec_dir[2]*aum]
+		add_z = self.get_euclidean(cam_pos, pto) - dist_z
+		zFar += add_z
+		zNear += add_z
+		fog_start += add_z
+		fog_end   += add_z
+		dist_z = self.get_euclidean(cam_pos, pto)
 		with self.open_context(True):
+		    x, y, width, height = self.get_allocation()
+		    glMatrixMode(GL_PROJECTION)
+		    glLoadIdentity()
+		    gluPerspective(self.fovy, float(width)/float(height), zNear, zFar)
+		    glFogf(GL_FOG_START, fog_start)
+		    glFogf(GL_FOG_END, fog_end)
 		    glMatrixMode(GL_MODELVIEW)
 		    glLoadIdentity()
 		    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
@@ -902,6 +838,17 @@ class GLCanvas(gtkgl.DrawingArea):
 		self.window.process_updates(False)
 	    if dist%0.1 > 0:
 		with self.open_context(True):
+		    add_z = self.get_euclidean(cam_pos, atom_pos) - dist_cam_zpr
+		    self.zFar += add_z
+		    self.zNear += add_z
+		    self.fog_start += add_z
+		    self.fog_end   += add_z
+		    x, y, width, height = self.get_allocation()
+		    glMatrixMode(GL_PROJECTION)
+		    glLoadIdentity()
+		    gluPerspective(self.fovy, float(width)/float(height), self.zNear, self.zFar)
+		    glFogf(GL_FOG_START, self.fog_start)
+		    glFogf(GL_FOG_END, self.fog_end)
 		    glMatrixMode(GL_MODELVIEW)
 		    glLoadIdentity()
 		    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], atom_pos[0], atom_pos[1], atom_pos[2], up[0], up[1], up[2])
