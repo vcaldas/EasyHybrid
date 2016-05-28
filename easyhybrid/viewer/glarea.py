@@ -805,30 +805,26 @@ class GLCanvas(gtkgl.DrawingArea):
 	    up = modelview[:3, 1]
 	    zpr = self._zprReferencePoint[:3]
 	    dist = self.get_euclidean(zpr, atom_pos)
-	    dist_cam_zpr = dist_z = self.get_euclidean(cam_pos, zpr)
+	    dist_z = self.get_euclidean(cam_pos, zpr)
 	    vec_dir = self.unit_vector([atom_pos[0]-zpr[0], atom_pos[1]-zpr[1], atom_pos[2]-zpr[2]])
-	    zFar = self.zFar
-	    zNear = self.zNear
-	    fog_start = self.fog_start
-	    fog_end = self.fog_end
+	    add_z = (self.zFar - self.zNear)/2
 	    cycles = int(1/.06)
 	    to_add = float(dist/cycles)
 	    for i in range(1, cycles):
 		aum = i*to_add
 		pto = [zpr[0]+vec_dir[0]*aum, zpr[1]+vec_dir[1]*aum, zpr[2]+vec_dir[2]*aum]
-		add_z = self.get_euclidean(cam_pos, pto) - dist_z
-		zFar += add_z
-		zNear += add_z
-		fog_start += add_z
-		fog_end   += add_z
+		self.zFar = dist_z + add_z
+		self.zNear = dist_z - add_z
+		self.fog_start = self.zFar - 3
+		self.fog_end = self.zFar + 1
 		dist_z = self.get_euclidean(cam_pos, pto)
 		with self.open_context(True):
 		    x, y, width, height = self.get_allocation()
 		    glMatrixMode(GL_PROJECTION)
 		    glLoadIdentity()
-		    gluPerspective(self.fovy, float(width)/float(height), zNear, zFar)
-		    glFogf(GL_FOG_START, fog_start)
-		    glFogf(GL_FOG_END, fog_end)
+		    gluPerspective(self.fovy, float(width)/float(height), self.zNear, self.zFar)
+		    glFogf(GL_FOG_START, self.fog_start)
+		    glFogf(GL_FOG_END, self.fog_end)
 		    glMatrixMode(GL_MODELVIEW)
 		    glLoadIdentity()
 		    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
@@ -838,11 +834,11 @@ class GLCanvas(gtkgl.DrawingArea):
 		self.window.process_updates(False)
 	    if dist%0.1 > 0:
 		with self.open_context(True):
-		    add_z = self.get_euclidean(cam_pos, atom_pos) - dist_cam_zpr
-		    self.zFar += add_z
-		    self.zNear += add_z
-		    self.fog_start += add_z
-		    self.fog_end   += add_z
+		    dist_z = self.get_euclidean(cam_pos, atom_pos)
+		    self.zFar = dist_z + add_z
+		    self.zNear = dist_z - add_z
+		    self.fog_start = self.zFar - 3
+		    self.fog_end = self.zFar + 1
 		    x, y, width, height = self.get_allocation()
 		    glMatrixMode(GL_PROJECTION)
 		    glLoadIdentity()
