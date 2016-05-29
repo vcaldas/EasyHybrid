@@ -805,26 +805,54 @@ class GLCanvas(gtkgl.DrawingArea):
 	    up = modelview[:3, 1]
 	    zpr = self._zprReferencePoint[:3]
 	    dist = self.get_euclidean(zpr, atom_pos)
+<<<<<<< HEAD
 	    dist_z = self.get_euclidean(cam_pos, zpr)
 	    vec_dir = self.unit_vector([atom_pos[0]-zpr[0], atom_pos[1]-zpr[1], atom_pos[2]-zpr[2]])
 	    add_z = (self.zFar - self.zNear)/2
+=======
+	    dist_cam_zpr = dist_z = self.get_euclidean(cam_pos, zpr)
+	    #print dist_cam_zpr, '<-- dist cam zpr'
+	    vec_dir = self.unit_vector([atom_pos[0]-zpr[0], atom_pos[1]-zpr[1], atom_pos[2]-zpr[2]])
+	    #factor = dist*0.06
+	    zFar = self.zFar
+	    zNear = self.zNear
+	    med = (zFar-zNear)/2.0
+	    fog_start = self.fog_start
+	    fog_end = self.fog_end
+>>>>>>> fc7a3cc5c3ca955aaf5105b04ce021f7bd22c1d7
 	    cycles = int(1/.06)
 	    to_add = float(dist/cycles)
+	    rest = dist_z - zNear
 	    for i in range(1, cycles):
 		aum = i*to_add
 		pto = [zpr[0]+vec_dir[0]*aum, zpr[1]+vec_dir[1]*aum, zpr[2]+vec_dir[2]*aum]
+<<<<<<< HEAD
 		self.zFar = dist_z + add_z
 		self.zNear = dist_z - add_z
 		self.fog_start = self.zFar - 3
 		self.fog_end = self.zFar + 1
 		dist_z = self.get_euclidean(cam_pos, pto)
+=======
+		#add_z = self.get_euclidean(cam_pos, pto) - dist_z
+		#print add_z, '<-- aumentar z'
+		dist_z = self.get_euclidean(cam_pos, pto)
+		self.zNear = dist_z - rest
+		self.zFar = dist_z + rest
+		#fog_start += add_z
+		#fog_end   += add_z
+>>>>>>> fc7a3cc5c3ca955aaf5105b04ce021f7bd22c1d7
 		with self.open_context(True):
 		    x, y, width, height = self.get_allocation()
 		    glMatrixMode(GL_PROJECTION)
 		    glLoadIdentity()
 		    gluPerspective(self.fovy, float(width)/float(height), self.zNear, self.zFar)
+<<<<<<< HEAD
 		    glFogf(GL_FOG_START, self.fog_start)
 		    glFogf(GL_FOG_END, self.fog_end)
+=======
+		    #glFogf(GL_FOG_START, fog_start)
+		    #glFogf(GL_FOG_END, fog_end)
+>>>>>>> fc7a3cc5c3ca955aaf5105b04ce021f7bd22c1d7
 		    glMatrixMode(GL_MODELVIEW)
 		    glLoadIdentity()
 		    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
@@ -832,8 +860,10 @@ class GLCanvas(gtkgl.DrawingArea):
 			      up[0], up[1], up[2])
 		self.window.invalidate_rect(self.allocation, False)
 		self.window.process_updates(False)
+		print 'zNear = ', zNear, 'zFar = ',  zFar, 'deltaZ = ', zNear -zFar, 'fog_start = ', fog_start, 'fog_end = ', fog_end, 'self.fog_end, deltaFog = ', fog_start - fog_end 
 	    if dist%0.1 > 0:
 		with self.open_context(True):
+<<<<<<< HEAD
 		    dist_z = self.get_euclidean(cam_pos, atom_pos)
 		    self.zFar = dist_z + add_z
 		    self.zNear = dist_z - add_z
@@ -845,16 +875,29 @@ class GLCanvas(gtkgl.DrawingArea):
 		    gluPerspective(self.fovy, float(width)/float(height), self.zNear, self.zFar)
 		    glFogf(GL_FOG_START, self.fog_start)
 		    glFogf(GL_FOG_END, self.fog_end)
+=======
+		    #add_z = self.get_euclidean(cam_pos, atom_pos) - dist_cam_zpr
+		    #self.zFar += add_z
+		    #self.zNear += add_z
+		    #self.fog_start += add_z
+		    #self.fog_end   += add_z
+		    #x, y, width, height = self.get_allocation()
+		    #glMatrixMode(GL_PROJECTION)
+		    #glLoadIdentity()
+		    #gluPerspective(self.fovy, float(width)/float(height), self.zNear, self.zFar)
+		    #glFogf(GL_FOG_START, self.fog_start)
+		    #glFogf(GL_FOG_END, self.fog_end)
+>>>>>>> fc7a3cc5c3ca955aaf5105b04ce021f7bd22c1d7
 		    glMatrixMode(GL_MODELVIEW)
 		    glLoadIdentity()
 		    gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], atom_pos[0], atom_pos[1], atom_pos[2], up[0], up[1], up[2])
 	    self.queue_draw()
-
+	    
     def PrintCameraStatus (self, log = True):
         """ Function doc """
         if log:
 	    pass
-            #print 'zNear = ', self.zNear, 'zFar = ',   self.zFar, 'deltaZ = ', self.zNear - self.zFar, 'fog_start = ', self.fog_start, 'fog_end = ', self.fog_end, 'self.fog_end, deltaFog = ', self.fog_start - self.fog_end 
+            print 'zNear = ', self.zNear, 'zFar = ',   self.zFar, 'deltaZ = ', self.zNear - self.zFar, 'fog_start = ', self.fog_start, 'fog_end = ', self.fog_end, 'self.fog_end, deltaFog = ', self.fog_start - self.fog_end 
         else:
             pass 
 
