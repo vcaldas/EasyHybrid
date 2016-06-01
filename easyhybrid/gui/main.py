@@ -246,7 +246,7 @@ class GLAreaDraw:
         atom_size = self.data.a_size[index] * self.settings['sphere_scale']
         glPushMatrix()
         glTranslate(atom[0], atom[1], atom[2])
-        glPushName(index+1)                           # nome da esfera = int ex. 1,2,4,5
+        glPushName(index)                           # nome da esfera = int ex. 1,2,4,5
         glColor3f(self.data.a_color[index][0],self.data.a_color[index][1],self.data.a_color[index][2])
         glutSolidSphere(atom_size, 15, 15)
         #glCallList(self.lista)
@@ -761,7 +761,7 @@ class EasyHybridMain(EasyHybridConfig, EasyMolActions, MainMenu, MainToolBar):
                     #print "drawing spheres"
                     if easymol_object.sphere[atom_index]:
                         self.gl_area_draw.DrawSpheres(index = atom_index)
-                    atom_index +=1  
+                    #atom_index +=1  
                 glEndList()
                 #---------------------------------------------------------------
 
