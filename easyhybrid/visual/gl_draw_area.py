@@ -38,7 +38,6 @@ import math
 from atom_types import get_color
 import representations as rep
 import operations as op
-from inspect import currentframe, getframeinfo
 
 class GLCanvas(gtk.gtkgl.DrawingArea):
     

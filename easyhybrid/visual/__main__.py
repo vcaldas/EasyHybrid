@@ -63,31 +63,16 @@ def main():
 	    if not res.atoms.has_key(at_index):
 		res.atoms[at_index] = atm
     frames.chains = chains_m
-    #for rs in frames.chains['A'].residues.values():
-	#for at in rs.atoms.values():
-	#    print at.index, '<-- atom index ', at.name, '<-- atom name'
-	#print '<------------------------------------------------------>'
-    #
     # Create a new window
     wind = gtk.Window(type=gtk.WINDOW_TOPLEVEL)
     # Add title
     wind.set_title("Ventana gtk de prueba")
     # Create a GTK area with OpenGL functions
     glutInit(sys.argv)
-    #wind.connect("destroy",lambda event: gtk.main_quit())
     glarea = gda.GLCanvas(data=frames)
-    #glarea
     # Put the area object into the gtk window
     wind.add(glarea)
-    # Draw the molecule
-    #glarea._init(glarea)
-    #glarea.realize()
-    # Show all the elements
-    #glarea.draw = rep.draw_mol
-    glarea.load_mol()
-    glarea.draw()
     wind.show_all()
-    #glarea.draw_mol()
     gtk.main()
     return 0
 
