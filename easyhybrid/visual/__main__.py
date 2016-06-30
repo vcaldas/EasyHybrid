@@ -46,8 +46,12 @@ def main():
 	    at_res_n = lin[17:20].strip()
 	    at_ch = lin[22]
 	    atm = mm.Atom(name=at_name, index=at_index, pos=at_pos, residue=at_res_i)
-	    atm.sphere = True
-	    atm.vdw = True
+	    atm.sphere      = True
+	    atm.ball        = True
+	    atm.vdw         = True
+	    atm.pretty_vdw  = True
+	    atm.dot         = True
+	    atm.surface     = True
 	    if at_ch == ' ':
 		at_ch = 'A'
 	    if chains_m.has_key(at_ch):

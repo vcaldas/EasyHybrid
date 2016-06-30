@@ -229,7 +229,7 @@ def get_radius(name):
 	    rad = 0.30
     return rad
 
-def get_vdw(name):
+def get_vdw_rad(name):
     """
     """
     try:
@@ -248,3 +248,23 @@ def get_vdw(name):
 	else:
 	    vdw = 0.40
     return vdw
+
+def get_ball_rad(name):
+    """
+    """
+    try:
+	ball = ATOM_TYPES[name][4]
+    except KeyError:
+	if name[0] == 'H' or name in hydrogen:
+	    ball = ATOM_TYPES['H'][4]
+	elif name[0] == 'C':
+	    ball = ATOM_TYPES['C'][4]
+	elif name[0] == 'O':
+	    ball = ATOM_TYPES['O'][4]
+	elif name[0] == 'N':
+	    ball = ATOM_TYPES['N'][4]
+	elif name[0] == 'S':
+	    ball = ATOM_TYPES['S'][4]
+	else:
+	    ball = 0.30
+    return ball/2.0

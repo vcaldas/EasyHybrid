@@ -32,10 +32,8 @@ import numpy as np
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
-from time import sleep
 import math
 
-from atom_types import get_color
 import representations as rep
 import operations as op
 
@@ -58,10 +56,12 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     mouse_x = mouse_y = 0
     dist_cam_zpr = 0
     scroll = 1
-    gl_sph_list = gl_bonds_list = gl_vdw_list = sph_list = vdw_list = bonds_list = None
     zpr_reference_point = target_point = np.array([0, 0, 0])
     mouse_rotate = mouse_pan = mouse_zoom = dragging = False
+    gl_sph_list = gl_bonds_list = gl_vdw_list = sph_list = vdw_list = bonds_list = None
     gl_settings = {'sphere_scale':0.35, 'sphere_res':25}
+    global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
+    POINTS_SURFACE = POINTS = BALL_STICK = LINES = VDW = PRETTY_VDW = RIBBON = SPHERES = False
     
     def __init__(self, data=None, width=640, height=420):
 	""" Constructor of the GLCanvas object. Here you can change the
@@ -170,92 +170,136 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    This is the core of the representations, and need to be more
 	    efficient.
 	"""
-	self.sph_list = []
-	self.vdw_list = []
+	self.dot_list         = []
+	self.vdw_list         = []
+	self.ball_list        = []
+	self.bonds_list       = []
+	self.sphere_list      = []
+	self.pretty_vdw_list  = []
+	self.dot_surface_list = []
 	if data is None and self.data is None:
 	    print 'No data to load'
 	else:
 	    if data is not None:
-		pass
 		for chain in data.chains.values():
 		    for residue in chain.residues.values():
 			for atom in residue.atoms.values():
+			    if atom.dot:
+				self.dot_list.append(atom)
+			    if atom.vdw:
+				self.vdw_list.append(atom)
+			    if atom.ball:
+				self.ball_list.append(atom)
 			    if atom.sphere:
-				self.sph_list.append(atom)
+				self.sphere_list.append(atom)
+			    if atom.pretty_vdw:
+				self.pretty_vdw_list.append(atom)
+			    if atom.dot_surface:
+				self.dot_surface_list.append(atom)
 	    else:
-		pass
 		for chain in self.data.chains.values():
 		    for residue in chain.residues.values():
 			for atom in residue.atoms.values():
-			    if atom.sphere:
-				self.sph_list.append(atom)
+			    if atom.dot:
+				self.dot_list.append(atom)
 			    if atom.vdw:
 				self.vdw_list.append(atom)
+			    if atom.ball:
+				self.ball_list.append(atom)
+			    if atom.sphere:
+				self.sphere_list.append(atom)
+			    if atom.pretty_vdw:
+				self.pretty_vdw_list.append(atom)
+			    if atom.dot_surface:
+				self.dot_surface_list.append(atom)
 	    
 	    # Make calculations for the bonds, this part of the code must be more efficient
 	    self.bonds_list = []
 	    arr1 = np.array([0, 0, 1])
-	    for i in range(len(self.sph_list)-1):
-		for j in range(i+1, len(self.sph_list)):
-		    if self.get_euclidean(self.sph_list[i].pos, self.sph_list[j].pos) <= (self.sph_list[i].cov_rad + self.sph_list[j].cov_rad):
-			arr2 = self.unit_vector(self.sph_list[j].pos - self.sph_list[i].pos)
+	    for i in range(len(self.ball_list)-1):
+		for j in range(i+1, len(self.ball_list)):
+		    if self.get_euclidean(self.ball_list[i].pos, self.ball_list[j].pos) <= (self.ball_list[i].cov_rad + self.ball_list[j].cov_rad):
+			arr2 = self.unit_vector(self.ball_list[j].pos - self.ball_list[i].pos)
 			angle = self.get_angle(arr1, arr2)
 			vec_o = np.cross(arr1, arr2)
-			length = self.get_euclidean(self.sph_list[i].pos, self.sph_list[j].pos)
-			temp = (self.sph_list[i], length, angle, vec_o)
-			#temp = (self.sph_list[i], self.sph_list[j])
+			length = self.get_euclidean(self.ball_list[i].pos, self.ball_list[j].pos)
+			temp = (self.ball_list[i], length, angle, vec_o)
 			self.bonds_list.append(temp)
 	    
 	    # Surface dots representation of the atoms
-	    for atom in self.sph_list:
+	    for atom in self.dot_surface_list:
 		atom.dots_surf = op.get_surf_dots(atom)
 	    self.gl_points_list = glGenLists(1)
 	    glNewList(self.gl_points_list, GL_COMPILE)
-	    for atom in self.sph_list:
+	    for atom in self.dot_surface_list:
 		for point in atom.dots_surf:
 		    rep.draw_dot(atom, point)
 	    glEndList()
 	    # Center dots representations of the atoms
 	    self.gl_point_list = glGenLists(1)
 	    glNewList(self.gl_point_list, GL_COMPILE)
-	    for atom in self.sph_list:
+	    for atom in self.dot_list:
 		rep.draw_point(atom)
 	    glEndList()
-	    # Ball or sphere representation of the atoms, the difference between them
-	    # is that ball are for ball-stick representation and sphere uses the
+	    # Sphere representation of the atoms, the difference between the ball
+	    # representation is that sphere uses the covalent radius and ball the
 	    # atomic radius.
-	    self.gl_sph_list = glGenLists(1)
-	    glNewList(self.gl_sph_list, GL_COMPILE)
-	    for atom in self.sph_list:
-		rep.draw_sp(atom)
-		#rep.draw_ball(atom)
+	    self.gl_sphere_list = glGenLists(1)
+	    glNewList(self.gl_sphere_list, GL_COMPILE)
+	    for atom in self.sphere_list:
+		rep.draw_sphere(atom)
 	    glEndList()
-	    # Makes the van-der-walls representation of the atoms or the pretty vdw,
-	    # that is the vdw volume just transparent
+	    # Ball representation.
+	    self.gl_ball_list = glGenLists(1)
+	    glNewList(self.gl_ball_list, GL_COMPILE)
+	    for atom in self.ball_list:
+		rep.draw_ball(atom)
+	    glEndList()
+	    # Makes the van-der-walls representation of the atoms.
 	    self.gl_vdw_list = glGenLists(1)
 	    glNewList(self.gl_vdw_list, GL_COMPILE)
 	    for atom in self.vdw_list:
+		rep.draw_vdw(atom)
+	    glEndList()
+	    # Makes the pretty van-der-walls representation of the atoms. The
+	    # difference between vdw is that this representation is transparent.
+	    self.gl_pretty_vdw_list = glGenLists(1)
+	    glNewList(self.gl_pretty_vdw_list, GL_COMPILE)
+	    for atom in self.pretty_vdw_list:
 		rep.draw_pretty_vdw(atom)
-		#rep.draw_vdw(atom)
 	    glEndList()
 	    # Makes the bonds representations, can be sticks or lines
-	    self.gl_bonds_list = glGenLists(1)
-	    glNewList(self.gl_bonds_list, GL_COMPILE)
+	    self.gl_stick_list = glGenLists(1)
+	    glNewList(self.gl_stick_list, GL_COMPILE)
 	    for bond in self.bonds_list:
 		rep.draw_bond_stick(bond[0], bond[1], bond[2], bond[3])
-		#rep.draw_bond_line(bond[0], bond[1])
 	    glEndList()
     
     def draw(self):
 	""" Defines wich type of representations will be displayed
 	"""
+	global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 	glClearColor(0.0, 0.0, 0.0, 0.0)
-	#glCallList(self.gl_points_list, GL_COMPILE)
-	#glCallList(self.gl_point_list, GL_COMPILE)
-	glCallList(self.gl_sph_list, GL_COMPILE)
-	glCallList(self.gl_bonds_list, GL_COMPILE)
-	#glCallList(self.gl_vdw_list, GL_COMPILE)
+	if POINTS_SURFACE:
+	    glCallList(self.gl_points_list, GL_COMPILE)
+	if POINTS:
+	    glCallList(self.gl_point_list, GL_COMPILE)
+	if BALL_STICK:
+	    glCallList(self.gl_ball_list, GL_COMPILE)
+	    glCallList(self.gl_stick_list, GL_COMPILE)
+	if LINES:
+	    glCallList(self.gl_lines_list, GL_COMPILE)
+	if VDW:
+	    glCallList(self.gl_vdw_list, GL_COMPILE)
+	if PRETTY_VDW:
+	    glCallList(self.gl_ball_list, GL_COMPILE)
+	    glCallList(self.gl_stick_list, GL_COMPILE)
+	    glCallList(self.gl_pretty_vdw_list, GL_COMPILE)
+	if RIBBON:
+	    glCallList(self.gl_ribbon_list, GL_COMPILE)
+	if SPHERES:
+	    glCallList(self.gl_sphere_list, GL_COMPILE)
     
     def key_press(self, widget, event):
 	""" The mouse_button function serves, as the names states, to catch
@@ -281,18 +325,58 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	return True
     
     def pressed_Escape(self):
-	""" Test function for the A key.
+	""" Quit the program.
 	"""
 	print 'Quitting'
 	quit()
     
-    def pressed_d(self):
-	""" Test function for the A key.
+    def pressed_b(self):
+	""" Change the representation to Ball-Stick.
 	"""
-	print 'd button pressed'
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-	glMatrixMode(GL_MODELVIEW)
-	glRotate(5, 0, 1, 0)
+	print 'Ball-Stick Representation ON'
+	global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
+	POINTS_SURFACE = POINTS = LINES = VDW = PRETTY_VDW = RIBBON = SPHERES = False
+	BALL_STICK = True
+	self.queue_draw()
+	return True
+    
+    def pressed_d(self):
+	""" Change the representation to Ball-Stick.
+	"""
+	print 'Dots Representation ON'
+	global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
+	POINTS_SURFACE = BALL_STICK = LINES = VDW = PRETTY_VDW = RIBBON = SPHERES = False
+	POINTS = True
+	self.queue_draw()
+	return True
+    
+    def pressed_p(self):
+	""" Change the representation to Pretty VDW.
+	"""
+	print 'Pretty Van-Der-Waals Representation ON'
+	global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
+	POINTS_SURFACE = POINTS = BALL_STICK = LINES = VDW = RIBBON = SPHERES = False
+	PRETTY_VDW = True
+	self.queue_draw()
+	return True
+    
+    def pressed_s(self):
+	""" Change the representation to Sphere.
+	"""
+	print 'Sphere Representation ON'
+	global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
+	POINTS_SURFACE = POINTS = BALL_STICK = LINES = VDW = PRETTY_VDW = RIBBON = False
+	SPHERES = True
+	self.queue_draw()
+	return True
+    
+    def pressed_v(self):
+	""" Change the representation to Van-Der-Waals.
+	"""
+	print 'Van-Der-Waals Representation ON'
+	global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
+	POINTS_SURFACE = POINTS = BALL_STICK = LINES = PRETTY_VDW = RIBBON = SPHERES = False
+	VDW = True
 	self.queue_draw()
 	return True
     
@@ -515,19 +599,18 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     def pick(self, event, nearest, hits):
 	"""
 	"""
-        if event.button == 1 or event.button == 2:
-	    if nearest != []:
-		x = self.zero[nearest[0]][0]
-		y = self.zero[nearest[0]][1]
-		z = self.zero[nearest[0]][2]
-		atom_pos = [x, y, z]
-                self.zpr_reference_point = [x, y, z]
-		self.target_point = atom_pos
-        if event.button == 3 and nearest != []:
-            px = self.zero[nearest[0]][0]
-            py = self.zero[nearest[0]][1]
-            pz = self.zero[nearest[0]][2]
-            atom_position = [px, py, pz]
+        if nearest != []:
+	    for chain in self.data.chains.values():
+		for residue in chain.residues.values():
+		    for atom in residue.atoms.values():
+			if atom.index == nearest[0]:
+			    x = atom.pos[0]
+			    y = atom.pos[1]
+			    z = atom.pos[2]
+			    break
+	    atom_pos = [x, y, z]
+	    self.zpr_reference_point = [x, y, z]
+	    self.target_point = atom_pos
     
     def get_euclidean(self, pa, pb):
 	""" Returns the distance between two points in R3

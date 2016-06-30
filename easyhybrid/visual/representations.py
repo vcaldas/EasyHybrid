@@ -162,7 +162,7 @@ def draw_ball(atom):
     glPopMatrix()
     glFlush()
 
-def draw_sp(atom):
+def draw_sphere(atom):
     """ Graphs a sphere for the given coordinates. Make use of the
 	imported function atom_types.get_color(name).
     """
@@ -178,8 +178,8 @@ def draw_sp(atom):
     glTranslate(atom.pos[0], atom.pos[1], atom.pos[2])
     glPushName(atom.index)
     glColor3f(atom.color[0], atom.color[1], atom.color[2])
-    #glutSolidSphere(atom.radius, gl_settings['sphere_res'], gl_settings['sphere_res'])
-    glutWireSphere(atom.radius, gl_settings['sphere_res'], gl_settings['sphere_res'])
+    glutSolidSphere(atom.radius, gl_settings['sphere_res'], gl_settings['sphere_res'])
+    #glutWireSphere(atom.radius, gl_settings['sphere_res'], gl_settings['sphere_res'])
     glPopName()
     glPopMatrix()
     glFlush()
@@ -221,7 +221,7 @@ def draw_vdw(atom):
     glPushMatrix()
     glTranslate(atom.pos[0], atom.pos[1], atom.pos[2])
     glPushName(atom.index)
-    glColor3f(atom.col_rgb[0], atom.col_rgb[1], atom.col_rgb[2])
+    glColor3f(atom.color[0], atom.color[1], atom.color[2])
     glutSolidSphere(atom.vdw_rad, gl_settings['sphere_res'], gl_settings['sphere_res'])
     glPopName()
     glPopMatrix()
