@@ -28,9 +28,7 @@ from OpenGL.GLUT import *
 
 from atom_types import get_color
 
-
-gl_settings = {'sphere_scale':0.15, 'sphere_res':15, 'pretty_res':20}
-cylinder = gluNewQuadric()
+gl_settings = {'sphere_scale':0.15, 'sphere_res':15, 'pretty_res':20, 'selection_radius':0.7}
 
 def init_gl(fog_start, fog_end, fovy, width, height, z_near, z_far):
     """ Inside the realize function, you should put all you OpenGL
@@ -81,8 +79,7 @@ def init_gl(fog_start, fog_end, fovy, width, height, z_near, z_far):
     gluLookAt(0, 0, 10, 0, 0, 0, 0, 1, 0)
 
 def draw_bond_line(atom1, atom2):
-    """ Draw the bonds. Make use of the imported function
-	atom_types.get_color(name).
+    """ Draw the bonds.
     """
     glDisable(GL_LIGHT0)
     glDisable(GL_LIGHT1)
@@ -139,9 +136,8 @@ def draw_point(atom):
     glPopName()
     glPopMatrix()
 
-def draw_ball(atom):
-    """ Graphs a sphere for the given coordinates. Make use of the
-	imported function atom_types.get_color(name).
+def draw_wire_sphere(atom):
+    """ Graphs a wired sphere for the given coordinates.
     """
     # Enables the GL_LIGHT0 variable
     glEnable(GL_LIGHT0)
@@ -150,43 +146,50 @@ def draw_ball(atom):
     # Enables tha surface colors in 3D, i guess
     glEnable(GL_COLOR_MATERIAL)
     # Enables profundity effect, i guess
+    glEnable(GL_DEPTH_TEST)
+    glPushMatrix()
+    glTranslate(atom.pos[0], atom.pos[1], atom.pos[2])
+    glPushName(atom.index)
+    glColor3f(atom.color[0], atom.color[1], atom.color[2])
+    glutWireSphere(atom.radius, gl_settings['sphere_res'], gl_settings['sphere_res'])
+    glPopName()
+    glPopMatrix()
+    glFlush()
+
+def draw_ball(atom):
+    """ Graphs a sphere for the given coordinates.
+    """
+    glEnable(GL_LIGHT0)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_COLOR_MATERIAL)
     glEnable(GL_DEPTH_TEST)
     glPushMatrix()
     glTranslate(atom.pos[0], atom.pos[1], atom.pos[2])
     glPushName(atom.index)
     glColor3f(atom.color[0], atom.color[1], atom.color[2])
     glutSolidSphere(atom.radius/1.5, gl_settings['sphere_res'], gl_settings['sphere_res'])
-    #quad = gluNewQuadric()
-    #gluSphere(quad, atom_size/1.5, gl_settings['sphere_res'], gl_settings['sphere_res'])
     glPopName()
     glPopMatrix()
     glFlush()
 
 def draw_sphere(atom):
-    """ Graphs a sphere for the given coordinates. Make use of the
-	imported function atom_types.get_color(name).
+    """ Graphs a sphere for the given coordinates.
     """
-    # Enables the GL_LIGHT0 variable
     glEnable(GL_LIGHT0)
-    # Enables lightin three dimensions, i guess
     glEnable(GL_LIGHTING)
-    # Enables tha surface colors in 3D, i guess
     glEnable(GL_COLOR_MATERIAL)
-    # Enables profundity effect, i guess
     glEnable(GL_DEPTH_TEST)
     glPushMatrix()
     glTranslate(atom.pos[0], atom.pos[1], atom.pos[2])
     glPushName(atom.index)
     glColor3f(atom.color[0], atom.color[1], atom.color[2])
-    glutSolidSphere(atom.radius, gl_settings['sphere_res'], gl_settings['sphere_res'])
-    #glutWireSphere(atom.radius, gl_settings['sphere_res'], gl_settings['sphere_res'])
+    glutSolidSphere(atom.cov_rad, gl_settings['sphere_res'], gl_settings['sphere_res'])
     glPopName()
     glPopMatrix()
     glFlush()
 
 def draw_pretty_vdw(atom):
-    """ Graphs a sphere for the given coordinates. Make use of the
-	imported function atom_types.get_color(name).
+    """ Graphs a sphere for the given coordinates.
     """
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -207,16 +210,11 @@ def draw_pretty_vdw(atom):
     glDisable(GL_BLEND)
 
 def draw_vdw(atom):
-    """ Graphs a sphere for the given coordinates. Make use of the
-	imported function atom_types.get_color(name).
+    """ Graphs a sphere for the given coordinates.
     """
-    # Enables the GL_LIGHT0 variable
     glEnable(GL_LIGHT0)
-    # Enables lightin three dimensions, i guess
     glEnable(GL_LIGHTING)
-    # Enables tha surface colors in 3D, i guess
     glEnable(GL_COLOR_MATERIAL)
-    # Enables profundity effect, i guess
     glEnable(GL_DEPTH_TEST)
     glPushMatrix()
     glTranslate(atom.pos[0], atom.pos[1], atom.pos[2])
@@ -227,25 +225,54 @@ def draw_vdw(atom):
     glPopMatrix()
     glFlush()
 
-def draw_bond_stick(atom, length, angle, vec_o):
-    """ Draw the bonds. Make use of the imported function
-	atom_types.get_color(name).
+def draw_bond_wired_stick(atom, length, angle, vec_o):
+    """ Draw the bonds.
     """
-    # The matris is by default looking at (0,0,1)
     glEnable(GL_LIGHT0)
     glEnable(GL_LIGHTING)
     glEnable(GL_COLOR_MATERIAL)
     glEnable(GL_DEPTH_TEST)
-    gluQuadricNormals(cylinder, GLU_SMOOTH)
-    gluQuadricTexture(cylinder, GL_TRUE)
     glPushMatrix()
     glPushName(atom.index)
     glColor3f(atom.color[0], atom.color[1], atom.color[2])
     glTranslatef(atom.pos[0], atom.pos[1], atom.pos[2])
     glRotatef(angle, vec_o[0], vec_o[1], vec_o[2])
-    gluCylinder(cylinder, 0.1, 0.1, length, 10, 10)
+    glutWireCylinder(0.1, length, 10, 10)
     glPopName()
     glPopMatrix()
+
+def draw_bond_stick(atom, length, angle, vec_o):
+    """ Draw the bonds.
+    """
+    # The matrix is by default looking at (0,0,1)
+    glEnable(GL_LIGHT0)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_COLOR_MATERIAL)
+    glEnable(GL_DEPTH_TEST)
+    glPushMatrix()
+    glPushName(atom.index)
+    glColor3f(atom.color[0], atom.color[1], atom.color[2])
+    glTranslatef(atom.pos[0], atom.pos[1], atom.pos[2])
+    glRotatef(angle, vec_o[0], vec_o[1], vec_o[2])
+    glutSolidCylinder(0.1, length, 10, 10)
+    glPopName()
+    glPopMatrix()
+
+def draw_selected(atom, slices):
+    """ Draw a selection marker to an atom.
+    """
+    glEnable(GL_LIGHT0)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_COLOR_MATERIAL)
+    glEnable(GL_DEPTH_TEST)
+    glPushMatrix()
+    glTranslate(atom.pos[0], atom.pos[1], atom.pos[2])
+    glPushName(atom.index)
+    glColor3f(0.745098, 0.745098, 0.745098)
+    glutWireSphere(gl_settings['selection_radius'], slices+2, slices)
+    glPopName()
+    glPopMatrix()
+    glFlush()
 
 def change_light_properties(gl_ambient=None, gl_diffuse=None, gl_specular=None, gl_position=None):
     """ Function doc

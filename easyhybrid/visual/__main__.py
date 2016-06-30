@@ -30,13 +30,16 @@ import gtk
 import gl_draw_area as gda
 from OpenGL.GLUT import glutInit
 import representations as rep
+import operations as op
 import numpy as np
 
 def main():
     with open(sys.argv[1], 'r') as pdb_file:
 	pdb = list(pdb_file)
+    frames = []
     chains_m = {}
-    frames = mm.Frame()
+    frame = mm.Frame()
+    i = 0
     for lin in pdb:
 	if lin[:4] == 'ATOM' or lin[:6] == 'HETATM':
 	    at_name = lin[12:16].strip()
@@ -46,12 +49,13 @@ def main():
 	    at_res_n = lin[17:20].strip()
 	    at_ch = lin[22]
 	    atm = mm.Atom(name=at_name, index=at_index, pos=at_pos, residue=at_res_i)
-	    atm.sphere      = True
-	    atm.ball        = True
-	    atm.vdw         = True
-	    atm.pretty_vdw  = True
-	    atm.dot         = True
-	    atm.surface     = True
+	    atm.sphere     = True
+	    atm.ball       = True
+	    atm.vdw        = True
+	    atm.pretty_vdw = True
+	    atm.dot        = True
+	    atm.surface    = True
+	    atm.wires      = True
 	    if at_ch == ' ':
 		at_ch = 'A'
 	    if chains_m.has_key(at_ch):
@@ -66,14 +70,25 @@ def main():
 		ch.residues[at_res_i] = res
 	    if not res.atoms.has_key(at_index):
 		res.atoms[at_index] = atm
-    frames.chains = chains_m
+	    i += 1
+    frame.chains = chains_m
+    frames.append(frame)
     # Create a new window
+    atom_matrix = np.zeros((i, 3))
+    i = 0
+    for frame in frames:
+	for chain in frame.chains.values():
+	    for residue in chain.residues.values():
+		for atom in residue.atoms.values():
+		    atom_matrix[i] = atom.pos
+		    i += 1
+    op.get_bonds(atom_matrix)
     wind = gtk.Window(type=gtk.WINDOW_TOPLEVEL)
     # Add title
     wind.set_title("Ventana gtk de prueba")
     # Create a GTK area with OpenGL functions
     glutInit(sys.argv)
-    glarea = gda.GLCanvas(data=frames)
+    glarea = gda.GLCanvas(data=frames[0])
     # Put the area object into the gtk window
     wind.add(glarea)
     wind.show_all()

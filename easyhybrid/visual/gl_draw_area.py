@@ -52,16 +52,14 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     bottom = -1.0
     left   = -10.0
     right  = 10
-    zero = None
+    selected_atoms = []
     mouse_x = mouse_y = 0
     dist_cam_zpr = 0
     scroll = 1
-    zpr_reference_point = target_point = np.array([0, 0, 0])
+    zero_reference_point = target_point = np.array([0, 0, 0])
     mouse_rotate = mouse_pan = mouse_zoom = dragging = False
     gl_sph_list = gl_bonds_list = gl_vdw_list = sph_list = vdw_list = bonds_list = None
-    gl_settings = {'sphere_scale':0.35, 'sphere_res':25}
-    global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
-    POINTS_SURFACE = POINTS = BALL_STICK = LINES = VDW = PRETTY_VDW = RIBBON = SPHERES = False
+    POINTS_SURFACE = POINTS = BALL_STICK = LINES = VDW = PRETTY_VDW = RIBBON = SPHERES = WIRES = SELECTION = False
     
     def __init__(self, data=None, width=640, height=420):
 	""" Constructor of the GLCanvas object. Here you can change the
@@ -174,6 +172,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	self.vdw_list         = []
 	self.ball_list        = []
 	self.bonds_list       = []
+	self.wires_list       = []
 	self.sphere_list      = []
 	self.pretty_vdw_list  = []
 	self.dot_surface_list = []
@@ -190,6 +189,8 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 				self.vdw_list.append(atom)
 			    if atom.ball:
 				self.ball_list.append(atom)
+			    if atom.wires:
+				self.wires_list.append(atom)
 			    if atom.sphere:
 				self.sphere_list.append(atom)
 			    if atom.pretty_vdw:
@@ -206,6 +207,8 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 				self.vdw_list.append(atom)
 			    if atom.ball:
 				self.ball_list.append(atom)
+			    if atom.wires:
+				self.wires_list.append(atom)
 			    if atom.sphere:
 				self.sphere_list.append(atom)
 			    if atom.pretty_vdw:
@@ -255,6 +258,12 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    for atom in self.ball_list:
 		rep.draw_ball(atom)
 	    glEndList()
+	    # Wires representation.
+	    self.gl_wires_list = glGenLists(1)
+	    glNewList(self.gl_wires_list, GL_COMPILE)
+	    for atom in self.wires_list:
+		rep.draw_wire_sphere(atom)
+	    glEndList()
 	    # Makes the van-der-walls representation of the atoms.
 	    self.gl_vdw_list = glGenLists(1)
 	    glNewList(self.gl_vdw_list, GL_COMPILE)
@@ -268,38 +277,111 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    for atom in self.pretty_vdw_list:
 		rep.draw_pretty_vdw(atom)
 	    glEndList()
-	    # Makes the bonds representations, can be sticks or lines
+	    # Makes the bonds representations in sticks format
 	    self.gl_stick_list = glGenLists(1)
 	    glNewList(self.gl_stick_list, GL_COMPILE)
 	    for bond in self.bonds_list:
 		rep.draw_bond_stick(bond[0], bond[1], bond[2], bond[3])
 	    glEndList()
+	    # Makes the bonds representations in wired sticks format
+	    self.gl_wired_stick_list = glGenLists(1)
+	    glNewList(self.gl_wired_stick_list, GL_COMPILE)
+	    for bond in self.bonds_list:
+		rep.draw_bond_wired_stick(bond[0], bond[1], bond[2], bond[3])
+	    glEndList()
     
     def draw(self):
 	""" Defines wich type of representations will be displayed
 	"""
-	global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 	glClearColor(0.0, 0.0, 0.0, 0.0)
-	if POINTS_SURFACE:
+	if self.POINTS_SURFACE:
 	    glCallList(self.gl_points_list, GL_COMPILE)
-	if POINTS:
+	if self.POINTS:
 	    glCallList(self.gl_point_list, GL_COMPILE)
-	if BALL_STICK:
+	if self.BALL_STICK:
 	    glCallList(self.gl_ball_list, GL_COMPILE)
 	    glCallList(self.gl_stick_list, GL_COMPILE)
-	if LINES:
+	if self.WIRES:
+	    glCallList(self.gl_wires_list, GL_COMPILE)
+	    glCallList(self.gl_wired_stick_list, GL_COMPILE)
+	if self.LINES:
 	    glCallList(self.gl_lines_list, GL_COMPILE)
-	if VDW:
+	if self.VDW:
 	    glCallList(self.gl_vdw_list, GL_COMPILE)
-	if PRETTY_VDW:
+	if self.PRETTY_VDW:
 	    glCallList(self.gl_ball_list, GL_COMPILE)
 	    glCallList(self.gl_stick_list, GL_COMPILE)
 	    glCallList(self.gl_pretty_vdw_list, GL_COMPILE)
-	if RIBBON:
+	if self.RIBBON:
 	    glCallList(self.gl_ribbon_list, GL_COMPILE)
-	if SPHERES:
+	if self.SPHERES:
 	    glCallList(self.gl_sphere_list, GL_COMPILE)
+	#if self.SELECTION:
+	for i,atom in enumerate(self.selected_atoms):
+	    rep.draw_selected(atom, i+2)
+    
+    def center_on_atom(self, atom_pos):
+        """ Only change the center of viewpoint of the camera.
+	    It does not change (yet) the position of the camera.
+	    
+	    atom_pos is a vector containing the XYZ coordinates
+	    of the selected atom.
+	"""
+	if self.get_euclidean(self.target_point, atom_pos) != 0:
+	    cam_pos = self.get_cam_pos()
+	    glMatrixMode(GL_MODELVIEW)
+	    modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+	    up = modelview[:3, 1]
+	    zrp = self.zero_reference_point
+	    dist = self.get_euclidean(zrp, atom_pos)
+	    dist_z = self.get_euclidean(cam_pos, zrp)
+	    vec_dir = self.unit_vector([atom_pos[0]-zrp[0], atom_pos[1]-zrp[1], atom_pos[2]-zrp[2]])
+	    add_z = (self.z_far - self.z_near)/2
+	    dist_z = self.get_euclidean(cam_pos, zrp)
+	    cycles = 15
+	    to_add = float(dist/cycles)
+	    for i in range(1, cycles):
+		aum = i*to_add
+		pto = [zrp[0]+vec_dir[0]*aum, zrp[1]+vec_dir[1]*aum, zrp[2]+vec_dir[2]*aum]
+		self.z_far = dist_z + add_z
+		self.z_near = dist_z - add_z
+		self.fog_start = self.z_far - 1.5
+		self.fog_end = self.z_far + 0.5
+		dist_z = self.get_euclidean(cam_pos, pto)
+		gl_context, gl_drawable = self.open_gl_ctx()
+		x, y, width, height = self.get_allocation()
+		glMatrixMode(GL_PROJECTION)
+		glLoadIdentity()
+		gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
+		glFogf(GL_FOG_START, self.fog_start)
+		glFogf(GL_FOG_END, self.fog_end)
+		glMatrixMode(GL_MODELVIEW)
+		glLoadIdentity()
+		gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
+			  pto[0], pto[1], pto[2],
+			  up[0], up[1], up[2])
+		self.window.invalidate_rect(self.allocation, False)
+		self.window.process_updates(False)
+		self.close_gl_ctx(gl_context, gl_drawable)
+	    if dist%0.1 > 0:
+		gl_context, gl_drawable = self.open_gl_ctx()
+		dist_z = self.get_euclidean(cam_pos, atom_pos)
+		self.z_far = dist_z + add_z
+		self.z_near = dist_z - add_z
+		self.fog_start = self.z_far - 1.5
+		self.fog_end = self.z_far + 0.5
+		x, y, width, height = self.get_allocation()
+		glMatrixMode(GL_PROJECTION)
+		glLoadIdentity()
+		gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
+		glFogf(GL_FOG_START, self.fog_start)
+		glFogf(GL_FOG_END, self.fog_end)
+		glMatrixMode(GL_MODELVIEW)
+		glLoadIdentity()
+		gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], atom_pos[0], atom_pos[1], atom_pos[2], up[0], up[1], up[2])
+		self.close_gl_ctx(gl_context, gl_drawable)
+	    self.queue_draw()
     
     def key_press(self, widget, event):
 	""" The mouse_button function serves, as the names states, to catch
@@ -334,9 +416,8 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	""" Change the representation to Ball-Stick.
 	"""
 	print 'Ball-Stick Representation ON'
-	global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
-	POINTS_SURFACE = POINTS = LINES = VDW = PRETTY_VDW = RIBBON = SPHERES = False
-	BALL_STICK = True
+	self.turn_off_reps()
+	self.BALL_STICK = True
 	self.queue_draw()
 	return True
     
@@ -344,9 +425,8 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	""" Change the representation to Ball-Stick.
 	"""
 	print 'Dots Representation ON'
-	global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
-	POINTS_SURFACE = BALL_STICK = LINES = VDW = PRETTY_VDW = RIBBON = SPHERES = False
-	POINTS = True
+	self.turn_off_reps()
+	self.POINTS = True
 	self.queue_draw()
 	return True
     
@@ -354,9 +434,8 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	""" Change the representation to Pretty VDW.
 	"""
 	print 'Pretty Van-Der-Waals Representation ON'
-	global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
-	POINTS_SURFACE = POINTS = BALL_STICK = LINES = VDW = RIBBON = SPHERES = False
-	PRETTY_VDW = True
+	self.turn_off_reps()
+	self.PRETTY_VDW = True
 	self.queue_draw()
 	return True
     
@@ -364,9 +443,8 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	""" Change the representation to Sphere.
 	"""
 	print 'Sphere Representation ON'
-	global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
-	POINTS_SURFACE = POINTS = BALL_STICK = LINES = VDW = PRETTY_VDW = RIBBON = False
-	SPHERES = True
+	self.turn_off_reps()
+	self.SPHERES = True
 	self.queue_draw()
 	return True
     
@@ -374,11 +452,24 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	""" Change the representation to Van-Der-Waals.
 	"""
 	print 'Van-Der-Waals Representation ON'
-	global POINTS_SURFACE, POINTS, BALL_STICK, LINES, VDW, PRETTY_VDW, RIBBON, SPHERES
-	POINTS_SURFACE = POINTS = BALL_STICK = LINES = PRETTY_VDW = RIBBON = SPHERES = False
-	VDW = True
+	self.turn_off_reps()
+	self.VDW = True
 	self.queue_draw()
 	return True
+    
+    def pressed_w(self):
+	""" Change the representation to Wires.
+	"""
+	print 'Wired Representation ON'
+	self.turn_off_reps()
+	self.WIRES = True
+	self.queue_draw()
+	return True
+    
+    def turn_off_reps(self):
+	"""
+	"""
+	self.POINTS_SURFACE = self.POINTS = self.LINES = self.VDW = self.PRETTY_VDW = self.RIBBON = self.SPHERES = self.WIRES = self.BALL_STICK = False
     
     @classmethod
     def event_masked(cls, event, mask):
@@ -410,22 +501,42 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         middle = self.get_middle_button_down(event)
         right  = self.get_right_button_down(event)
         self.mouse_rotate = left and not (middle or right)
-        self.mouse_zoom = right and not (middle or left)
-        self.mouse_pan = middle and not (right or left)
+        self.mouse_zoom   = right and not (middle or left)
+        self.mouse_pan    = middle and not (right or left)
         x = self.mouse_x = event.x
         y = self.mouse_y = event.y
         self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(x, y)
         if event.button == 1 and event.type == gtk.gdk._2BUTTON_PRESS:
             nearest, hits = self._pick(x, self.get_allocation().height-1-y, 3, 3, event)
-            self.pick(event, nearest, hits)
+            picked = self.pick(event, nearest, hits)
+	    if picked is not None:
+		self.center_on_atom(picked.pos)
+		self.zero_reference_point = picked.pos
+		self.target_point = picked.pos
         if event.button == 2 and event.type == gtk.gdk.BUTTON_PRESS:
-	    self.dist_cam_zpr = self.get_euclidean(self.zpr_reference_point, self.get_cam_pos())
+	    self.dist_cam_zpr = self.get_euclidean(self.zero_reference_point, self.get_cam_pos())
+	if event.button == 1 and event.type == gtk.gdk.BUTTON_PRESS:
+	    nearest, hits = self._pick(x, self.get_allocation().height-1-y, 3, 3, event)
+            picked = self.pick(event, nearest, hits)
+	    if picked is None:
+		#self.SELECTION = False
+		self.selected_atoms = []
+	    else:
+		#self.SELECTION = True
+		if picked not in self.selected_atoms:
+		    self.selected_atoms.append(picked)
+		else:
+		    self.selected_atoms.remove(picked)
+	    self.queue_draw()
     
     def mouse_released(self, widget, event):
 	""" The mouse_released function serves, as the names states, to catch
 	    mouse buttons events when released.
 	"""
 	self.mouse_rotate = self.mouse_pan = self.mouse_zoom = False
+	x = self.mouse_x = event.x
+        y = self.mouse_y = event.y
+        self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(x, y)
 	if event.button == 2 and event.type == gtk.gdk.BUTTON_RELEASE:
 	    if self.dragging:
 		glMatrixMode(GL_MODELVIEW)
@@ -434,11 +545,15 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		cam_pos = self.get_cam_pos()
 		dir_vec *= -self.dist_cam_zpr
 		new_zpr = cam_pos + dir_vec
+		self.zero_reference_point = np.array([new_zpr[0], new_zpr[1], new_zpr[2]])
 		self.dragging = False
 	    else:
-		pass
-		#nearest, hits = self._pick(x, self.get_allocation().height-1-y, 3, 3, event)
-		#self.pick(event, nearest, hits)
+		nearest, hits = self._pick(x,self.get_allocation().height-1-y,3,3,event)
+		picked = self.pick(event,nearest,hits)
+		if picked is not None:
+		    self.center_on_atom(picked.pos)
+		    self.zero_reference_point = picked.pos
+		    self.target_point = picked.pos
     
     def mouse_motion(self, widget, event):
 	""" The mouse_motion function serves, as the names states, to perform
@@ -456,7 +571,6 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         if (dx==0 and dy==0):
 	    return
         self.mouse_x, self.mouse_y = x, y
-	gl_context, gl_drawable = self.open_gl_ctx()
 	changed = False
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	if self.mouse_zoom:
@@ -505,9 +619,9 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 			 (py-self.drag_pos_y)*(self.z_far)/10, 
 			 (pz-self.drag_pos_z)*(self.z_far)/10)
 	    glMultMatrixd(modelview)
-	    x = self.zpr_reference_point[0]
-	    y = self.zpr_reference_point[1]
-	    z = self.zpr_reference_point[2]
+	    x = self.zero_reference_point[0]
+	    y = self.zero_reference_point[1]
+	    z = self.zero_reference_point[2]
 	    self.drag_pos_x = px
 	    self.drag_pos_y = py
 	    self.drag_pos_z = pz
@@ -563,9 +677,9 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     def apply_trans(self, func, *args):
 	"""
 	"""
-        glTranslatef(*self.zpr_reference_point)
+        glTranslatef(*self.zero_reference_point)
         func(*args)
-        glTranslatef(*map(lambda x:-x, self.zpr_reference_point))
+        glTranslatef(*map(lambda x:-x, self.zero_reference_point))
     
     def _pick(self, x, y, dx, dy, event):
 	"""
@@ -599,18 +713,15 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     def pick(self, event, nearest, hits):
 	"""
 	"""
+	picked = None
         if nearest != []:
 	    for chain in self.data.chains.values():
 		for residue in chain.residues.values():
 		    for atom in residue.atoms.values():
 			if atom.index == nearest[0]:
-			    x = atom.pos[0]
-			    y = atom.pos[1]
-			    z = atom.pos[2]
+			    picked = atom
 			    break
-	    atom_pos = [x, y, z]
-	    self.zpr_reference_point = [x, y, z]
-	    self.target_point = atom_pos
+	return picked
     
     def get_euclidean(self, pa, pb):
 	""" Returns the distance between two points in R3

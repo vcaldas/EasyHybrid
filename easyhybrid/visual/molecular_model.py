@@ -89,5 +89,5 @@ class Atom:
         self.dot         = False
         self.dot_surface = False
         self.surface     = False
-        #self.stick   = False
+        self.wires       = False
         #self.lines   = False

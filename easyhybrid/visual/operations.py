@@ -68,3 +68,45 @@ def get_surf_dots(atom):
 	point = [x+r*sin_teta[i], y, z+r*cos_teta[i]]
 	dots.append(point)
     return dots
+
+def get_bonds(atom_matrix):
+    """
+    """
+    x_pos = atom_matrix[:,0]
+    y_pos = atom_matrix[:,1]
+    z_pos = atom_matrix[:,2]
+    dim = len(x_pos)
+    x_matrix1 = np.zeros((dim, dim))
+    x_matrix2 = np.zeros((dim, dim))
+    y_matrix1 = np.zeros((dim, dim))
+    y_matrix2 = np.zeros((dim, dim))
+    z_matrix1 = np.zeros((dim, dim))
+    z_matrix2 = np.zeros((dim, dim))
+    x_matrix1[:] = x_pos
+    x_matrix2[:,0] = x_pos.T
+    print x_pos.T, '<-- transpuesta'
+    print x_matrix1, '<-- matriz X1'
+    print x_matrix2, '<-- matriz X2'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
