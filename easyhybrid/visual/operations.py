@@ -83,10 +83,17 @@ def get_bonds(atom_matrix):
     z_matrix1 = np.zeros((dim, dim))
     z_matrix2 = np.zeros((dim, dim))
     x_matrix1[:] = x_pos
-    x_matrix2[:,0] = x_pos.T
-    print x_pos.T, '<-- transpuesta'
-    print x_matrix1, '<-- matriz X1'
-    print x_matrix2, '<-- matriz X2'
+    x_matrix2[:] = x_matrix1.T
+    y_matrix1[:] = y_pos
+    y_matrix2[:] = y_matrix1.T
+    z_matrix1[:] = z_pos
+    z_matrix2[:] = z_matrix1.T
+    #print x_matrix1, '<-- matriz X1'
+    #print x_matrix2, '<-- matriz X2'
+    dist_x = np.triu(x_matrix1-x_matrix2)
+    dist_y = np.triu(y_matrix1-y_matrix2)
+    dist_z = np.triu(z_matrix1-z_matrix2)
+    print dist_x, '<-- dist en x'
 
 
 
