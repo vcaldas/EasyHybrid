@@ -52,13 +52,15 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     bottom = -1.0
     left   = -10.0
     right  = 10
-    selected_atoms = []
+    selected_atoms = [None]*4
     mouse_x = mouse_y = 0
     dist_cam_zpr = 0
     scroll = 1
+    pick_radius = [10, 10]
+    pos_mouse = [None, None]
+    gl_backgrd = [0.0, 0.0, 0.0, 0.0]
     zero_reference_point = target_point = np.array([0, 0, 0])
     mouse_rotate = mouse_pan = mouse_zoom = dragging = False
-    gl_sph_list = gl_bonds_list = gl_vdw_list = sph_list = vdw_list = bonds_list = None
     POINTS_SURFACE = POINTS = BALL_STICK = LINES = VDW = PRETTY_VDW = RIBBON = SPHERES = WIRES = SELECTION = False
     
     def __init__(self, data=None, width=640, height=420):
@@ -75,7 +77,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	self.data   = data
 	self.width  = width
 	self.height = height
-	self.connect_after('realize', self._init)
+	self.connect_after('realize', self.initialize)
 	self.connect('configure_event', self.reshape_wind)
 	self.connect('expose_event', self.my_draw)
 	self.connect('button_press_event', self.mouse_pressed)
@@ -91,14 +93,14 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	# If you want to cath keyboard events use this two lines
 	self.set_flags(gtk.HAS_FOCUS | gtk.CAN_FOCUS)
 	self.grab_focus()
-	#self.realize()
     
-    def _init(self, widget):
+    def initialize(self, widget):
 	""" Load the molecule if is any data and initialize the widget.
 	"""
 	assert(widget == self)
+	glutInit()
 	self.load_mol()
-        self.initialize()
+        self.gl_initialize()
 	return True
 	
     def open_gl_ctx(self):
@@ -124,7 +126,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	del gl_drawable
 	return True
     
-    def initialize(self):
+    def gl_initialize(self):
 	""" Initializes all the parameters for the OpenGL context. Is in 
 	    another module to keep OpenGL commands separated from the gtk
 	    commands.
@@ -216,19 +218,6 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 			    if atom.dot_surface:
 				self.dot_surface_list.append(atom)
 	    
-	    # Make calculations for the bonds, this part of the code must be more efficient
-	    self.bonds_list = []
-	    arr1 = np.array([0, 0, 1])
-	    for i in range(len(self.ball_list)-1):
-		for j in range(i+1, len(self.ball_list)):
-		    if self.get_euclidean(self.ball_list[i].pos, self.ball_list[j].pos) <= (self.ball_list[i].cov_rad + self.ball_list[j].cov_rad):
-			arr2 = self.unit_vector(self.ball_list[j].pos - self.ball_list[i].pos)
-			angle = self.get_angle(arr1, arr2)
-			vec_o = np.cross(arr1, arr2)
-			length = self.get_euclidean(self.ball_list[i].pos, self.ball_list[j].pos)
-			temp = (self.ball_list[i], length, angle, vec_o)
-			self.bonds_list.append(temp)
-	    
 	    # Surface dots representation of the atoms
 	    for atom in self.dot_surface_list:
 		atom.dots_surf = op.get_surf_dots(atom)
@@ -277,10 +266,16 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    for atom in self.pretty_vdw_list:
 		rep.draw_pretty_vdw(atom)
 	    glEndList()
+	    # Makes the ribbon representations
+	    self.gl_ribbon_list = glGenLists(1)
+	    glNewList(self.gl_ribbon_list, GL_COMPILE)
+	    for ribbon in self.data.ribbons:
+		rep.draw_ribbon(ribbon[0], ribbon[1], ribbon[2], ribbon[3])
+	    glEndList()
 	    # Makes the bonds representations in sticks format
 	    self.gl_stick_list = glGenLists(1)
 	    glNewList(self.gl_stick_list, GL_COMPILE)
-	    for bond in self.bonds_list:
+	    for bond in self.data.bonds:
 		rep.draw_bond_stick(bond[0], bond[1], bond[2], bond[3])
 	    glEndList()
 	    # Makes the bonds representations in wired sticks format
@@ -294,7 +289,11 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	""" Defines wich type of representations will be displayed
 	"""
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-	glClearColor(0.0, 0.0, 0.0, 0.0)
+	glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
+	#if self.SELECTION:
+	for i,atom in enumerate(self.selected_atoms):
+	    if atom is not None:
+		rep.draw_selected(atom, i+2)
 	if self.POINTS_SURFACE:
 	    glCallList(self.gl_points_list, GL_COMPILE)
 	if self.POINTS:
@@ -317,9 +316,34 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    glCallList(self.gl_ribbon_list, GL_COMPILE)
 	if self.SPHERES:
 	    glCallList(self.gl_sphere_list, GL_COMPILE)
-	#if self.SELECTION:
-	for i,atom in enumerate(self.selected_atoms):
-	    rep.draw_selected(atom, i+2)
+    
+    def draw_to_pick(self):
+	""" Drawing method only to select atoms.
+	"""
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+	glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
+	if self.POINTS_SURFACE:
+	    glCallList(self.gl_points_list, GL_COMPILE)
+	if self.POINTS:
+	    glCallList(self.gl_point_list, GL_COMPILE)
+	if self.BALL_STICK:
+	    glCallList(self.gl_ball_list, GL_COMPILE)
+	    glCallList(self.gl_stick_list, GL_COMPILE)
+	if self.WIRES:
+	    glCallList(self.gl_wires_list, GL_COMPILE)
+	    glCallList(self.gl_wired_stick_list, GL_COMPILE)
+	if self.LINES:
+	    glCallList(self.gl_lines_list, GL_COMPILE)
+	if self.VDW:
+	    glCallList(self.gl_vdw_list, GL_COMPILE)
+	if self.PRETTY_VDW:
+	    glCallList(self.gl_ball_list, GL_COMPILE)
+	    glCallList(self.gl_stick_list, GL_COMPILE)
+	    glCallList(self.gl_pretty_vdw_list, GL_COMPILE)
+	if self.RIBBON:
+	    glCallList(self.gl_ribbon_list, GL_COMPILE)
+	if self.SPHERES:
+	    glCallList(self.gl_sphere_list, GL_COMPILE)
     
     def center_on_atom(self, atom_pos):
         """ Only change the center of viewpoint of the camera.
@@ -328,17 +352,17 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    atom_pos is a vector containing the XYZ coordinates
 	    of the selected atom.
 	"""
-	if self.get_euclidean(self.target_point, atom_pos) != 0:
+	if op.get_euclidean(self.target_point, atom_pos) != 0:
 	    cam_pos = self.get_cam_pos()
 	    glMatrixMode(GL_MODELVIEW)
 	    modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
 	    up = modelview[:3, 1]
 	    zrp = self.zero_reference_point
-	    dist = self.get_euclidean(zrp, atom_pos)
-	    dist_z = self.get_euclidean(cam_pos, zrp)
-	    vec_dir = self.unit_vector([atom_pos[0]-zrp[0], atom_pos[1]-zrp[1], atom_pos[2]-zrp[2]])
+	    dist = op.get_euclidean(zrp, atom_pos)
+	    dist_z = op.get_euclidean(cam_pos, zrp)
+	    vec_dir = op.unit_vector([atom_pos[0]-zrp[0], atom_pos[1]-zrp[1], atom_pos[2]-zrp[2]])
 	    add_z = (self.z_far - self.z_near)/2
-	    dist_z = self.get_euclidean(cam_pos, zrp)
+	    dist_z = op.get_euclidean(cam_pos, zrp)
 	    cycles = 15
 	    to_add = float(dist/cycles)
 	    for i in range(1, cycles):
@@ -347,8 +371,8 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		self.z_far = dist_z + add_z
 		self.z_near = dist_z - add_z
 		self.fog_start = self.z_far - 1.5
-		self.fog_end = self.z_far + 0.5
-		dist_z = self.get_euclidean(cam_pos, pto)
+		self.fog_end = self.z_far
+		dist_z = op.get_euclidean(cam_pos, pto)
 		gl_context, gl_drawable = self.open_gl_ctx()
 		x, y, width, height = self.get_allocation()
 		glMatrixMode(GL_PROJECTION)
@@ -366,11 +390,11 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		self.close_gl_ctx(gl_context, gl_drawable)
 	    if dist%0.1 > 0:
 		gl_context, gl_drawable = self.open_gl_ctx()
-		dist_z = self.get_euclidean(cam_pos, atom_pos)
+		dist_z = op.get_euclidean(cam_pos, atom_pos)
 		self.z_far = dist_z + add_z
 		self.z_near = dist_z - add_z
 		self.fog_start = self.z_far - 1.5
-		self.fog_end = self.z_far + 0.5
+		self.fog_end = self.z_far
 		x, y, width, height = self.get_allocation()
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
@@ -415,59 +439,68 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     def pressed_b(self):
 	""" Change the representation to Ball-Stick.
 	"""
-	print 'Ball-Stick Representation ON'
-	self.turn_off_reps()
-	self.BALL_STICK = True
+	print 'Ball-Stick Representation'
+	#self.turn_off_reps()
+	self.BALL_STICK = not self.BALL_STICK
 	self.queue_draw()
 	return True
     
     def pressed_d(self):
 	""" Change the representation to Ball-Stick.
 	"""
-	print 'Dots Representation ON'
-	self.turn_off_reps()
-	self.POINTS = True
+	print 'Dots Representation'
+	#self.turn_off_reps()
+	self.POINTS = not self.POINTS
 	self.queue_draw()
 	return True
     
     def pressed_p(self):
 	""" Change the representation to Pretty VDW.
 	"""
-	print 'Pretty Van-Der-Waals Representation ON'
-	self.turn_off_reps()
-	self.PRETTY_VDW = True
+	print 'Pretty Van-Der-Waals Representation'
+	#self.turn_off_reps()
+	self.PRETTY_VDW = not self.PRETTY_VDW
+	self.queue_draw()
+	return True
+    
+    def pressed_r(self):
+	""" Change the representation to Sphere.
+	"""
+	print 'Ribbon Representation'
+	#self.turn_off_reps()
+	self.RIBBON = not self.RIBBON
 	self.queue_draw()
 	return True
     
     def pressed_s(self):
 	""" Change the representation to Sphere.
 	"""
-	print 'Sphere Representation ON'
-	self.turn_off_reps()
-	self.SPHERES = True
+	print 'Sphere Representation'
+	#self.turn_off_reps()
+	self.SPHERES = not self.SPHERES
 	self.queue_draw()
 	return True
     
     def pressed_v(self):
 	""" Change the representation to Van-Der-Waals.
 	"""
-	print 'Van-Der-Waals Representation ON'
-	self.turn_off_reps()
-	self.VDW = True
+	print 'Van-Der-Waals Representation'
+	#self.turn_off_reps()
+	self.VDW = not self.VDW
 	self.queue_draw()
 	return True
     
     def pressed_w(self):
 	""" Change the representation to Wires.
 	"""
-	print 'Wired Representation ON'
-	self.turn_off_reps()
-	self.WIRES = True
+	print 'Wired Representation'
+	#self.turn_off_reps()
+	self.WIRES = not self.WIRES
 	self.queue_draw()
 	return True
     
     def turn_off_reps(self):
-	"""
+	""" Hyde Everything
 	"""
 	self.POINTS_SURFACE = self.POINTS = self.LINES = self.VDW = self.PRETTY_VDW = self.RIBBON = self.SPHERES = self.WIRES = self.BALL_STICK = False
     
@@ -507,27 +540,16 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         y = self.mouse_y = event.y
         self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(x, y)
         if event.button == 1 and event.type == gtk.gdk._2BUTTON_PRESS:
-            nearest, hits = self._pick(x, self.get_allocation().height-1-y, 3, 3, event)
-            picked = self.pick(event, nearest, hits)
-	    if picked is not None:
-		self.center_on_atom(picked.pos)
-		self.zero_reference_point = picked.pos
-		self.target_point = picked.pos
+            nearest, hits = self.pick(x, self.get_allocation().height-1-y, self.pick_radius[0], self.pick_radius[1], event)
+            selected = self.select(event, nearest, hits)
+	    if selected is not None:
+		self.center_on_atom(selected.pos)
+		self.zero_reference_point = selected.pos
+		self.target_point = selected.pos
         if event.button == 2 and event.type == gtk.gdk.BUTTON_PRESS:
-	    self.dist_cam_zpr = self.get_euclidean(self.zero_reference_point, self.get_cam_pos())
+	    self.dist_cam_zpr = op.get_euclidean(self.zero_reference_point, self.get_cam_pos())
 	if event.button == 1 and event.type == gtk.gdk.BUTTON_PRESS:
-	    nearest, hits = self._pick(x, self.get_allocation().height-1-y, 3, 3, event)
-            picked = self.pick(event, nearest, hits)
-	    if picked is None:
-		#self.SELECTION = False
-		self.selected_atoms = []
-	    else:
-		#self.SELECTION = True
-		if picked not in self.selected_atoms:
-		    self.selected_atoms.append(picked)
-		else:
-		    self.selected_atoms.remove(picked)
-	    self.queue_draw()
+	    self.pos_mouse = [x, y]
     
     def mouse_released(self, widget, event):
 	""" The mouse_released function serves, as the names states, to catch
@@ -537,6 +559,28 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	x = self.mouse_x = event.x
         y = self.mouse_y = event.y
         self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(x, y)
+	if event.button == 1 and event.type == gtk.gdk.BUTTON_RELEASE:
+	    if self.pos_mouse[0] == x and self.pos_mouse[1] == y:
+		nearest, hits = self.pick(x, self.get_allocation().height-1-y, self.pick_radius[0], self.pick_radius[1], event)
+		selected = self.select(event, nearest, hits)
+		if selected is None:
+		    self.selected_atoms = [None]*4
+		else:
+		    if selected not in self.selected_atoms:
+			for i in range(4):
+			    if self.selected_atoms[i] == None:
+				self.selected_atoms[i] = selected
+				selected = None
+				break
+			if selected is not None:
+			    self.selected_atoms[3] = selected
+		    else:
+			for i in range(4):
+			    if self.selected_atoms[i] == selected:
+				self.selected_atoms[i] = None
+		self.queue_draw()
+	    else:
+		self.pos_mouse = [None, None]
 	if event.button == 2 and event.type == gtk.gdk.BUTTON_RELEASE:
 	    if self.dragging:
 		glMatrixMode(GL_MODELVIEW)
@@ -548,12 +592,12 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		self.zero_reference_point = np.array([new_zpr[0], new_zpr[1], new_zpr[2]])
 		self.dragging = False
 	    else:
-		nearest, hits = self._pick(x,self.get_allocation().height-1-y,3,3,event)
-		picked = self.pick(event,nearest,hits)
-		if picked is not None:
-		    self.center_on_atom(picked.pos)
-		    self.zero_reference_point = picked.pos
-		    self.target_point = picked.pos
+		nearest, hits = self.pick(x, self.get_allocation().height-1-y, self.pick_radius[0], self.pick_radius[1], event)
+		selected = self.select(event,nearest,hits)
+		if selected is not None:
+		    self.center_on_atom(selected.pos)
+		    self.zero_reference_point = selected.pos
+		    self.target_point = selected.pos
     
     def mouse_motion(self, widget, event):
 	""" The mouse_motion function serves, as the names states, to perform
@@ -681,7 +725,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         func(*args)
         glTranslatef(*map(lambda x:-x, self.zero_reference_point))
     
-    def _pick(self, x, y, dx, dy, event):
+    def pick(self, x, y, dx, dy, event):
 	"""
 	"""
         buf = glSelectBuffer(256)
@@ -696,7 +740,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         glMultMatrixd(projection)        
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
-        self.draw()
+        self.draw_to_pick()
         glPopMatrix()
         hits = glRenderMode(GL_RENDER)
         nearest = []
@@ -710,7 +754,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         glMatrixMode(GL_MODELVIEW)
         return nearest, hits
     
-    def pick(self, event, nearest, hits):
+    def select(self, event, nearest, hits):
 	"""
 	"""
 	picked = None
@@ -723,38 +767,11 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 			    break
 	return picked
     
-    def get_euclidean(self, pa, pb):
-	""" Returns the distance between two points in R3
-	"""
-	if len(pa) == 1:
-	    pa = [pa[0], 0, 0]
-	if len(pa) == 2:
-	    pa = [pa[0], pa[1], 0]
-	if len(pb) == 1:
-	    pb = [pb[0], 0, 0]
-	if len(pb) == 2:
-	    pb = [pb[0], pb[1], 0]
-	return math.sqrt((pb[0]-pa[0])**2 +
-			 (pb[1]-pa[1])**2 +
-			 (pb[2]-pa[2])**2)
-    
     def get_cam_pos(self):
 	""" Returns the position of the camera in XYZ coordinates
 	    The type of data returned is 'numpy.ndarray'.
 	"""
-	buffer = glGetDoublev(GL_MODELVIEW_MATRIX)
-	crd_xyz = -1 * np.mat(buffer[:3,:3]) * np.mat(buffer[3,:3]).T
+	modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+	crd_xyz = -1 * np.mat(modelview[:3,:3]) * np.mat(modelview[3,:3]).T
 	return crd_xyz.A1
-    
-    def unit_vector(self, vector):
-	""" Returns the unit vector of the vector.
-	"""
-	return vector / np.linalg.norm(vector)
-    
-    def get_angle(self, vecA, vecB):
-	""" Return the angle in degrees of two vectors.
-	"""
-	vecA_u = self.unit_vector(vecA)
-	vecB_u = self.unit_vector(vecB)
-	return np.degrees(np.arccos(np.clip(np.dot(vecA_u, vecB_u), -1.0, 1.0)))
     

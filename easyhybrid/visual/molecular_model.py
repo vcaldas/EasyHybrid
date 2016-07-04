@@ -37,7 +37,23 @@ class Frame:
 	    mass_center = np.array([0.0, 0.0, 0.0])
         self.chains      = chains
         self.bonds       = bonds
+        self.ribbons     = []
         self.mass_center = mass_center
+	self.atoms       = []
+    
+    def load_bonds(self):
+	"""
+	"""
+	import operations
+	self.bonds = operations.generate_bonds(self.atoms)
+    
+    def load_ribbons(self):
+	"""
+	"""
+	import operations
+	for chain in self.chains.values():
+	    ribs = operations.generate_ribbons(chain.backbone)
+	    self.ribbons += ribs
 
 class Chain:
     """ Class doc """
@@ -49,6 +65,7 @@ class Chain:
         self.residues = residues
         self.name     = name
 	self.frame    = frame
+	self.backbone = []
 
 class Residue:
     """ Class doc """

@@ -28,7 +28,7 @@ from OpenGL.GLUT import *
 
 from atom_types import get_color
 
-gl_settings = {'sphere_scale':0.15, 'sphere_res':15, 'pretty_res':20, 'selection_radius':0.7}
+gl_settings = {'sphere_scale':0.15, 'sphere_res':15, 'pretty_res':20, 'selection_radius':1.0, 'ribbon_res':0.4}
 
 def init_gl(fog_start, fog_end, fovy, width, height, z_near, z_far):
     """ Inside the realize function, you should put all you OpenGL
@@ -238,6 +238,24 @@ def draw_bond_wired_stick(atom, length, angle, vec_o):
     glTranslatef(atom.pos[0], atom.pos[1], atom.pos[2])
     glRotatef(angle, vec_o[0], vec_o[1], vec_o[2])
     glutWireCylinder(0.1, length, 10, 10)
+    glPopName()
+    glPopMatrix()
+
+def draw_ribbon(atom, length, angle, vec_o):
+    """ Draw the bonds.
+    """
+    # The matrix is by default looking at (0,0,1)
+    glEnable(GL_LIGHT0)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_COLOR_MATERIAL)
+    glEnable(GL_DEPTH_TEST)
+    glPushMatrix()
+    glPushName(atom.index)
+    glColor3f(atom.color[0], atom.color[1], atom.color[2])
+    glTranslatef(atom.pos[0], atom.pos[1], atom.pos[2])
+    glRotatef(angle, vec_o[0], vec_o[1], vec_o[2])
+    glutSolidCylinder(gl_settings['ribbon_res'], length, 10, 10)
+    glutSolidSphere(gl_settings['ribbon_res'], gl_settings['sphere_res'], gl_settings['sphere_res'])
     glPopName()
     glPopMatrix()
 
