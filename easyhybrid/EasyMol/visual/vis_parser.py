@@ -67,16 +67,17 @@ def parse_pdb(infile):
 		    res.atoms[at_index] = atm
 		atoms.append(atm)
 	    elif line[:6] == 'ENDMDL':
-		frames.append(frame)
 		frame.chains = chains_m
 		frame.atoms = atoms
 		frame.load_bonds()
+		frame.load_ribbons()
+		frames.append(frame)
 		frame = mm.Frame()
 		chains_m = {}
 		atoms = []
-	if len(frame.chains.values()) > 0:
-	    frame.atoms = atoms
-	    frame.load_bonds()
-	    frame.load_ribbons()
-	    frames.append(frame)
+	#if len(frame.chains.values()) > 0:
+	    #frame.atoms = atoms
+	    #frame.load_bonds()
+	    #frame.load_ribbons()
+	    #frames.append(frame)
     return frames

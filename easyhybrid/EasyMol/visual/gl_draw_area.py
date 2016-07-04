@@ -61,7 +61,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     gl_backgrd = [0.0, 0.0, 0.0, 0.0]
     zero_reference_point = target_point = np.array([0, 0, 0])
     mouse_rotate = mouse_pan = mouse_zoom = dragging = False
-    POINTS_SURFACE = POINTS = BALL_STICK = LINES = VDW = PRETTY_VDW = RIBBON = SPHERES = WIRES = SELECTION = False
+    POINTS_SURFACE = POINTS = BALL_STICK = LINES = VDW = PRETTY_VDW = RIBBON = SPHERES = WIRES = SELECTION = MODIFIED = False
     
     def __init__(self, data=None, width=640, height=420):
 	""" Constructor of the GLCanvas object. Here you can change the
@@ -444,19 +444,40 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	print 'Quitting'
 	quit()
     
+    def pressed_0(self):
+	""" Move to frame 1.
+	"""
+	self.MODIFIED = True
+	self.frame_i = 0
+	self.load_mol()
+    
+    def pressed_1(self):
+	""" Move to frame 1.
+	"""
+	self.MODIFIED = True
+	self.frame_i = 1
+	self.load_mol()
+    
+    def pressed_2(self):
+	""" Move to frame 2.
+	"""
+	self.MODIFIED = True
+	self.frame_i = 2
+	self.load_mol()
+    
     def pressed_b(self):
 	""" Change the representation to Ball-Stick.
 	"""
 	print 'Ball-Stick Representation'
 	# Ball representation.
-	if self.gl_ball_list == None:
+	if self.gl_ball_list == None or self.MODIFIED:
 	    self.gl_ball_list = glGenLists(1)
 	    glNewList(self.gl_ball_list, GL_COMPILE)
 	    for atom in self.ball_list:
 		rep.draw_ball(atom)
 	    glEndList()
 	# Makes the bonds representations in sticks format
-	if self.gl_stick_list == None:
+	if self.gl_stick_list == None or self.MODIFIED:
 	    self.gl_stick_list = glGenLists(1)
 	    glNewList(self.gl_stick_list, GL_COMPILE)
 	    for bond in self.data[self.frame_i].bonds:
@@ -472,7 +493,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	"""
 	print 'Dots Representation'
 	# Center dots representations of the atoms
-	if self.gl_point_list == None:
+	if self.gl_point_list == None or self.MODIFIED:
 	    self.gl_point_list = glGenLists(1)
 	    glNewList(self.gl_point_list, GL_COMPILE)
 	    for atom in self.dot_list:
@@ -518,7 +539,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	"""
 	print 'Ribbon Representation'
 	# Makes the ribbon representations
-	if self.gl_ribbon_list == None:
+	if self.gl_ribbon_list == None or self.MODIFIED:
 	    self.gl_ribbon_list = glGenLists(1)
 	    glNewList(self.gl_ribbon_list, GL_COMPILE)
 	    for ribbon in self.data[self.frame_i].ribbons:
@@ -846,7 +867,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	"""
 	picked = None
         if nearest != []:
-	    for chain in self.data.chains.values():
+	    for chain in self.data[self.frame_i].chains.values():
 		for residue in chain.residues.values():
 		    for atom in residue.atoms.values():
 			if atom.index == nearest[0]:

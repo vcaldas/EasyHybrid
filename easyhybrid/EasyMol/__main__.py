@@ -26,8 +26,6 @@ import sys
 import pygtk
 pygtk.require('2.0')
 import gtk
-#import visual.gl_draw_area as gda
-#import visual.vis_parser
 from visual import gl_draw_area as gda, vis_parser
 
 def main():
@@ -35,6 +33,7 @@ def main():
     glarea = gda.GLCanvas(frames)
     builder = gtk.Builder()
     builder.add_from_file('EasyMol/visual_gui/main_window.glade')
+    boton = builder.get_object('btn_ball_stick')
     window = builder.get_object('main_window')
     window.set_size_request(800,600)
     window.connect('key_press_event', glarea.key_press)
