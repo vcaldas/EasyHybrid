@@ -52,7 +52,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     bottom = -1.0
     left   = -10.0
     right  = 10
-    selected_atoms = [None]*4
+    selected_atoms = [None]*6
     mouse_x = mouse_y = 0
     dist_cam_zpr = 0
     scroll = 1
@@ -281,7 +281,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    # Makes the bonds representations in wired sticks format
 	    self.gl_wired_stick_list = glGenLists(1)
 	    glNewList(self.gl_wired_stick_list, GL_COMPILE)
-	    for bond in self.bonds_list:
+	    for bond in self.data.bonds:
 		rep.draw_bond_wired_stick(bond[0], bond[1], bond[2], bond[3])
 	    glEndList()
     
@@ -564,18 +564,18 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		nearest, hits = self.pick(x, self.get_allocation().height-1-y, self.pick_radius[0], self.pick_radius[1], event)
 		selected = self.select(event, nearest, hits)
 		if selected is None:
-		    self.selected_atoms = [None]*4
+		    self.selected_atoms = [None]*len(self.selected_atoms)
 		else:
 		    if selected not in self.selected_atoms:
-			for i in range(4):
+			for i in range(len(self.selected_atoms)):
 			    if self.selected_atoms[i] == None:
 				self.selected_atoms[i] = selected
 				selected = None
 				break
 			if selected is not None:
-			    self.selected_atoms[3] = selected
+			    self.selected_atoms[len(self.selected_atoms)-1] = selected
 		    else:
-			for i in range(4):
+			for i in range(len(self.selected_atoms)):
 			    if self.selected_atoms[i] == selected:
 				self.selected_atoms[i] = None
 		self.queue_draw()
