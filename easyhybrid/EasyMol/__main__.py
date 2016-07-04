@@ -26,19 +26,21 @@ import sys
 import pygtk
 pygtk.require('2.0')
 import gtk
-import gl_draw_area as gda
-import vis_parser
+#import visual.gl_draw_area as gda
+#import visual.vis_parser
+from visual import gl_draw_area as gda, vis_parser
 
 def main():
     frames = vis_parser.parse_pdb(sys.argv[1])
-    wind = gtk.Window(type=gtk.WINDOW_TOPLEVEL)
-    # Add title
-    wind.set_title("Ventana gtk de prueba")
-    # Create a GTK area with OpenGL functions
-    glarea = gda.GLCanvas(data=frames[0])
-    # Put the area object into the gtk window
-    wind.add(glarea)
-    wind.show_all()
+    glarea = gda.GLCanvas(frames)
+    builder = gtk.Builder()
+    builder.add_from_file('EasyMol/visual_gui/main_window.glade')
+    window = builder.get_object('main_window')
+    window.set_size_request(800,600)
+    window.connect('key_press_event', glarea.key_press)
+    vbox = builder.get_object('vbox_main')
+    vbox.pack_end(glarea, True, True)
+    window.show_all()
     gtk.main()
     return 0
 
