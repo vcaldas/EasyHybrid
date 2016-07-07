@@ -23,6 +23,7 @@
 #  
 
 import numpy as np
+import math
 
 sin_phi = np.array([0.309017,0.587785,0.809017,0.951057,1.0])
 #sin_phi = np.array([17.705370,33.677614,46.353259,54.491524,57.295780])
@@ -165,17 +166,36 @@ def generate_bonds(atoms):
     """ Make calculations for the bonds, this part of the code must be more efficient.
     """
     bonds_list = []
+    #print 'BEGINS TO CALCULATE DISTANCES'
+    #arr1 = np.array([0, 0, 1])
+    #for i in range(len(atoms)-1):
+	#for j in range(i+1, len(atoms)):
+	    #if get_euclidean(atoms[i].pos, atoms[j].pos) <= (atoms[i].cov_rad + atoms[j].cov_rad):
+		#arr2 = unit_vector(atoms[j].pos - atoms[i].pos)
+		#angle = get_angle(arr1, arr2)
+		#vec_o = np.cross(arr1, arr2)
+		#length = get_euclidean(atoms[i].pos, atoms[j].pos)
+		#bond = (atoms[i], length, angle, vec_o)
+		#bonds_list.append(bond)
+    #print 'ENDS!'
     print 'BEGINS TO CALCULATE DISTANCES'
     arr1 = np.array([0, 0, 1])
     for i in range(len(atoms)-1):
-	for j in range(i+1, len(atoms)):
+	if i+20>=len(atoms):
+	    limit = len(atoms)
+	else:
+	    limit = i+20
+	for j in range(i+1, limit):
 	    if get_euclidean(atoms[i].pos, atoms[j].pos) <= (atoms[i].cov_rad + atoms[j].cov_rad):
 		arr2 = unit_vector(atoms[j].pos - atoms[i].pos)
+		mid_point = (atoms[i].pos+atoms[j].pos)/2
 		angle = get_angle(arr1, arr2)
 		vec_o = np.cross(arr1, arr2)
-		length = get_euclidean(atoms[i].pos, atoms[j].pos)
-		bond = (atoms[i], length, angle, vec_o)
+		length = get_euclidean(atoms[i].pos, atoms[j].pos)/2
+		bond = (atoms[i], length, angle, vec_o, mid_point)
+		bond2 = (atoms[j], length, angle+180, vec_o, mid_point)
 		bonds_list.append(bond)
+		bonds_list.append(bond2)
     print 'ENDS!'
     return bonds_list
 

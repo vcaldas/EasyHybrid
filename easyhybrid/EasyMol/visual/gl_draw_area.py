@@ -61,6 +61,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     gl_backgrd = [0.0, 0.0, 0.0, 0.0]
     zero_reference_point = target_point = np.array([0, 0, 0])
     mouse_rotate = mouse_pan = mouse_zoom = dragging = False
+    LINES = True
     DOTS_SURFACE = DOTS = BALL_STICK = LINES = VDW = PRETTY_VDW = RIBBON = SPHERES = WIRES = SELECTION = MODIFIED = False
     
     def __init__(self, data=None, width=640, height=420):
@@ -107,9 +108,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     def create_gl_lists(self):
 	"""
 	"""
-	self.gl_points_list = self.gl_point_list = self.gl_ball_list = self.gl_stick_list = \
-	self.gl_wires_list = self.gl_wired_stick_list = self.gl_lines_list = self.gl_vdw_list = \
-	self.gl_pretty_vdw_list = self.gl_ribbon_list = self.gl_sphere_list = None
+	self.gl_ball_stick_list = self.gl_point_list = self.gl_lines_list = self.gl_pretty_vdw_list = self.gl_ribbon_list =  self.gl_sphere_list = self.gl_vdw_list = self.gl_wires_list = None
     
     def open_gl_ctx(self):
 	""" Open the OpenGL context.
@@ -225,7 +224,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 				self.pretty_vdw_list.append(atom)
 			    if atom.dot_surface:
 				self.dot_surface_list.append(atom)
-	    
+	    self.LINES = self.draw_lines()
 	    # Surface dots representation of the atoms
 	    for atom in self.dot_surface_list:
 		atom.dots_surf = op.get_surf_dots(atom)
@@ -235,63 +234,6 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		for point in atom.dots_surf:
 		    rep.draw_dot(atom, point)
 	    glEndList()
-	    ## Center dots representations of the atoms
-	    #self.gl_point_list = glGenLists(1)
-	    #glNewList(self.gl_point_list, GL_COMPILE)
-	    #for atom in self.dot_list:
-		#rep.draw_point(atom)
-	    #glEndList()
-	    ## Sphere representation of the atoms, the difference between the ball
-	    ## representation is that sphere uses the covalent radius and ball the
-	    ## atomic radius.
-	    #self.gl_sphere_list = glGenLists(1)
-	    #glNewList(self.gl_sphere_list, GL_COMPILE)
-	    #for atom in self.sphere_list:
-		#rep.draw_sphere(atom)
-	    #glEndList()
-	    ## Ball representation.
-	    #self.gl_ball_list = glGenLists(1)
-	    #glNewList(self.gl_ball_list, GL_COMPILE)
-	    #for atom in self.ball_list:
-		#rep.draw_ball(atom)
-	    #glEndList()
-	    ## Wires representation.
-	    #self.gl_wires_list = glGenLists(1)
-	    #glNewList(self.gl_wires_list, GL_COMPILE)
-	    #for atom in self.wires_list:
-		#rep.draw_wire_sphere(atom)
-	    #glEndList()
-	    ## Makes the van-der-walls representation of the atoms.
-	    #self.gl_vdw_list = glGenLists(1)
-	    #glNewList(self.gl_vdw_list, GL_COMPILE)
-	    #for atom in self.vdw_list:
-		#rep.draw_vdw(atom)
-	    #glEndList()
-	    ## Makes the pretty van-der-walls representation of the atoms. The
-	    ## difference between vdw is that this representation is transparent.
-	    #self.gl_pretty_vdw_list = glGenLists(1)
-	    #glNewList(self.gl_pretty_vdw_list, GL_COMPILE)
-	    #for atom in self.pretty_vdw_list:
-		#rep.draw_pretty_vdw(atom)
-	    #glEndList()
-	    ## Makes the ribbon representations
-	    #self.gl_ribbon_list = glGenLists(1)
-	    #glNewList(self.gl_ribbon_list, GL_COMPILE)
-	    #for ribbon in self.data.ribbons:
-		#rep.draw_ribbon(ribbon[0], ribbon[1], ribbon[2], ribbon[3])
-	    #glEndList()
-	    ## Makes the bonds representations in sticks format
-	    #self.gl_stick_list = glGenLists(1)
-	    #glNewList(self.gl_stick_list, GL_COMPILE)
-	    #for bond in self.data.bonds:
-		#rep.draw_bond_stick(bond[0], bond[1], bond[2], bond[3])
-	    #glEndList()
-	    ## Makes the bonds representations in wired sticks format
-	    #self.gl_wired_stick_list = glGenLists(1)
-	    #glNewList(self.gl_wired_stick_list, GL_COMPILE)
-	    #for bond in self.data.bonds:
-		#rep.draw_bond_wired_stick(bond[0], bond[1], bond[2], bond[3])
-	    #glEndList()
     
     def draw(self):
 	""" Defines wich type of representations will be displayed
@@ -303,27 +245,23 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    if atom is not None:
 		rep.draw_selected(atom, i+2)
 	if self.DOTS_SURFACE:
-	    glCallList(self.gl_points_list, GL_COMPILE)
+	    glCallList(self.gl_points_list[self.frame_i], GL_COMPILE)
 	if self.DOTS:
-	    glCallList(self.gl_point_list, GL_COMPILE)
+	    glCallList(self.gl_point_list[self.frame_i], GL_COMPILE)
 	if self.BALL_STICK:
-	    glCallList(self.gl_ball_list, GL_COMPILE)
-	    glCallList(self.gl_stick_list, GL_COMPILE)
+	    glCallList(self.gl_ball_stick_list[self.frame_i], GL_COMPILE)
 	if self.WIRES:
-	    glCallList(self.gl_wires_list, GL_COMPILE)
-	    glCallList(self.gl_wired_stick_list, GL_COMPILE)
+	    glCallList(self.gl_wires_list[self.frame_i], GL_COMPILE)
 	if self.LINES:
-	    glCallList(self.gl_lines_list, GL_COMPILE)
+	    glCallList(self.gl_lines_list[self.frame_i])
 	if self.VDW:
-	    glCallList(self.gl_vdw_list, GL_COMPILE)
+	    glCallList(self.gl_vdw_list[self.frame_i], GL_COMPILE)
 	if self.PRETTY_VDW:
-	    glCallList(self.gl_ball_list, GL_COMPILE)
-	    glCallList(self.gl_stick_list, GL_COMPILE)
-	    glCallList(self.gl_pretty_vdw_list, GL_COMPILE)
+	    glCallList(self.gl_pretty_vdw_list[self.frame_i], GL_COMPILE)
 	if self.RIBBON:
-	    glCallList(self.gl_ribbon_list, GL_COMPILE)
+	    glCallList(self.gl_ribbon_list[self.frame_i], GL_COMPILE)
 	if self.SPHERES:
-	    glCallList(self.gl_sphere_list, GL_COMPILE)
+	    glCallList(self.gl_sphere_list[self.frame_i], GL_COMPILE)
     
     def draw_to_pick(self):
 	""" Drawing method only to select atoms.
@@ -331,27 +269,23 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 	glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
 	if self.DOTS_SURFACE:
-	    glCallList(self.gl_points_list, GL_COMPILE)
+	    glCallList(self.gl_points_list[self.frame_i], GL_COMPILE)
 	if self.DOTS:
-	    glCallList(self.gl_point_list, GL_COMPILE)
+	    glCallList(self.gl_point_list[self.frame_i], GL_COMPILE)
 	if self.BALL_STICK:
-	    glCallList(self.gl_ball_list, GL_COMPILE)
-	    glCallList(self.gl_stick_list, GL_COMPILE)
+	    glCallList(self.gl_ball_stick_list[self.frame_i], GL_COMPILE)
 	if self.WIRES:
-	    glCallList(self.gl_wires_list, GL_COMPILE)
-	    glCallList(self.gl_wired_stick_list, GL_COMPILE)
+	    glCallList(self.gl_wires_list[self.frame_i], GL_COMPILE)
 	if self.LINES:
-	    glCallList(self.gl_lines_list, GL_COMPILE)
+	    glCallList(self.gl_lines_list[self.frame_i])
 	if self.VDW:
-	    glCallList(self.gl_vdw_list, GL_COMPILE)
+	    glCallList(self.gl_vdw_list[self.frame_i], GL_COMPILE)
 	if self.PRETTY_VDW:
-	    glCallList(self.gl_ball_list, GL_COMPILE)
-	    glCallList(self.gl_stick_list, GL_COMPILE)
-	    glCallList(self.gl_pretty_vdw_list, GL_COMPILE)
+	    glCallList(self.gl_pretty_vdw_list[self.frame_i], GL_COMPILE)
 	if self.RIBBON:
-	    glCallList(self.gl_ribbon_list, GL_COMPILE)
+	    glCallList(self.gl_ribbon_list[self.frame_i], GL_COMPILE)
 	if self.SPHERES:
-	    glCallList(self.gl_sphere_list, GL_COMPILE)
+	    glCallList(self.gl_sphere_list[self.frame_i], GL_COMPILE)
     
     def center_on_atom(self, atom_pos):
         """ Only change the center of viewpoint of the camera.
@@ -367,10 +301,11 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    up = modelview[:3, 1]
 	    zrp = self.zero_reference_point
 	    dist = op.get_euclidean(zrp, atom_pos)
-	    dist_z = op.get_euclidean(cam_pos, zrp)
 	    vec_dir = op.unit_vector([atom_pos[0]-zrp[0], atom_pos[1]-zrp[1], atom_pos[2]-zrp[2]])
 	    add_z = (self.z_far - self.z_near)/2
 	    dist_z = op.get_euclidean(cam_pos, zrp)
+	    if dist_z < add_z:
+		add_z = dist_z - 0.1
 	    cycles = 15
 	    to_add = float(dist/cycles)
 	    for i in range(1, cycles):
@@ -381,7 +316,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		self.fog_start = self.z_far - 1.5
 		self.fog_end = self.z_far
 		dist_z = op.get_euclidean(cam_pos, pto)
-		gl_context, gl_drawable = self.open_gl_ctx()
+		#gl_context, gl_drawable = self.open_gl_ctx()
 		x, y, width, height = self.get_allocation()
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
@@ -395,9 +330,9 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 			  up[0], up[1], up[2])
 		self.window.invalidate_rect(self.allocation, False)
 		self.window.process_updates(False)
-		self.close_gl_ctx(gl_context, gl_drawable)
+		#self.close_gl_ctx(gl_context, gl_drawable)
 	    if dist%0.1 > 0:
-		gl_context, gl_drawable = self.open_gl_ctx()
+		#gl_context, gl_drawable = self.open_gl_ctx()
 		dist_z = op.get_euclidean(cam_pos, atom_pos)
 		self.z_far = dist_z + add_z
 		self.z_near = dist_z - add_z
@@ -412,7 +347,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity()
 		gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], atom_pos[0], atom_pos[1], atom_pos[2], up[0], up[1], up[2])
-		self.close_gl_ctx(gl_context, gl_drawable)
+		#self.close_gl_ctx(gl_context, gl_drawable)
 	    self.queue_draw()
     
     def key_press(self, widget, event):
@@ -447,29 +382,9 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     def pressed_q(self):
 	""" Move frames.
 	"""
-	self.MODIFIED = True
 	for i in range(len(self.data)):
 	    self.frame_i = i
-	    self.load_mol()
 	    self.update_draw_view()
-	    self.window.invalidate_rect(self.allocation, False)
-	    self.window.process_updates(False)
-    
-    def pressed_1(self):
-	""" Move to frame 1.
-	"""
-	self.MODIFIED = True
-	self.frame_i = 1
-	self.load_mol()
-	self.update_draw_view()
-    
-    def pressed_2(self):
-	""" Move to frame 2.
-	"""
-	self.MODIFIED = True
-	self.frame_i = 2
-	self.load_mol()
-	self.update_draw_view()
     
     def pressed_b(self):
 	""" Turn on/off Ball-Stick representation.
@@ -484,6 +399,14 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	"""
 	self.DOTS = not self.DOTS
 	self.draw_dots()
+	self.queue_draw()
+	return True
+    
+    def pressed_l(self):
+	""" Turn on/off Lines representation.
+	"""
+	self.LINES = not self.LINES
+	self.draw_lines()
 	self.queue_draw()
 	return True
     
@@ -530,142 +453,165 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     def draw_ball_stick(self):
 	""" Change the representation to Ball-Stick.
 	"""
-	print 'Ball-Stick Representation'
-	if self.gl_ball_list == None or self.MODIFIED:
-	    self.gl_ball_list = glGenLists(1)
-	    glNewList(self.gl_ball_list, GL_COMPILE)
-	    for atom in self.ball_list:
-		rep.draw_ball(atom)
-	    glEndList()
-	# Makes the bonds representations in sticks format
-	if self.gl_stick_list == None or self.MODIFIED:
-	    self.gl_stick_list = glGenLists(1)
-	    glNewList(self.gl_stick_list, GL_COMPILE)
-	    for bond in self.data[self.frame_i].bonds:
-		rep.draw_bond_stick(bond[0], bond[1], bond[2], bond[3])
-	    glEndList()
-	self.queue_draw()
+	#print 'Ball-Stick Representation'
+	if self.gl_ball_stick_list == None or self.MODIFIED:
+	    self.gl_ball_stick_list = []
+	    for i in range(len(self.data)):
+		self.frame_i = i
+		self.load_mol()
+		gl_bs_li = glGenLists(1)
+		glNewList(gl_bs_li, GL_COMPILE)
+		for atom in self.ball_list:
+		    rep.draw_ball(atom)
+		for bond in self.data[self.frame_i].bonds:
+		    rep.draw_bond_stick(bond[0], bond[1], bond[2], bond[3])
+		glEndList()
+		self.gl_ball_stick_list.append(gl_bs_li)
 	return True
     
     def draw_dots(self):
 	""" Change the representation to Dots.
 	"""
-	print 'Dots Representation'
+	#print 'Dots Representation'
 	# Center dots representations of the atoms
 	if self.gl_point_list == None or self.MODIFIED:
-	    self.gl_point_list = glGenLists(1)
-	    glNewList(self.gl_point_list, GL_COMPILE)
-	    for atom in self.dot_list:
-		rep.draw_point(atom)
-	    glEndList()
-	self.queue_draw()
+	    self.gl_point_list = []
+	    for i in range(len(self.data)):
+		self.frame_i = i
+		self.load_mol()
+		gl_pt_li = glGenLists(1)
+		glNewList(gl_pt_li, GL_COMPILE)
+		for atom in self.dot_list:
+		    rep.draw_point(atom)
+		glEndList()
+		self.gl_point_list.append(gl_pt_li)
+	return True
+    
+    def draw_lines(self):
+	""" Change the representation to lines.
+	    It is the default representation.
+	"""
+	if self.gl_lines_list == None or self.MODIFIED:
+	    self.gl_lines_list = []
+	    for frame in self.data:
+		gl_ln_li = glGenLists(1)
+		glNewList(gl_ln_li, GL_COMPILE)
+		for bond in frame.bonds:
+		    rep.draw_bond_line(bond[0], bond[4])
+		glEndList()
+		self.gl_lines_list.append(gl_ln_li)
 	return True
     
     def draw_pretty_vdw(self):
 	""" Change the representation to Pretty VDW.
 	"""
-	print 'Pretty Van-Der-Waals Representation'
+	#print 'Pretty Van-Der-Waals Representation'
 	# Ball representation.
-	if self.gl_ball_list == None or self.MODIFIED:
-	    self.gl_ball_list = glGenLists(1)
-	    glNewList(self.gl_ball_list, GL_COMPILE)
-	    for atom in self.ball_list:
-		rep.draw_ball(atom)
-	    glEndList()
-	# Makes the bonds representations in sticks format
-	if self.gl_stick_list == None or self.MODIFIED:
-	    self.gl_stick_list = glGenLists(1)
-	    glNewList(self.gl_stick_list, GL_COMPILE)
-	    for bond in self.data[self.frame_i].bonds:
-		rep.draw_bond_stick(bond[0], bond[1], bond[2], bond[3])
-	    glEndList()
-	# Makes the pretty van-der-walls representation of the atoms. The
-	# difference between vdw is that this representation is transparent.
 	if self.gl_pretty_vdw_list == None or self.MODIFIED:
-	    self.gl_pretty_vdw_list = glGenLists(1)
-	    glNewList(self.gl_pretty_vdw_list, GL_COMPILE)
-	    for atom in self.pretty_vdw_list:
-		rep.draw_pretty_vdw(atom)
-	    glEndList()
-	self.queue_draw()
+	    self.gl_pretty_vdw_list = []
+	    for i in range(len(self.data)):
+		self.frame_i = i
+		self.load_mol()
+		gl_p_vdw_li = glGenLists(1)
+		glNewList(gl_p_vdw_li, GL_COMPILE)
+		for atom in self.ball_list:
+		    rep.draw_ball(atom)
+		    # Makes the bonds representations in sticks format
+		for bond in self.data[self.frame_i].bonds:
+		    rep.draw_bond_stick(bond[0], bond[1], bond[2], bond[3])
+		    # Makes the pretty van-der-walls representation of the atoms. The
+		    # difference between vdw is that this representation is transparent.
+		for atom in self.pretty_vdw_list:
+		    rep.draw_pretty_vdw(atom)
+		glEndList()
+		self.gl_pretty_vdw_list.append(gl_p_vdw_li)
 	return True
     
     def draw_ribbon(self):
 	""" Change the representation to Ribbon.
 	"""
-	print 'Ribbon Representation'
+	#print 'Ribbon Representation'
 	# Makes the ribbon representations
 	if self.gl_ribbon_list == None or self.MODIFIED:
-	    self.gl_ribbon_list = glGenLists(1)
-	    glNewList(self.gl_ribbon_list, GL_COMPILE)
-	    for ribbon in self.data[self.frame_i].ribbons:
-		rep.draw_ribbon(ribbon[0], ribbon[1], ribbon[2], ribbon[3])
-	    glEndList()
-	self.queue_draw()
+	    self.gl_ribbon_list = []
+	    for frame in self.data:
+		gl_rb_li = glGenLists(1)
+		glNewList(gl_rb_li, GL_COMPILE)
+		for ribbon in frame.ribbons:
+		    rep.draw_ribbon(ribbon[0], ribbon[1], ribbon[2], ribbon[3])
+		glEndList()
+		self.gl_ribbon_list.append(gl_rb_li)
 	return True
     
     def draw_spheres(self):
 	""" Change the representation to Spheres.
 	"""
-	print 'Spheres Representation'
+	#print 'Spheres Representation'
 	# Sphere representation of the atoms, the difference between the ball
 	# representation is that sphere uses the covalent radius and ball the
 	# atomic radius.
-	if self.gl_sphere_list == None:
-	    self.gl_sphere_list = glGenLists(1)
-	    glNewList(self.gl_sphere_list, GL_COMPILE)
-	    for atom in self.sphere_list:
-		rep.draw_sphere(atom)
-	    glEndList()
-	self.queue_draw()
+	if self.gl_sphere_list == None or self.MODIFIED:
+	    self.gl_sphere_list = []
+	    for i in range(len(self.data)):
+		self.frame_i = i
+		self.load_mol()
+		gl_sp_li = glGenLists(1)
+		glNewList(gl_sp_li, GL_COMPILE)
+		for atom in self.sphere_list:
+		    rep.draw_sphere(atom)
+		glEndList()
+		self.gl_sphere_list.append(gl_sp_li)
 	return True
     
     def draw_vdw(self):
 	""" Change the representation to Van-Der-Waals.
 	"""
-	print 'Van-Der-Waals Representation'
+	#print 'Van-Der-Waals Representation'
 	# Makes the van-der-walls representation of the atoms.
-	if self.gl_vdw_list == None:
-	    self.gl_vdw_list = glGenLists(1)
-	    glNewList(self.gl_vdw_list, GL_COMPILE)
-	    for atom in self.vdw_list:
-		rep.draw_vdw(atom)
-	    glEndList()
-	self.queue_draw()
+	if self.gl_vdw_list == None or self.MODIFIED:
+	    self.gl_vdw_list = []
+	    for i in range(len(self.data)):
+		self.frame_i = i
+		self.load_mol()
+		gl_vdw_li = glGenLists(1)
+		glNewList(gl_vdw_li, GL_COMPILE)
+		for atom in self.vdw_list:
+		    rep.draw_vdw(atom)
+		glEndList()
+		self.gl_vdw_list.append(gl_vdw_li)
 	return True
     
     def draw_wires(self):
 	""" Change the representation to Wires.
 	"""
-	print 'Wired Representation'
+	#print 'Wired Representation'
 	# Wires representation.
-	if self.gl_wires_list == None:
-	    self.gl_wires_list = glGenLists(1)
-	    glNewList(self.gl_wires_list, GL_COMPILE)
-	    for atom in self.wires_list:
-		rep.draw_wire_sphere(atom)
-	    glEndList()
-	# Makes the bonds representations in wired sticks format
-	if self.gl_wired_stick_list == None:
-	    self.gl_wired_stick_list = glGenLists(1)
-	    glNewList(self.gl_wired_stick_list, GL_COMPILE)
-	    for bond in self.data[self.frame_i].bonds:
-		rep.draw_bond_wired_stick(bond[0], bond[1], bond[2], bond[3])
-	    glEndList()
-	self.queue_draw()
+	if self.gl_wires_list == None or self.MODIFIED:
+	    self.gl_wires_list = []
+	    for i in range(len(self.data)):
+		self.frame_i = i
+		self.load_mol()
+		gl_wr_li = glGenLists(1)
+		glNewList(gl_wr_li, GL_COMPILE)
+		for atom in self.wires_list:
+		    rep.draw_wire_sphere(atom)
+		# Makes the bonds representations in wired sticks format
+		for bond in self.data[self.frame_i].bonds:
+		    rep.draw_bond_wired_stick(bond[0], bond[1], bond[2], bond[3])
+		glEndList()
+		self.gl_wires_list.append(gl_wr_li)
 	return True
     
     def update_draw_view(self):
 	""" Redraws the representations with new data.
 	"""
-	reps = ['dots_surf', 'dots', 'vdw', 'pretty_vdw', 'ribbon', 'spheres', 'wires', 'ball_stick']
+	reps = ['dots_surf', 'dots', 'vdw', 'pretty_vdw', 'ribbon', 'spheres', 'wires', 'ball_stick', 'lines']
 	for rep in reps:
 	    func = getattr(self, 'draw_' + rep, None)
 	    if func:
 		func()
-	#func = getattr(self, 'draw_ball_stick', None)
-	#if func():
-	    #func()
+	    self.window.invalidate_rect(self.allocation, False)
+	    self.window.process_updates(False)
     
     def turn_off_reps(self):
 	""" Hyde Everything

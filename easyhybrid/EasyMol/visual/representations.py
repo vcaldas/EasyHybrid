@@ -78,7 +78,7 @@ def init_gl(fog_start, fog_end, fovy, width, height, z_near, z_far):
     glLoadIdentity()
     gluLookAt(0, 0, 10, 0, 0, 0, 0, 1, 0)
 
-def draw_bond_line(atom1, atom2):
+def draw_bond_line(atom, pos_end):
     """ Draw the bonds.
     """
     glDisable(GL_LIGHT0)
@@ -88,12 +88,12 @@ def draw_bond_line(atom1, atom2):
     glEnable(GL_COLOR_MATERIAL)
     glEnable(GL_DEPTH_TEST)
     glPushMatrix()
-    glPushName(atom1.index)
-    glColor3f(atom1.color[0], atom1.color[1], atom1.color[2])
+    glPushName(atom.index)
+    glColor3f(atom.color[0], atom.color[1], atom.color[2])
     glLineWidth(3)
     glBegin(GL_LINES)
-    glVertex3f(atom1.pos[0], atom1.pos[1], atom1.pos[2])
-    glVertex3f(atom2.pos[0], atom2.pos[1], atom2.pos[2])
+    glVertex3f(atom.pos[0], atom.pos[1], atom.pos[2])
+    glVertex3f(pos_end[0], pos_end[1], pos_end[2])
     glEnd()
     glPopName()
     glPopMatrix()
