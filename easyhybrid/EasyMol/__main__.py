@@ -31,11 +31,15 @@ from visual import gl_draw_area as gda, vis_parser
 def main():
     frames = vis_parser.parse_pdb(sys.argv[1])
     glarea = gda.GLCanvas(frames)
+    #glarea = gda.GLCanvas()
     builder = gtk.Builder()
     builder.add_from_file('EasyMol/visual_gui/main_window.glade')
-    boton = builder.get_object('btn_ball_stick')
     window = builder.get_object('main_window')
-    window.set_size_request(800,600)
+    boton = builder.get_object('btn_ball_stick')
+    #window.set_size_request(800,600)
+    handlers = {"on_btn_BallStick_clicked": glarea.switch_ball_stick,
+		"on_file_quit_activate": gtk.main_quit}
+    builder.connect_signals(handlers)
     window.connect('key_press_event', glarea.key_press)
     vbox = builder.get_object('vbox_main')
     vbox.pack_end(glarea, True, True)

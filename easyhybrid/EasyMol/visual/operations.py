@@ -181,10 +181,10 @@ def generate_bonds(atoms):
     print 'BEGINS TO CALCULATE DISTANCES'
     arr1 = np.array([0, 0, 1])
     for i in range(len(atoms)-1):
-	if i+20>=len(atoms):
+	if i+25>=len(atoms):
 	    limit = len(atoms)
 	else:
-	    limit = i+20
+	    limit = i+25
 	for j in range(i+1, limit):
 	    if get_euclidean(atoms[i].pos, atoms[j].pos) <= (atoms[i].cov_rad + atoms[j].cov_rad):
 		arr2 = unit_vector(atoms[j].pos - atoms[i].pos)

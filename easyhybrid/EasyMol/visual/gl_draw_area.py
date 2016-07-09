@@ -61,8 +61,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     gl_backgrd = [0.0, 0.0, 0.0, 0.0]
     zero_reference_point = target_point = np.array([0, 0, 0])
     mouse_rotate = mouse_pan = mouse_zoom = dragging = False
-    LINES = True
-    DOTS_SURFACE = DOTS = BALL_STICK = LINES = VDW = PRETTY_VDW = RIBBON = SPHERES = WIRES = SELECTION = MODIFIED = False
+    LINES = DOTS_SURFACE = DOTS = BALL_STICK = VDW = PRETTY_VDW = RIBBON = SPHERES = WIRES = SELECTION = MODIFIED = False
     
     def __init__(self, data=None, width=640, height=420):
 	""" Constructor of the GLCanvas object. Here you can change the
@@ -316,7 +315,6 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		self.fog_start = self.z_far - 1.5
 		self.fog_end = self.z_far
 		dist_z = op.get_euclidean(cam_pos, pto)
-		#gl_context, gl_drawable = self.open_gl_ctx()
 		x, y, width, height = self.get_allocation()
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
@@ -330,9 +328,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 			  up[0], up[1], up[2])
 		self.window.invalidate_rect(self.allocation, False)
 		self.window.process_updates(False)
-		#self.close_gl_ctx(gl_context, gl_drawable)
 	    if dist%0.1 > 0:
-		#gl_context, gl_drawable = self.open_gl_ctx()
 		dist_z = op.get_euclidean(cam_pos, atom_pos)
 		self.z_far = dist_z + add_z
 		self.z_near = dist_z - add_z
@@ -347,7 +343,6 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity()
 		gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], atom_pos[0], atom_pos[1], atom_pos[2], up[0], up[1], up[2])
-		#self.close_gl_ctx(gl_context, gl_drawable)
 	    self.queue_draw()
     
     def key_press(self, widget, event):
@@ -385,6 +380,18 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	for i in range(len(self.data)):
 	    self.frame_i = i
 	    self.update_draw_view()
+    
+    def pressed_1(self):
+	""" Changes color to white.
+	"""
+	color = [1.0, 1.0, 1.0, 0.0]
+	self.change_background(color)
+    
+    def pressed_2(self):
+	""" Changes color to white.
+	"""
+	color = [0.486275, 0.988235, 0.0, 0.0]
+	self.change_background(color)
     
     def pressed_b(self):
 	""" Turn on/off Ball-Stick representation.
@@ -451,7 +458,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	return True
     
     def draw_ball_stick(self):
-	""" Change the representation to Ball-Stick.
+	""" Draws all the elements for Ball-Stick representation.
 	"""
 	#print 'Ball-Stick Representation'
 	if self.gl_ball_stick_list == None or self.MODIFIED:
@@ -605,6 +612,10 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     def update_draw_view(self):
 	""" Redraws the representations with new data.
 	"""
+	# Experimental, ONLY WORKS if all the atoms are numbered the same in all frames
+	for i in range(len(self.selected_atoms)):
+	    self.selected_atoms[i] = self.data[self.frame_i].atoms[self.selected_atoms[i].index-1]
+	# Experimental, ONLY WORKS if all the atoms are numbered the same in all frames
 	reps = ['dots_surf', 'dots', 'vdw', 'pretty_vdw', 'ribbon', 'spheres', 'wires', 'ball_stick', 'lines']
 	for rep in reps:
 	    func = getattr(self, 'draw_' + rep, None)
@@ -616,7 +627,18 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     def turn_off_reps(self):
 	""" Hyde Everything
 	"""
-	self.DOTS_SURFACE = self.DOTS = self.LINES = self.VDW = self.PRETTY_VDW = self.RIBBON = self.SPHERES = self.WIRES = self.BALL_STICK = False
+	self.DOTS_SURFACE = self.DOTS = self.LINES = self.VDW = self.PRETTY_VDW = self.RIBBON = self.SPHERES = self.WIRES = self.BALL_STICK = self.LINES = False
+    
+    def change_background(self, color):
+	""" Changes the color of the background.
+	    The color variable is an array of four elements 
+	    corresponding to Red, Green, Blue and Alpha values
+	    in the 0.0-1.0 range.
+	"""
+	self.gl_backgrd = color
+	glFogfv(GL_FOG_COLOR, color[:3])
+	self.draw()
+	self.queue_draw()
     
     @classmethod
     def event_masked(cls, event, mask):
@@ -674,7 +696,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         y = self.mouse_y = event.y
         self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(x, y)
 	if event.button == 1 and event.type == gtk.gdk.BUTTON_RELEASE:
-	    if self.pos_mouse[0] == x and self.pos_mouse[1] == y:
+	    if math.fabs(self.pos_mouse[0]-x) <= self.pick_radius[0] and math.fabs(self.pos_mouse[1]-y) <= self.pick_radius[1]:
 		nearest, hits = self.pick(x, self.get_allocation().height-1-y, self.pick_radius[0], self.pick_radius[1], event)
 		selected = self.select(event, nearest, hits)
 		if selected is None:
@@ -888,4 +910,83 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
 	crd_xyz = -1 * np.mat(modelview[:3,:3]) * np.mat(modelview[3,:3]).T
 	return crd_xyz.A1
+    
+    #""" Following are the functions to use with glade-gtk.
+    #"""
+    
+    #def switch_ball_stick(self, button):
+	#""" Turn on/off Ball-Stick representation.
+	#"""
+	#self.BALL_STICK = not self.BALL_STICK
+	#self.draw_ball_stick()
+	#self.queue_draw()
+	#return True
+    
+    
+    #def switch_dots(self, button):
+	#""" Turn on/off Dots representation.
+	#"""
+	#self.DOTS = not self.DOTS
+	#self.draw_dots()
+	#self.queue_draw()
+	#return True
+    
+    #def switch_lines(self, button):
+	#""" Turn on/off Lines representation.
+	#"""
+	#self.LINES = not self.LINES
+	#self.draw_lines()
+	#self.queue_draw()
+	#return True
+    
+    #def switch_pretty_vdw(self, button):
+	#""" Turn on/off the Pretty VDW representation.
+	#"""
+	#self.PRETTY_VDW = not self.PRETTY_VDW
+	#self.draw_pretty_vdw()
+	#self.queue_draw()
+	#return True
+    
+    #def switch_ribbon(self, button):
+	#""" Turn on/off the Ribbon representation.
+	#"""
+	#self.RIBBON = not self.RIBBON
+	#self.draw_ribbon()
+	#self.queue_draw()
+	#return True
+    
+    #def switch_spheres(self, button):
+	#""" Turn on/off the Sphere representation.
+	#"""
+	#self.SPHERES = not self.SPHERES
+	#self.draw_spheres()
+	#self.queue_draw()
+	#return True
+    
+    #def switch_vdw(self, button):
+	#""" Turn on/off the Van-Der-Waals representation.
+	#"""
+	#self.VDW = not self.VDW
+	#self.draw_vdw()
+	#self.queue_draw()
+	#return True
+    
+    #def switch_wires(self, button):
+	#""" Turn on/off the Wires representation.
+	#"""
+	#self.WIRES = not self.WIRES
+	#self.draw_wires()
+	#self.queue_draw()
+	#return True
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
