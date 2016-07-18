@@ -914,70 +914,70 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     #""" Following are the functions to use with glade-gtk.
     #"""
     
-    #def switch_ball_stick(self, button):
-	#""" Turn on/off Ball-Stick representation.
-	#"""
-	#self.BALL_STICK = not self.BALL_STICK
-	#self.draw_ball_stick()
-	#self.queue_draw()
-	#return True
+    def switch_ball_stick(self, button):
+	""" Turn on/off Ball-Stick representation.
+	"""
+	self.BALL_STICK = not self.BALL_STICK
+	self.draw_ball_stick()
+	self.queue_draw()
+	return True
     
     
-    #def switch_dots(self, button):
-	#""" Turn on/off Dots representation.
-	#"""
-	#self.DOTS = not self.DOTS
-	#self.draw_dots()
-	#self.queue_draw()
-	#return True
+    def switch_dots(self, button):
+	""" Turn on/off Dots representation.
+	"""
+	self.DOTS = not self.DOTS
+	self.draw_dots()
+	self.queue_draw()
+	return True
     
-    #def switch_lines(self, button):
-	#""" Turn on/off Lines representation.
-	#"""
-	#self.LINES = not self.LINES
-	#self.draw_lines()
-	#self.queue_draw()
-	#return True
+    def switch_lines(self, button):
+	""" Turn on/off Lines representation.
+	"""
+	self.LINES = not self.LINES
+	self.draw_lines()
+	self.queue_draw()
+	return True
     
-    #def switch_pretty_vdw(self, button):
-	#""" Turn on/off the Pretty VDW representation.
-	#"""
-	#self.PRETTY_VDW = not self.PRETTY_VDW
-	#self.draw_pretty_vdw()
-	#self.queue_draw()
-	#return True
+    def switch_pretty_vdw(self, button):
+	""" Turn on/off the Pretty VDW representation.
+	"""
+	self.PRETTY_VDW = not self.PRETTY_VDW
+	self.draw_pretty_vdw()
+	self.queue_draw()
+	return True
     
-    #def switch_ribbon(self, button):
-	#""" Turn on/off the Ribbon representation.
-	#"""
-	#self.RIBBON = not self.RIBBON
-	#self.draw_ribbon()
-	#self.queue_draw()
-	#return True
+    def switch_ribbon(self, button):
+	""" Turn on/off the Ribbon representation.
+	"""
+	self.RIBBON = not self.RIBBON
+	self.draw_ribbon()
+	self.queue_draw()
+	return True
     
-    #def switch_spheres(self, button):
-	#""" Turn on/off the Sphere representation.
-	#"""
-	#self.SPHERES = not self.SPHERES
-	#self.draw_spheres()
-	#self.queue_draw()
-	#return True
+    def switch_spheres(self, button):
+	""" Turn on/off the Sphere representation.
+	"""
+	self.SPHERES = not self.SPHERES
+	self.draw_spheres()
+	self.queue_draw()
+	return True
     
-    #def switch_vdw(self, button):
-	#""" Turn on/off the Van-Der-Waals representation.
-	#"""
-	#self.VDW = not self.VDW
-	#self.draw_vdw()
-	#self.queue_draw()
-	#return True
+    def switch_vdw(self, button):
+	""" Turn on/off the Van-Der-Waals representation.
+	"""
+	self.VDW = not self.VDW
+	self.draw_vdw()
+	self.queue_draw()
+	return True
     
-    #def switch_wires(self, button):
-	#""" Turn on/off the Wires representation.
-	#"""
-	#self.WIRES = not self.WIRES
-	#self.draw_wires()
-	#self.queue_draw()
-	#return True
+    def switch_wires(self, button):
+	""" Turn on/off the Wires representation.
+	"""
+	self.WIRES = not self.WIRES
+	self.draw_wires()
+	self.queue_draw()
+	return True
     
     
     
