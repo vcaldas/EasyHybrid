@@ -29,7 +29,7 @@ import glcamera as cam
 import matrix_operations as mop
 import shapes
 import sphere_data as sph_d
-import easymol_shaders as em_shader
+import vismol_shaders as vm_shader
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -45,7 +45,7 @@ class MyGLProgram(Gtk.GLArea):
         add a function to change the shaders.
     """
     
-    def __init__(self, vertex=None, fragment=None, geometry=None):
+    def __init__(self, data=None, vertex=None, fragment=None, geometry=None, width=640, height=420):
         """ Constructor of the class, needs two String objects,
             the vertex and fragment shaders.
             
@@ -65,27 +65,21 @@ class MyGLProgram(Gtk.GLArea):
         self.connect("button-release-event", self.mouse_released)
         self.connect("motion-notify-event", self.mouse_motion)
         self.connect("scroll-event", self.mouse_scroll)
-        self.set_size_request(640,420)
+        self.set_size_request(width, height)
         self.grab_focus()
         self.set_events( self.get_events() | Gdk.EventMask.SCROLL_MASK
                        | Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK
                        | Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.POINTER_MOTION_HINT_MASK
                        | Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK )
-        
         self.vertex_shader = vertex
         self.fragment_shader = fragment
         self.geometry_shader = geometry
-        self.model_mat = np.identity(4, dtype=np.float32)
-        self.glcamera = cam.GLCamera()
+        self.data = data
         
     def initialize(self, widget):
         """ Enables the buffers and other charasteristics of the OpenGL context.
             sets the initial projection and view matrix
             
-            Keyword arguments:
-            glarea -- The Gtk.GLArea field of the class
-            self.projection_matrix -- The projection matrix
-            self.view_mat -- The view matrix
             self.flag -- Needed to only create one OpenGL program, otherwise a bunch of
                          programs will be created and use system resources. If the OpenGL
                          program will be changed change this value to True
@@ -96,9 +90,11 @@ class MyGLProgram(Gtk.GLArea):
             print self.get_error().domain
             print self.get_error().message
             Gtk.main_quit()
+        self.model_mat = np.identity(4, dtype=np.float32)
+        self.glcamera = cam.GLCamera()
         self.set_has_depth_buffer(True)
         self.set_has_alpha(True)
-        self.data = None
+        self.frame_i = 0
         aloc = self.get_allocation()
         w = np.float32(aloc.width)
         h = np.float32(aloc.height)
@@ -114,10 +110,25 @@ class MyGLProgram(Gtk.GLArea):
         self.bottom = -1
         self.mouse_x = self.mouse_y = 0
         self.mouse_rotate = self.mouse_zoom = self.mouse_pan = False
-        self.light_position = np.array([-0.5,2.0,3.0],dtype=np.float32)
-        self.light_color = np.array([1.0,1.0,1.0],dtype=np.float32)
+        self.bckgrnd_color = np.array([0.0,0.0,0.0,1.0],dtype=np.float32)
+        self.light_position = np.array([-4.0,4.0,3.0],dtype=np.float32)
+        self.light_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
+        self.light_ambient_coef = 0.5
+        self.light_shininess = 5.0
+        self.light_intensity = np.array([0.6,0.6,0.6],dtype=np.float32)
+        self.light_specular_color = np.array([1.0,1.0,1.0],dtype=np.float32)
+        self.LINES = self.SPHERES = self.DOTS = self.DOTS_SURFACE = False
+        self.VDW = self.PRETTY_VDW = self.RIBBON = self.BALL_STICK = False
     
-    def reshape(self, other_self, width, height):
+    def reshape(self, widget, width, height):
+        """ Resizing function, takes the widht and height of the widget
+            and modifies the view in the camera acording to the new values
+        
+            Keyword arguments:
+            widget -- The widget that is performing resizing
+            width -- Actual width of the window
+            height -- Actual height of the window
+        """
         self.left = -float(width)/height
         self.right = -self.left
         self.width = width
@@ -157,17 +168,16 @@ class MyGLProgram(Gtk.GLArea):
             Keyword arguments:
             shader -- The shader text to use
             shader_type -- The OpenGL enum type of shader, it can be:
-                           GL.GL_COMPUTE_SHADER, GL.GL_VERTEX_SHADER, 
-                           GL.GL_TESS_CONTROL_SHADER, GL.GL_TESS_EVALUATION_SHADER,
-                           GL.GL_GEOMETRY_SHADER or GL.GL_FRAGMENT_SHADER
+                           GL.GL_VERTEX_SHADER, GL.GL_GEOMETRY_SHADER or GL.GL_FRAGMENT_SHADER
             
             Returns:
-            A shader object identifier or pop out an error
+            A shader object identifier or pops out an error
         """
         shader = GL.glCreateShader(shader_type)
         GL.glShaderSource(shader, shader_prog)
         GL.glCompileShader(shader)
         if GL.glGetShaderiv(shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
+            print "Error compiling the shader: ", shader_type
             raise RuntimeError(GL.glGetShaderInfoLog(shader))
         return shader
     
@@ -178,120 +188,136 @@ class MyGLProgram(Gtk.GLArea):
         if self.data is not None:
             if self.shader_flag:
                 self.load_shaders()
-            GL.glClearColor(0.0, 0.0, 0.0, 1.0)
-            #GL.glClearColor(1.0, 1.0, 1.0, 1.0)
+            GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
+                            self.bckgrnd_color[2],self.bckgrnd_color[3])
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
             GL.glUseProgram(self.program)
-            model = GL.glGetUniformLocation(self.program, 'model_mat')
-            GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
-            view = GL.glGetUniformLocation(self.program, 'view_mat')
-            GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.get_view_matrix())
-            proj = GL.glGetUniformLocation(self.program, 'projection_mat')
-            GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.get_projection_matrix())
             
-            light_pos = GL.glGetUniformLocation(self.program, 'my_light.position')
-            GL.glUniform3fv(light_pos, 1, self.light_position)
-            light_col = GL.glGetUniformLocation(self.program, 'my_light.color')
-            GL.glUniform3fv(light_col, 1, self.light_color)
-            amb_coef = GL.glGetUniformLocation(self.program, 'my_light.ambient_coef')
-            GL.glUniform1fv(amb_coef, 1, .5)
-            shiny = GL.glGetUniformLocation(self.program, 'my_light.shininess')
-            GL.glUniform1fv(shiny, 1, 1)
-            intensity = GL.glGetUniformLocation(self.program, 'my_light.intensity')
-            GL.glUniform3fv(intensity, 1, [.8,.8,.8])
-            spec_col = GL.glGetUniformLocation(self.program, 'my_light.specular_color')
-            GL.glUniform3fv(spec_col, 1, [1.0,1.0,1.0])
-            cam_pos = GL.glGetUniformLocation(self.program, 'vert_cam_pos')
-            GL.glUniform3fv(cam_pos, 1, self.glcamera.get_position())
+            self.load_matrices()
+            self.load_lights()
             
-            GL.glBindVertexArray(self.vertex_array_object)
+            if self.SPHERES or 1:
+                self.draw_spheres()
+            #GL.glBindVertexArray(self.vertex_array_object)
             
-            GL.glDrawElements(GL.GL_TRIANGLES, len(self.index), GL.GL_UNSIGNED_SHORT, None)
+            #GL.glDrawElements(GL.GL_TRIANGLES, len(self.index), GL.GL_UNSIGNED_SHORT, None)
             #GL.glDrawElements(GL.GL_POINTS, len(self.index), GL.GL_UNSIGNED_SHORT, None)
-            print self.glcamera.get_position(), '<-- Cam pos'
-            GL.glBindVertexArray(0)
+            #print self.glcamera.get_position(), '<-- Cam pos'
+            #GL.glBindVertexArray(0)
             GL.glUseProgram(0)
         else:
-            GL.glClearColor(0.0, 0.0, 0.0, 1.0)
+            GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
+                            self.bckgrnd_color[2],self.bckgrnd_color[3])
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+    
+    def load_matrices(self):
+        """ Load the matrices to OpenGL.
+            
+            model_mat -- transformation matrix for the objects rendered
+            view_mat -- transformation matrix for the camera used
+            projection_mat -- matrix for the space to be visualized in the scene
+        """
+        model = GL.glGetUniformLocation(self.program, 'model_mat')
+        GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
+        view = GL.glGetUniformLocation(self.program, 'view_mat')
+        GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.get_view_matrix())
+        proj = GL.glGetUniformLocation(self.program, 'projection_mat')
+        GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.get_projection_matrix())
+        return True
+    
+    def load_lights(self):
+        """ Function doc
+        """
+        light_pos = GL.glGetUniformLocation(self.program, 'my_light.position')
+        GL.glUniform3fv(light_pos, 1, self.light_position)
+        light_col = GL.glGetUniformLocation(self.program, 'my_light.color')
+        GL.glUniform3fv(light_col, 1, self.light_color)
+        amb_coef = GL.glGetUniformLocation(self.program, 'my_light.ambient_coef')
+        GL.glUniform1fv(amb_coef, 1, self.light_ambient_coef)
+        shiny = GL.glGetUniformLocation(self.program, 'my_light.shininess')
+        GL.glUniform1fv(shiny, 1, self.light_shininess)
+        intensity = GL.glGetUniformLocation(self.program, 'my_light.intensity')
+        GL.glUniform3fv(intensity, 1, self.light_intensity)
+        spec_col = GL.glGetUniformLocation(self.program, 'my_light.specular_color')
+        GL.glUniform3fv(spec_col, 1, self.light_specular_color)
+        cam_pos = GL.glGetUniformLocation(self.program, 'vert_cam_pos')
+        GL.glUniform3fv(cam_pos, 1, self.glcamera.get_position())
+        return True
     
     def load_data(self, data=None):
         """ In this function you load the data to be displayed. Because of
             using the flag the program loads the data just once. Here you
             bind the coordinates data to the buffer array.
         """
-        self.vertex_array_object = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(self.vertex_array_object)
-        
-        vert_vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.data.itemsize*len(self.data), self.data, GL.GL_STATIC_DRAW)
-        
-        ind_vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
-        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.index.itemsize*len(self.index), self.index, GL.GL_STATIC_DRAW)
-        
-        position = GL.glGetAttribLocation(self.program, 'coordinate')
-        GL.glEnableVertexAttribArray(position)
-        GL.glVertexAttribPointer(position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.data.itemsize, ctypes.c_void_p(0))
-        
-        col_vbo = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.color.itemsize*len(self.color), self.color, GL.GL_STATIC_DRAW)
-        
-        colors = GL.glGetAttribLocation(self.program, 'vert_color')
-        GL.glEnableVertexAttribArray(colors)
-        GL.glVertexAttribPointer(colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.color.itemsize, ctypes.c_void_p(0))
-        
-        #cam_vbo = GL.glGenBuffers(1)
-        #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, cam_vbo)
-        #GL.glBufferData(GL.GL_ARRAY_BUFFER, self.glcamera.get_position().itemsize*len(self.glcamera.get_position()), self.glcamera.get_position(), GL.GL_STATIC_DRAW)
-        
-        #cam_pos = GL.glGetAttribLocation(self.program, 'vert_cam_pos')
-        #GL.glEnableVertexAttribArray(cam_pos)
-        #GL.glVertexAttribPointer(cam_pos, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.color.itemsize, ctypes.c_void_p(0))
-        
-        GL.glBindVertexArray(0)
-        GL.glDisableVertexAttribArray(position)
-        GL.glDisableVertexAttribArray(colors)
-        GL.glDisableVertexAttribArray(colors)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+        assert(self.data is not None or data is not None)
+        if data is not None:
+            self.data = data
+        self.dot_list         = []
+        self.vdw_list         = []
+        self.ball_list        = []
+        self.bonds_list       = []
+        self.wires_list       = []
+        self.sphere_list      = []
+        self.spheres_vao      = []
+        self.pretty_vdw_list  = []
+        self.dot_surface_list = []
+        for chain in self.data[self.frame_i].chains.values():
+            for residue in chain.residues.values():
+                for atom in residue.atoms.values():
+                    #if atom.dot:
+                        #self.dot_list.append(atom)
+                    #if atom.vdw:
+                        #self.vdw_list.append(atom)
+                    #if atom.ball:
+                        #self.ball_list.append(atom)
+                    #if atom.wires:
+                        #self.wires_list.append(atom)
+                    if atom.sphere:
+                        self.sphere_list.append(atom)
+                    #if atom.pretty_vdw:
+                        #self.pretty_vdw_list.append(atom)
+                    #if atom.dot_surface:
+                        #self.dot_surface_list.append(atom)
+        #print self.sphere_list
+        for atom in self.sphere_list:
+            vertices, indexes, colors = shapes.get_sphere(atom.pos, atom.vdw_rad, atom.color)
+            vao = GL.glGenVertexArrays(1)
+            GL.glBindVertexArray(vao)
+            
+            vert_vbo = GL.glGenBuffers(1)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.itemsize*len(vertices), vertices, GL.GL_STATIC_DRAW)
+            
+            ind_vbo = GL.glGenBuffers(1)
+            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
+            GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*len(indexes), indexes, GL.GL_STATIC_DRAW)
+            
+            att_position = GL.glGetAttribLocation(self.program, 'coordinate')
+            GL.glEnableVertexAttribArray(att_position)
+            GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*vertices.itemsize, ctypes.c_void_p(0))
+            
+            col_vbo = GL.glGenBuffers(1)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*len(colors), colors, GL.GL_STATIC_DRAW)
+            
+            att_colors = GL.glGetAttribLocation(self.program, 'vert_color')
+            GL.glEnableVertexAttribArray(att_colors)
+            GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+            self.spheres_vao.append(vao)
+            GL.glBindVertexArray(0)
+            GL.glDisableVertexAttribArray(att_position)
+            GL.glDisableVertexAttribArray(att_colors)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
     
-    #def load_data(self, data=None):
-        #""" In this function you load the data to be displayed. Because of
-            #using the flag the program loads the data just once. Here you
-            #bind the coordinates data to the buffer array.
-        #"""
-        #self.vertex_array_object = GL.glGenVertexArrays(1)
-        #GL.glBindVertexArray(self.vertex_array_object)
-        
-        #vert_buffer = (ctypes.c_float*len(self.data))(*self.data)
-        #vert_vbo = GL.glGenBuffers(1)
-        #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
-        #GL.glBufferData(GL.GL_ARRAY_BUFFER, vert_buffer, GL.GL_STATIC_DRAW)
-        
-        #ind_buffer = (ctypes.c_uint*len(self.index))(*self.index)
-        #vert_ind = GL.glGenBuffers(1)
-        #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, vert_ind)
-        #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, ind_buffer, GL.GL_STATIC_DRAW)
-        
-        #position = GL.glGetAttribLocation(self.program, 'coordinate')
-        #GL.glEnableVertexAttribArray(position)
-        #GL.glVertexAttribPointer(position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*4, ctypes.c_void_p(0))
-        
-        #col_buffer = (ctypes.c_float*len(self.color))(*self.color)
-        #col_vbo = GL.glGenBuffers(1)
-        #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
-        #GL.glBufferData(GL.GL_ARRAY_BUFFER, col_buffer, GL.GL_STATIC_DRAW)
-        
-        #gl_colors = GL.glGetAttribLocation(self.program, 'color')
-        #GL.glEnableVertexAttribArray(gl_colors)
-        #GL.glVertexAttribPointer(gl_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*4, ctypes.c_void_p(0))
-        
-        #GL.glBindVertexArray(0)
-        #GL.glDisableVertexAttribArray(position)
-        #GL.glDisableVertexAttribArray(gl_colors)
-        #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+    def draw_spheres(self):
+        """ Function doc
+        """
+        assert(len(self.spheres_vao)>0)
+        for i,atom in enumerate(self.sphere_list):
+            GL.glBindVertexArray(self.spheres_vao[i])
+            GL.glDrawElements(GL.GL_TRIANGLES, 240, GL.GL_UNSIGNED_SHORT, None)
+            GL.glBindVertexArray(0)
     
     def key_press(self, widget, event):
         """ The mouse_button function serves, as the names states, to catch
@@ -304,7 +330,7 @@ class MyGLProgram(Gtk.GLArea):
         """
         k_name = Gdk.keyval_name(event.keyval)
         func = getattr(self, 'pressed_' + k_name, None)
-        print k_name, 'key Pressed'
+        #print k_name, 'key Pressed'
         if func:
             func()
         return True
@@ -355,9 +381,9 @@ class MyGLProgram(Gtk.GLArea):
                                 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
                                 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
                                 0.0, 0.0, 1.0, 0.0, 1.0, 0.0],dtype=np.float32)
-        self.data = sph_d.sph_verts['level_4']
-        self.index = sph_d.sph_triangles['level_4']
-        #print self.data
+        self.data = sph_d.sph_verts['level_2']
+        self.index = sph_d.sph_triangles['level_2']
+        
         self.queue_draw()
         print 'Load data'
     
@@ -390,7 +416,6 @@ class MyGLProgram(Gtk.GLArea):
     
     def mouse_released(self, widget, event):
         pass
-        #print 'click released'
         self.mouse_rotate = self.mouse_zoom = self.mouse_pan = False
     
     def mouse_motion(self, widget, event):
@@ -455,17 +480,3 @@ class MyGLProgram(Gtk.GLArea):
         pz = self.glcamera.z_near
         return px, py, pz
     
-#test = MyGLProgram(vertex_shader, fragment_shader, geometry_shader)
-test = MyGLProgram(em_shader.vertex_shader2, em_shader.fragment_shader2)
-wind = Gtk.Window()
-wind.add(test)
-
-wind.connect("delete-event", Gtk.main_quit)
-wind.connect("key-press-event", test.key_press)
-
-wind.show_all()
-Gtk.main()
-
-
-
-

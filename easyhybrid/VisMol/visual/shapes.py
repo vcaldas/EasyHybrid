@@ -23,7 +23,8 @@
 #  
 
 import numpy as np
-import math
+import math, copy
+import sphere_data as sphd
 
 def get_cube(center, r):
     """ Generates the vertex of a cube for using the 
@@ -84,3 +85,36 @@ def get_icosahedron(radius):
                            1,10, 7, 1, 6, 8, 8, 9, 4, 7, 6, 1,
                            6, 9, 8, 2, 4, 9, 2,11, 5,10,11, 7],dtype=np.uint32)
     return vertices, triangles
+
+def get_sphere(pos, rad, color, level='level_1'):
+    """ Function doc
+    """
+    vertices = copy.copy(sphd.sph_verts[level])
+    indices = copy.copy(sphd.sph_triangles[level])
+    colors = np.array(color*len(vertices),dtype=np.float32)
+    for i in range(len(vertices)/3):
+        vertices[i*3:(i+1)*3] = (vertices[i*3:(i+1)*3] + pos) * rad
+    return vertices, indices, colors
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  shaders.py
+#  vismol_shaders.py
 #  
 #  Copyright 2016 Labio <labio@labio-XPS-8300>
 #  
@@ -168,7 +168,7 @@ void main(){
    
    vec3 incidence_vec = -vert_to_light;
    vec3 reflection_vec = reflect(incidence_vec, normal);
-   vec3 vert_to_cam = normalize(frag_cam_pos - frag_vert);
+   vec3 vert_to_cam = normalize(frag_cam_pos - frag_pos);
    float cos_angle = max(0.0, dot(vert_to_cam, reflection_vec));
    float specular_coef = pow(cos_angle, my_light.shininess);
    vec3 specular = specular_coef * my_light.specular_color * my_light.intensity;
