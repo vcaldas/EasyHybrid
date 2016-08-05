@@ -157,8 +157,11 @@ class MyGLProgram(Gtk.GLArea):
         GL.glAttachShader(self.program, my_fragment_shader)
         GL.glLinkProgram(self.program)
         print 'OpenGL version: ',GL.glGetString(GL.GL_VERSION)
-        print 'OpenGL major version: ',GL.glGetDoublev(GL.GL_MAJOR_VERSION)
-        print 'OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION)
+        try:
+            print 'OpenGL major version: ',GL.glGetDoublev(GL.GL_MAJOR_VERSION)
+            print 'OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION)
+        except:
+            print 'OpenGL major version not found'
         self.load_data()
         self.shader_flag = False
         
