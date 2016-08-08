@@ -42,7 +42,6 @@ struct gl_LightSourceParameters {
 
 uniform gl_LightSourceParameters gl_LightSource[gl_MaxLights];
 """
-
 my_glMaterial = """
 struct gl_MaterialParameters {
    vec4 emission;    // Ecm 
@@ -75,7 +74,6 @@ void main()
    sh_color = vert_color;
 }
 """
-
 fragment_shader = """
 #version 330
 
@@ -88,7 +86,6 @@ void main()
    final_color = vec4(sh_color, 1.0);
 }
 """
-
 geometry_shader = """
 #version 330
 
@@ -111,26 +108,21 @@ vertex_shader2 = """
 uniform mat4 model_mat;
 uniform mat4 view_mat;
 uniform mat4 projection_mat;
-uniform vec3 vert_cam_pos;
 
 in vec3 coordinate;
 in vec3 vert_color;
-//in vec3 vert_cam_pos;
 
 out vec3 frag_vert;
 out vec3 frag_color;
 out vec3 frag_normal;
-out vec3 frag_cam_pos;
 
 void main(){
    gl_Position = projection_mat * view_mat * model_mat * vec4(coordinate, 1.0);
-   frag_vert = coordinate;
+   frag_vert = vec3(view_mat * model_mat * vec4(coordinate, 1.0));
    frag_color = vert_color;
-   frag_normal = coordinate;
-   frag_cam_pos = vert_cam_pos;
+   frag_normal = frag_vert;
 }
 """
-
 fragment_shader2 = """
 #version 330
 
@@ -143,23 +135,21 @@ struct Light {
    float shininess;
 };
 
-uniform mat4 model_mat;
 uniform Light my_light;
+uniform mat4 model_mat;
+uniform mat3 normal_mat;
+uniform vec3 cam_pos;
 
 in vec3 frag_vert;
 in vec3 frag_color;
 in vec3 frag_normal;
-in vec3 frag_cam_pos;
 
 out vec4 final_color;
 
 void main(){
-   mat3 normal_mat = transpose(inverse(mat3(model_mat)));
    vec3 normal = normalize(normal_mat * frag_normal);
    
-   vec3 frag_pos = vec3(model_mat * vec4(frag_vert, 1.0));
-   
-   vec3 vert_to_light = normalize(my_light.position - frag_pos);
+   vec3 vert_to_light = normalize(my_light.position - frag_vert);
    
    float diffuse_coef = max(0.0, dot(normal, vert_to_light));
    vec3 diffuse = diffuse_coef * my_light.color * frag_color;
@@ -168,7 +158,7 @@ void main(){
    
    vec3 incidence_vec = -vert_to_light;
    vec3 reflection_vec = reflect(incidence_vec, normal);
-   vec3 vert_to_cam = normalize(frag_cam_pos - frag_pos);
+   vec3 vert_to_cam = normalize(cam_pos - frag_vert);
    float cos_angle = max(0.0, dot(vert_to_cam, reflection_vec));
    float specular_coef = pow(cos_angle, my_light.shininess);
    vec3 specular = specular_coef * my_light.specular_color * my_light.intensity;
@@ -177,10 +167,200 @@ void main(){
 }
 """
 
+vertex_shader3 = """
+#version 330
 
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 projection_mat;
 
+in vec3 coordinate;
+in vec3 vert_color;
 
+out vec3 frag_coord;
+out vec3 frag_color;
+out vec3 frag_normal;
 
+void main(){
+   gl_Position = projection_mat * view_mat * model_mat * vec4(coordinate, 1.0);
+   frag_coord = vec3(model_mat * vec4(coordinate, 1.0));
+   frag_normal = coordinate;
+   frag_color = vert_color;
+}
+"""
+fragment_shader3 = """
+#version 330
+
+struct Light {
+   vec3 position;
+   vec3 color;
+   vec3 intensity;
+   vec3 specular_color;
+   float ambient_coef;
+   float shininess;
+};
+
+uniform Light my_light;
+uniform mat4 model_mat;
+uniform mat3 normal_mat;
+uniform vec3 cam_pos;
+
+in vec3 frag_coord;
+in vec3 frag_color;
+in vec3 frag_normal;
+
+out vec4 final_color;
+
+void main(){
+   vec3 normal = normalize(normal_mat * frag_normal);
+   
+   vec3 vert_to_light = normalize(my_light.position - frag_coord);
+   vec3 vert_to_cam = normalize(cam_pos - frag_coord);
+   
+   vec3 ambient = my_light.ambient_coef * frag_color * my_light.intensity;
+   
+   float diffuse_coef = max(0.0, dot(normal, vert_to_light));
+   vec3 diffuse = diffuse_coef * frag_color * my_light.intensity;
+   
+   float specular_coef = 0.0;
+   if (diffuse_coef > 0.0)
+      specular_coef = pow(max(0.0, dot(vert_to_cam, reflect(-vert_to_light, normal))), my_light.shininess);
+   vec3 specular = specular_coef * vec3(1) * my_light.intensity;
+   specular = specular * (vec3(1) - diffuse);
+   
+   final_color = vec4(ambient + diffuse + specular, 1.0);
+}
+"""
+
+vertex_shader4 = """
+#version 330
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 projection_mat;
+
+in vec3 coordinate;
+in vec3 vert_color;
+
+out vec3 frag_coord;
+out vec3 frag_color;
+out vec3 frag_normal;
+
+void main(){
+   gl_Position = projection_mat * view_mat * model_mat * vec4(coordinate, 1.0);
+   frag_coord = vec3(model_mat * vec4(coordinate, 1.0));
+   frag_normal = coordinate;
+   frag_color = vert_color;
+}
+"""
+fragment_shader4 = """
+#version 330
+
+struct Light {
+   vec3 position;
+   vec3 color;
+   vec3 intensity;
+   vec3 specular_color;
+   float ambient_coef;
+   float shininess;
+};
+
+uniform Light my_light;
+uniform mat4 model_mat;
+uniform mat3 normal_mat;
+uniform vec3 cam_pos;
+
+in vec3 frag_coord;
+in vec3 frag_color;
+in vec3 frag_normal;
+
+out vec4 final_color;
+
+void main(){
+   vec3 normal = normalize(normal_mat * frag_normal);
+   
+   vec3 vert_to_light = normalize(my_light.position);
+   vec3 vert_to_cam = normalize(cam_pos);
+   
+   vec3 ambient = my_light.ambient_coef * frag_color * my_light.intensity;
+   
+   float diffuse_coef = max(0.0, dot(normal, vert_to_light));
+   vec3 diffuse = diffuse_coef * frag_color * my_light.intensity;
+   
+   float specular_coef = 0.0;
+   if (diffuse_coef > 0.0)
+      specular_coef = pow(max(0.0, dot(vert_to_cam, reflect(-vert_to_light, normal))), my_light.shininess);
+   vec3 specular = specular_coef * my_light.intensity;
+   specular = specular * (vec3(1) - diffuse);
+   
+   final_color = vec4(ambient + diffuse + specular, 1.0);
+}
+"""
+
+vertex_shader_point_light = """
+#version 330
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 projection_mat;
+
+in vec3 coordinate;
+in vec3 vert_color;
+
+out vec3 frag_coord;
+out vec3 frag_color;
+out vec3 frag_normal;
+
+void main(){
+   gl_Position = projection_mat * view_mat * model_mat * vec4(coordinate, 1.0);
+   frag_coord = vec3(model_mat * vec4(coordinate, 1.0));
+   frag_normal = coordinate;
+   frag_color = vert_color;
+}
+"""
+fragment_shader_point_light = """
+#version 330
+
+struct Light {
+   vec3 position;
+   vec3 color;
+   vec3 intensity;
+   vec3 specular_color;
+   float ambient_coef;
+   float shininess;
+};
+
+uniform Light my_light;
+uniform mat4 model_mat;
+uniform mat3 normal_mat;
+uniform vec3 cam_pos;
+
+in vec3 frag_coord;
+in vec3 frag_color;
+in vec3 frag_normal;
+
+out vec4 final_color;
+
+void main(){
+   vec3 normal = normalize(normal_mat * frag_normal);
+   
+   vec3 vert_to_light = normalize(my_light.position - frag_coord);
+   vec3 vert_to_cam = normalize(cam_pos - frag_coord);
+   
+   vec3 ambient = my_light.ambient_coef * frag_color * my_light.intensity;
+   
+   float diffuse_coef = max(0.0, dot(normal, vert_to_light));
+   vec3 diffuse = diffuse_coef * frag_color * my_light.intensity;
+   
+   float specular_coef = 0.0;
+   if (diffuse_coef > 0.0)
+      specular_coef = pow(max(0.0, dot(vert_to_cam, reflect(-vert_to_light, normal))), my_light.shininess);
+   vec3 specular = specular_coef * vec3(1) * my_light.intensity;
+   specular = specular * (vec3(1) - diffuse);
+   
+   final_color = vec4(ambient + diffuse + specular, 1.0);
+}
+"""
 
 
 

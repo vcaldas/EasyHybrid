@@ -32,7 +32,8 @@ def main():
     
     frames = vis_parser.parse_pdb(sys.argv[1])
     
-    vism = vismol.MyGLProgram(frames, vm_sh.vertex_shader2, vm_sh.fragment_shader2)
+    #vism = vismol.MyGLProgram(frames, vm_sh.vertex_shader_point_light, vm_sh.fragment_shader_point_light)
+    vism = vismol.MyGLProgram(frames, vm_sh.vertex_shader4, vm_sh.fragment_shader4)
     wind = Gtk.Window()
     wind.add(vism)
     

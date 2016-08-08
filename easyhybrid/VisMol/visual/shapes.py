@@ -93,7 +93,7 @@ def get_sphere(pos, rad, color, level='level_1'):
     indices = copy.copy(sphd.sph_triangles[level])
     colors = np.array(color*len(vertices),dtype=np.float32)
     for i in range(len(vertices)/3):
-        vertices[i*3:(i+1)*3] = (vertices[i*3:(i+1)*3] + pos) * rad
+        vertices[i*3:(i+1)*3] = (vertices[i*3:(i+1)*3] * rad) + pos
     return vertices, indices, colors
 
 

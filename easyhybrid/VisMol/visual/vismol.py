@@ -91,6 +91,7 @@ class MyGLProgram(Gtk.GLArea):
             print self.get_error().message
             Gtk.main_quit()
         self.model_mat = np.identity(4, dtype=np.float32)
+        self.normal_mat = np.identity(3, dtype=np.float32)
         self.glcamera = cam.GLCamera()
         self.set_has_depth_buffer(True)
         self.set_has_alpha(True)
@@ -100,9 +101,9 @@ class MyGLProgram(Gtk.GLArea):
         h = np.float32(aloc.height)
         self.shader_flag = True
         self.scroll = 0.3
-        self.glcamera.field_of_view = 30.0
+        self.glcamera.field_of_view = 25.0
         self.glcamera.z_near = 0.01
-        self.glcamera.z_far = 10
+        self.glcamera.z_far = 100
         self.glcamera.viewport_aspect_ratio = float(w)/h
         self.right = float(w)/h
         self.left = -self.right
@@ -111,10 +112,11 @@ class MyGLProgram(Gtk.GLArea):
         self.mouse_x = self.mouse_y = 0
         self.mouse_rotate = self.mouse_zoom = self.mouse_pan = False
         self.bckgrnd_color = np.array([0.0,0.0,0.0,1.0],dtype=np.float32)
-        self.light_position = np.array([-4.0,4.0,3.0],dtype=np.float32)
+        #self.bckgrnd_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
+        self.light_position = np.array([2.5,2.5,3.0],dtype=np.float32)
         self.light_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
         self.light_ambient_coef = 0.5
-        self.light_shininess = 5.0
+        self.light_shininess = 5.5
         self.light_intensity = np.array([0.6,0.6,0.6],dtype=np.float32)
         self.light_specular_color = np.array([1.0,1.0,1.0],dtype=np.float32)
         self.LINES = self.SPHERES = self.DOTS = self.DOTS_SURFACE = False
@@ -194,19 +196,17 @@ class MyGLProgram(Gtk.GLArea):
             GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
                             self.bckgrnd_color[2],self.bckgrnd_color[3])
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+            
             GL.glUseProgram(self.program)
             
             self.load_matrices()
             self.load_lights()
             
-            if self.SPHERES or 1:
+            if self.SPHERES:
                 self.draw_spheres()
-            #GL.glBindVertexArray(self.vertex_array_object)
+            if self.BALL_STICK:
+                self.draw_ball_stick()
             
-            #GL.glDrawElements(GL.GL_TRIANGLES, len(self.index), GL.GL_UNSIGNED_SHORT, None)
-            #GL.glDrawElements(GL.GL_POINTS, len(self.index), GL.GL_UNSIGNED_SHORT, None)
-            #print self.glcamera.get_position(), '<-- Cam pos'
-            #GL.glBindVertexArray(0)
             GL.glUseProgram(0)
         else:
             GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
@@ -226,11 +226,19 @@ class MyGLProgram(Gtk.GLArea):
         GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.get_view_matrix())
         proj = GL.glGetUniformLocation(self.program, 'projection_mat')
         GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.get_projection_matrix())
+        norm = GL.glGetUniformLocation(self.program, 'normal_mat')
+        GL.glUniformMatrix3fv(norm, 1, GL.GL_FALSE, self.normal_mat)
         return True
     
     def load_lights(self):
         """ Function doc
         """
+        #light_pos = GL.glGetUniformLocation(self.program, 'sun_light.v_direction')
+        #GL.glUniform3fv(light_pos, 1, self.light_position)
+        #light_col = GL.glGetUniformLocation(self.program, 'sun_light.v_color')
+        #GL.glUniform3fv(light_col, 1, self.light_color)
+        #amb_coef = GL.glGetUniformLocation(self.program, 'sun_light.ambient_intensity')
+        #GL.glUniform1fv(amb_coef, 1, self.light_ambient_coef)
         light_pos = GL.glGetUniformLocation(self.program, 'my_light.position')
         GL.glUniform3fv(light_pos, 1, self.light_position)
         light_col = GL.glGetUniformLocation(self.program, 'my_light.color')
@@ -243,7 +251,7 @@ class MyGLProgram(Gtk.GLArea):
         GL.glUniform3fv(intensity, 1, self.light_intensity)
         spec_col = GL.glGetUniformLocation(self.program, 'my_light.specular_color')
         GL.glUniform3fv(spec_col, 1, self.light_specular_color)
-        cam_pos = GL.glGetUniformLocation(self.program, 'vert_cam_pos')
+        cam_pos = GL.glGetUniformLocation(self.program, 'cam_pos')
         GL.glUniform3fv(cam_pos, 1, self.glcamera.get_position())
         return True
     
@@ -257,7 +265,8 @@ class MyGLProgram(Gtk.GLArea):
             self.data = data
         self.dot_list         = []
         self.vdw_list         = []
-        self.ball_list        = []
+        self.ball_stick_list  = []
+        self.ball_stick_vao   = []
         self.bonds_list       = []
         self.wires_list       = []
         self.sphere_list      = []
@@ -271,8 +280,8 @@ class MyGLProgram(Gtk.GLArea):
                         #self.dot_list.append(atom)
                     #if atom.vdw:
                         #self.vdw_list.append(atom)
-                    #if atom.ball:
-                        #self.ball_list.append(atom)
+                    if atom.ball:
+                        self.ball_stick_list.append(atom)
                     #if atom.wires:
                         #self.wires_list.append(atom)
                     if atom.sphere:
@@ -283,10 +292,14 @@ class MyGLProgram(Gtk.GLArea):
                         #self.dot_surface_list.append(atom)
         #print self.sphere_list
         for atom in self.sphere_list:
-            vertices, indexes, colors = shapes.get_sphere(atom.pos, atom.vdw_rad, atom.color)
+            vertices, indexes, colors = shapes.get_sphere(atom.pos, atom.cov_rad, atom.color, level='level_3')
             vao = GL.glGenVertexArrays(1)
             GL.glBindVertexArray(vao)
-            
+            atom.vertices = len(vertices)
+            atom.triangles = len(indexes)
+            #light_pos = GL.glGetUniformLocation(self.program, 'my_light.position')
+            #GL.glUniform3fv(light_pos, 1, self.light_position+[3,3,1])
+        
             vert_vbo = GL.glGenBuffers(1)
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.itemsize*len(vertices), vertices, GL.GL_STATIC_DRAW)
@@ -306,20 +319,81 @@ class MyGLProgram(Gtk.GLArea):
             att_colors = GL.glGetAttribLocation(self.program, 'vert_color')
             GL.glEnableVertexAttribArray(att_colors)
             GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+            
+            #center_vbo = GL.glGenBuffers(1)
+            #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, center_vbo)
+            #GL.glBufferData(GL.GL_ARRAY_BUFFER, atom.pos.itemsize*len(atom.pos), atom.pos, GL.GL_STATIC_DRAW)
+            
+            #att_center = GL.glGetAttribLocation(self.program, 'vert_center')
+            #GL.glEnableVertexAttribArray(att_center)
+            #GL.glVertexAttribPointer(att_center, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*atom.pos.itemsize, ctypes.c_void_p(0))
+            
             self.spheres_vao.append(vao)
             GL.glBindVertexArray(0)
             GL.glDisableVertexAttribArray(att_position)
             GL.glDisableVertexAttribArray(att_colors)
+            #GL.glDisableVertexAttribArray(att_center)
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
             GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-    
+        
+        #for atom in self.ball_stick_list:
+            #vertices, indexes, colors = shapes.get_sphere(atom.pos, atom.ball_radius, atom.color, level='level_2')
+            #vao = GL.glGenVertexArrays(1)
+            #GL.glBindVertexArray(vao)
+            #atom.vertices = len(vertices)
+            #atom.triangles = len(indexes)
+            #vert_vbo = GL.glGenBuffers(1)
+            #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
+            #GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.itemsize*len(vertices), vertices, GL.GL_STATIC_DRAW)
+            
+            #ind_vbo = GL.glGenBuffers(1)
+            #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
+            #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*len(indexes), indexes, GL.GL_STATIC_DRAW)
+            
+            #att_position = GL.glGetAttribLocation(self.program, 'coordinate')
+            #GL.glEnableVertexAttribArray(att_position)
+            #GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*vertices.itemsize, ctypes.c_void_p(0))
+            
+            ##col_vbo = GL.glGenBuffers(1)
+            ##GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
+            ##GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*len(colors), colors, GL.GL_STATIC_DRAW)
+            
+            ##att_colors = GL.glGetAttribLocation(self.program, 'vert_color')
+            ##GL.glEnableVertexAttribArray(att_colors)
+            ##GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+            
+            ##center_vbo = GL.glGenBuffers(1)
+            ##GL.glBindBuffer(GL.GL_ARRAY_BUFFER, center_vbo)
+            ##GL.glBufferData(GL.GL_ARRAY_BUFFER, atom.pos.itemsize*len(atom.pos), atom.pos, GL.GL_STATIC_DRAW)
+            
+            ##att_center = GL.glGetAttribLocation(self.program, 'vert_center')
+            ##GL.glEnableVertexAttribArray(att_center)
+            ##GL.glVertexAttribPointer(att_center, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*atom.pos.itemsize, ctypes.c_void_p(0))
+            
+            #self.ball_stick_vao.append(vao)
+            #GL.glBindVertexArray(0)
+            #GL.glDisableVertexAttribArray(att_position)
+            ##GL.glDisableVertexAttribArray(att_colors)
+            ##GL.glDisableVertexAttribArray(att_center)
+            #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+            #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+        
     def draw_spheres(self):
         """ Function doc
         """
         assert(len(self.spheres_vao)>0)
-        for i,atom in enumerate(self.sphere_list):
+        for i,atom in enumerate(self.ball_stick_list):
             GL.glBindVertexArray(self.spheres_vao[i])
-            GL.glDrawElements(GL.GL_TRIANGLES, 240, GL.GL_UNSIGNED_SHORT, None)
+            GL.glDrawElements(GL.GL_TRIANGLES, atom.triangles, GL.GL_UNSIGNED_SHORT, None)
+            GL.glBindVertexArray(0)
+    
+    def draw_ball_stick(self):
+        """ Function doc
+        """
+        assert(len(self.ball_stick_vao)>0)
+        for i,atom in enumerate(self.sphere_list):
+            GL.glBindVertexArray(self.ball_stick_vao[i])
+            GL.glDrawElements(GL.GL_TRIANGLES, atom.triangles, GL.GL_UNSIGNED_SHORT, None)
             GL.glBindVertexArray(0)
     
     def key_press(self, widget, event):
@@ -341,6 +415,14 @@ class MyGLProgram(Gtk.GLArea):
     def pressed_Escape(self):
         print 'Exit!'
         Gtk.main_quit()
+    
+    def pressed_s(self):
+        self.SPHERES = not self.SPHERES
+        self.queue_draw()
+    
+    def pressed_b(self):
+        self.BALL_STICK = not self.BALL_STICK
+        self.queue_draw()
     
     def pressed_l(self):
         self.color = np.array([ 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
@@ -390,22 +472,6 @@ class MyGLProgram(Gtk.GLArea):
         self.queue_draw()
         print 'Load data'
     
-    def pressed_Up(self):
-        self.model_mat = mop.my_glRotatef(self.model_mat,5,[1,0,0])
-        self.queue_draw()
-    
-    def pressed_Down(self):
-        self.model_mat = mop.my_glRotatef(self.model_mat,-5,[1,0,0])
-        self.queue_draw()
-    
-    def pressed_Right(self):
-        self.model_mat = mop.my_glRotatef(self.model_mat,5,[0,1,0])
-        self.queue_draw()
-    
-    def pressed_Left(self):
-        self.model_mat = mop.my_glRotatef(self.model_mat,-5,[0,1,0])
-        self.queue_draw()
-    
     def mouse_pressed(self, widget, event):
         left   = event.button==1 and event.type==Gdk.EventType.BUTTON_PRESS
         middle = event.button==2 and event.type==Gdk.EventType.BUTTON_PRESS
@@ -431,10 +497,11 @@ class MyGLProgram(Gtk.GLArea):
             return
         self.mouse_x, self.mouse_y = x, y
         changed = False
-        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+        #GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         if self.mouse_rotate:
             angle = math.sqrt(dx**2+dy**2)/float(self.width+1)*180.0
             self.model_mat = mop.my_glRotatef(self.model_mat, angle, [-dy, -dx, 0])
+            self.update_normal_mat()
             changed = True
         elif self.mouse_pan:
             px, py, pz = self.pos(x, y)
@@ -443,6 +510,7 @@ class MyGLProgram(Gtk.GLArea):
                  (py-self.drag_pos_y)*self.glcamera.z_far/10, 
                  (pz-self.drag_pos_z)*self.glcamera.z_far/10])
             self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, pan_matrix)
+            self.update_normal_mat()
             self.drag_pos_x = px
             self.drag_pos_y = py
             self.drag_pos_z = pz
@@ -452,6 +520,7 @@ class MyGLProgram(Gtk.GLArea):
             direction = mop.my_glForwardVectorAbs(self.glcamera.get_view_matrix())
             bz = delta*direction[2]
             self.glcamera.move_position(dy*delta*direction)
+            #self.light_position = np.array([-4.0,4.0,3.0],dtype=np.float32) + self.glcamera.get_position()
             changed = True
         if changed:
             self.queue_draw()
@@ -469,6 +538,15 @@ class MyGLProgram(Gtk.GLArea):
             self.glcamera.z_near -= self.scroll
             self.glcamera.z_far = self.glcamera.z_near + 0.05
         self.queue_draw()
+    
+    def update_normal_mat(self):
+        """ Function doc
+        """
+        #modelview = mop.my_glMultiplyMatricesf(self.glcamera.get_view_matrix(), self.model_mat)
+        #normal_mat = np.matrix(modelview[:3,:3]).I.T
+        #self.normal_mat = np.array(normal_mat)
+        model = np.matrix(self.model_mat[:3,:3]).I.T
+        self.normal_mat = np.array(model)
     
     def pos(self, x, y):
         """

@@ -38,7 +38,7 @@ def parse_pdb(infile):
 	    if line[:4] == 'ATOM' or line[:6] == 'HETATM':
 		at_name = line[12:16].strip()
 		at_index = int(line[6:11])
-		at_pos = np.array([float(line[30:38]), float(line[38:46]), float(line[46:54])])
+		at_pos = np.array([float(line[30:38]), float(line[38:46]), float(line[46:54])],dtype=np.float32)
 		at_res_i = int(line[22:26])
 		at_res_n = line[17:20].strip()
 		at_ch = line[21]
