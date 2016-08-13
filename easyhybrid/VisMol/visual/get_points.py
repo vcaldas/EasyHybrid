@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+
+import math, sys
+
+def get_puntos(nivel):
+    puntos = []
+    angulo = math.pi/nivel
+    for i in range(nivel):
+        puntos.append(math.cos(angulo*i))
+        puntos.append(0.0)
+        puntos.append(math.sin(angulo*i))
+    return puntos
+
+niv = int(sys.argv[1])
+puntos = get_puntos(niv)
+for i in range(len(puntos)/3):
+    print '%1.12f, %1.12f, %1.12f,' %(puntos[i*3], puntos[i*3+1], puntos[i*3+2])
+

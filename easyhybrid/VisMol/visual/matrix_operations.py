@@ -150,6 +150,28 @@ def my_glPerspectivef(fovy, aspect, z_near, z_far):
     pers_matrix[3,2] = 2*z_near*z_far/(z_near-z_far)
     pers_matrix[2,3] = -1
     return pers_matrix
+
+def my_glFrustumf(left, rigth, bottom, top, near, far):
+    frust = np.zeros((4,4), dtype=np.float32)
+    frust[0,0] = 2*near/(rigth-left)
+    frust[1,1] = 2*near/(top-bottom)
+    frust[2,0] = (rigth+left)/(rigth-left)
+    frust[2,1] = (top+bottom)/(top-bottom)
+    frust[2,2] = (far+near)/(near-far)
+    frust[2,3] = -1
+    frust[3,2] = -2*near*far/(far-near)
+    return frust
+
+def my_glOrthof(left, rigth, bottom, top, near, far):
+    ortho = np.zeros((4,4), dtype=np.float32)
+    ortho[0,0] = 2/(rigth-left)
+    ortho[1,1] = 2/(top-bottom)
+    ortho[2,2] = -2/(far-near)
+    ortho[3,0] = (rigth+left)/(left-rigth)
+    ortho[3,1] = (top+bottom)/(bottom-top)
+    ortho[3,2] = (far+near)/(near-far)
+    ortho[3,3] = 1
+    return ortho
     
 #def my_glScalef(scale):
     #scale_matrix = np.identity(4, dtype=np.float32)
