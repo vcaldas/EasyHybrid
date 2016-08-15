@@ -25,6 +25,8 @@
 import numpy as np
 import math, copy
 import sphere_data as sphd
+import cylinder_data as cyd
+import matrix_operations as mop
 
 def get_cube(center, r):
     """ Generates the vertex of a cube for using the 
@@ -96,6 +98,40 @@ def get_sphere(pos, rad, color, level='level_1'):
         vertices[i*3:(i+1)*3] = (vertices[i*3:(i+1)*3] * rad) + pos
     return vertices, indices, colors
 
+def get_cylinder(pos, color, angle, vec_dir, length, stacks, radius=0.5, level='level_0'):
+    """ Function doc
+    """
+    assert(stacks>1)
+    assert(length>0.0)
+    assert(angle>=0.0)
+    verts = copy.copy(cyd.cylinder_vertices[level])
+    verts2 = copy.copy(cyd.cylinder_vertices2[level])
+    inds = copy.copy(cyd.cylinder_triangles[level])
+    vertices = np.array([],dtype=np.float32)
+    normals = np.array([],dtype=np.float32)
+    indices = np.array([],dtype=np.uint16)
+    colors = np.array(color*len(verts)*stacks,dtype=np.float32)
+    to_add_pos = length/float(stacks-1)
+    print to_add_pos
+    to_add_ind = len(inds)/6
+    verts *= radius
+    verts2 *= radius
+    norms = copy.copy(verts)
+    norms2 = copy.copy(verts2)
+    for i in range(stacks):
+        if i%2==0:
+            vertices = np.append(vertices, verts)
+            normals = np.append(normals, norms)
+        else:
+            vertices = np.append(vertices, verts2)
+            normals = np.append(normals, norms2)
+        for j in range(1, len(verts), 3):
+            vertices[j+i*len(verts)] += i*to_add_pos
+        if i>0:
+            indices = np.append(indices, inds)
+            for k in range(len(inds)):
+                indices[k+(i-1)*len(inds)] += (i-1)*to_add_ind
+    return vertices, indices, colors, normals
 
 
 

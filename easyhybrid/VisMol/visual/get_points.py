@@ -4,11 +4,13 @@ import math, sys
 
 def get_puntos(nivel):
     puntos = []
-    angulo = math.pi/nivel
+    angulo = 2*math.pi/nivel
+    mitad = angulo/2.0
+    #mitad = 0
     for i in range(nivel):
-        puntos.append(math.cos(angulo*i))
+        puntos.append(math.cos(angulo*i+mitad))
         puntos.append(0.0)
-        puntos.append(math.sin(angulo*i))
+        puntos.append(math.sin(angulo*i+mitad))
     return puntos
 
 niv = int(sys.argv[1])
