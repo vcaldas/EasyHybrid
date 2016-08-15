@@ -110,7 +110,7 @@ def get_cylinder(pos, color, angle, vec_dir, length, stacks, radius=0.5, level='
     vertices = np.array([],dtype=np.float32)
     normals = np.array([],dtype=np.float32)
     indices = np.array([],dtype=np.uint16)
-    colors = np.array(color*len(verts)*stacks,dtype=np.float32)
+    colors = np.array(color*(len(verts)/3)*stacks,dtype=np.float32)
     to_add_pos = length/float(stacks-1)
     rot_mat = mop.my_glRotatef(np.identity(4, dtype=np.float32), angle, vec_dir)[:3,:3]
     to_add_ind = len(inds)/6

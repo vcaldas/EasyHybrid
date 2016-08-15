@@ -200,6 +200,13 @@ class MyGLProgram(Gtk.GLArea):
             
             GL.glUseProgram(self.program)
             
+            GL.glEnable(GL.GL_BLEND)
+            #GL.glBlendFunc(GL.GL_DST_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+            GL.glBlendFunc(GL.GL_DST_ALPHA, GL.GL_ONE_MINUS_CONSTANT_ALPHA)
+            # MEJOR # GL.glBlendFunc(GL.GL_DST_ALPHA, GL.GL_ONE)
+            #GL.glBlendFunc(GL.GL_ONE, GL.GL_ONE)
+            GL.glEnable(GL.GL_CULL_FACE)
+            
             self.load_matrices()
             self.load_lights()
             
@@ -386,7 +393,10 @@ class MyGLProgram(Gtk.GLArea):
             GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         
         for bond in self.data[0].bonds:
-            vertices, indexes, colors, normals = shapes.get_cylinder(bond[0].pos,bond[0].color,bond[2],bond[3],bond[1],5,radius=0.1,level='level_3')
+            vertices, indexes, colors, normals = shapes.get_cylinder(bond[0].pos,bond[0].color,bond[2],bond[3],bond[1],10,radius=0.1,level='level_6')
+            
+            self.stick_indexes = len(indexes)
+            
             vao = GL.glGenVertexArrays(1)
             GL.glBindVertexArray(vao)
             vert_vbo = GL.glGenBuffers(1)
@@ -426,7 +436,10 @@ class MyGLProgram(Gtk.GLArea):
             GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         
         for rib in self.data[0].ribbons:
-            vertices, indexes, colors, normals = shapes.get_cylinder(rib[0].pos,rib[0].color,rib[2],rib[3],rib[1],5,radius=0.2,level='level_4')
+            vertices, indexes, colors, normals = shapes.get_cylinder(rib[0].pos,rib[0].color,rib[2],rib[3],rib[1],10,radius=0.2,level='level_6')
+            
+            self.ribbon_indexes = len(indexes)
+            
             vao = GL.glGenVertexArrays(1)
             GL.glBindVertexArray(vao)
             vert_vbo = GL.glGenBuffers(1)
@@ -484,7 +497,7 @@ class MyGLProgram(Gtk.GLArea):
             GL.glBindVertexArray(0)
         for i,bond in enumerate(self.bond_stick_vao):
             GL.glBindVertexArray(self.bond_stick_vao[i])
-            GL.glDrawElements(GL.GL_TRIANGLES, 144, GL.GL_UNSIGNED_SHORT, None)
+            GL.glDrawElements(GL.GL_TRIANGLES, self.stick_indexes, GL.GL_UNSIGNED_SHORT, None)
             GL.glBindVertexArray(0)
     
     def draw_ribbons(self):
@@ -493,7 +506,7 @@ class MyGLProgram(Gtk.GLArea):
         assert(len(self.ribbons_vao)>0)
         for i,bond in enumerate(self.ribbons_vao):
             GL.glBindVertexArray(self.ribbons_vao[i])
-            GL.glDrawElements(GL.GL_TRIANGLES, 168, GL.GL_UNSIGNED_SHORT, None)
+            GL.glDrawElements(GL.GL_TRIANGLES, self.ribbon_indexes, GL.GL_UNSIGNED_SHORT, None)
             GL.glBindVertexArray(0)
         
     

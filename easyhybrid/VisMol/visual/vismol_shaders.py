@@ -317,7 +317,7 @@ void main(){
    vec3 specular = specular_coef * my_light.intensity;
    specular = specular * (vec3(1) - diffuse);
    
-   final_color = vec4(ambient + diffuse + specular, 1.0);
+   final_color = vec4(ambient + diffuse + specular, 0.6);
 }
 """
 
