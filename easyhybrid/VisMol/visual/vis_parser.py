@@ -66,7 +66,8 @@ def parse_pdb(infile):
 		if not res.atoms.has_key(at_index):
 		    res.atoms[at_index] = atm
 		atoms.append(atm)
-	    elif line[:6] == 'ENDMDL':
+	    #elif line[:6] == 'ENDMDL':
+	    elif 'END' in line[:6]:
 		frame.chains = chains_m
 		frame.atoms = atoms
 		frame.load_bonds()

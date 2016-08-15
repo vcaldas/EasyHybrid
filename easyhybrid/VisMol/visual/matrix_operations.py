@@ -121,10 +121,11 @@ def my_glMultiplyMatricesf(mat1, mat2):
     return result
 
 def my_glRotatef(in_matrix, angle, dir_vec):
-    angle = angle*math.pi/180.0
     vector = np.array(dir_vec, dtype=np.float32)
-    vector = vector/np.linalg.norm(vector)
-    x,y,z = vector
+    assert(np.linalg.norm(vector)>0.0)
+    assert(angle>=0.0)
+    angle = angle*math.pi/180.0
+    x,y,z = vector/np.linalg.norm(vector)
     c = math.cos(angle)
     s = math.sin(angle)
     rot_matrix = np.identity(4, dtype=np.float32)

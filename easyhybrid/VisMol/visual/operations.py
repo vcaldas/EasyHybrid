@@ -30,7 +30,7 @@ def generate_bonds(atoms):
     """
     bonds_list = []
     print 'BEGINS TO CALCULATE DISTANCES'
-    arr1 = np.array([0, 0, 1])
+    arr1 = np.array([0, 1, 0])
     for i in range(len(atoms)-1):
 	if i+25>=len(atoms):
 	    limit = len(atoms)
@@ -53,7 +53,7 @@ def generate_bonds(atoms):
 def generate_ribbons(backbone):
     """ Calculates the distances and angles for the ribbon representation.
     """
-    arr1 = np.array([0, 0, 1])
+    arr1 = np.array([0, 1, 0])
     ribbon_list = []
     for i in range(len(backbone)-1):
 	arr2 = unit_vector(backbone[i+1].pos - backbone[i].pos)
@@ -62,7 +62,7 @@ def generate_ribbons(backbone):
 	length = get_euclidean(backbone[i].pos, backbone[i+1].pos)
 	temp = (backbone[i], length, angle, vec_o)
 	ribbon_list.append(temp)
-    ribbon_list.append((backbone[-1], 0, 0, [0,0,0]))
+    #ribbon_list.append((backbone[-1], 0, 0, [0,0,0]))
     return ribbon_list
 
 def get_mass_center(atoms):

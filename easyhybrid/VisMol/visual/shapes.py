@@ -112,21 +112,30 @@ def get_cylinder(pos, color, angle, vec_dir, length, stacks, radius=0.5, level='
     indices = np.array([],dtype=np.uint16)
     colors = np.array(color*len(verts)*stacks,dtype=np.float32)
     to_add_pos = length/float(stacks-1)
-    print to_add_pos
+    rot_mat = mop.my_glRotatef(np.identity(4, dtype=np.float32), angle, vec_dir)[:3,:3]
     to_add_ind = len(inds)/6
     verts *= radius
     verts2 *= radius
-    norms = copy.copy(verts)
-    norms2 = copy.copy(verts2)
+    zeros = np.zeros(len(verts),dtype=np.float32)
     for i in range(stacks):
         if i%2==0:
             vertices = np.append(vertices, verts)
-            normals = np.append(normals, norms)
         else:
             vertices = np.append(vertices, verts2)
-            normals = np.append(normals, norms2)
+        normals = np.append(normals, zeros)
         for j in range(1, len(verts), 3):
             vertices[j+i*len(verts)] += i*to_add_pos
+            normals[j+i*len(verts)] += i*to_add_pos
+            # Rotation of points and Translation at the end
+            x, y, z = vertices[j+i*len(verts)-1:j+i*len(verts)+2]
+            vertices[j+i*len(verts)-1] = x*rot_mat[0,0] + y*rot_mat[0,1] + z*rot_mat[0,2] + pos[0]
+            vertices[j+i*len(verts)] = x*rot_mat[1,0] + y*rot_mat[1,1] + z*rot_mat[1,2] + pos[1]
+            vertices[j+i*len(verts)+1] = x*rot_mat[2,0] + y*rot_mat[2,1] + z*rot_mat[2,2] + pos[2]
+            # Rotation of normals and Translation at the end
+            x, y, z = normals[j+i*len(verts)-1:j+i*len(verts)+2]
+            normals[j+i*len(verts)-1] = x*rot_mat[0,0] + y*rot_mat[0,1] + z*rot_mat[0,2] + pos[0]
+            normals[j+i*len(verts)] = x*rot_mat[1,0] + y*rot_mat[1,1] + z*rot_mat[1,2] + pos[1]
+            normals[j+i*len(verts)+1] = x*rot_mat[2,0] + y*rot_mat[2,1] + z*rot_mat[2,2] + pos[2]
         if i>0:
             indices = np.append(indices, inds)
             for k in range(len(inds)):
