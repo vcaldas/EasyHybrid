@@ -29,7 +29,6 @@ import glcamera as cam
 import matrix_operations as mop
 import shapes
 import sphere_data as sph_d
-import vismol_shaders as vm_shader
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -45,7 +44,7 @@ class MyGLProgram(Gtk.GLArea):
         add a function to change the shaders.
     """
     
-    def __init__(self, data=None, vertex=None, fragment=None, geometry=None, width=640, height=420):
+    def __init__(self, data=None, width=640, height=420):
         """ Constructor of the class, needs two String objects,
             the vertex and fragment shaders.
             
@@ -71,9 +70,6 @@ class MyGLProgram(Gtk.GLArea):
                        | Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK
                        | Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.POINTER_MOTION_HINT_MASK
                        | Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK )
-        self.vertex_shader = vertex
-        self.fragment_shader = fragment
-        self.geometry_shader = geometry
         self.data = data
         
     def initialize(self, widget):
@@ -100,7 +96,7 @@ class MyGLProgram(Gtk.GLArea):
         w = np.float32(aloc.width)
         h = np.float32(aloc.height)
         self.shader_flag = True
-        self.test = False
+        self.modified_data = False
         self.scroll = 0.3
         self.glcamera.field_of_view = 25.0
         self.glcamera.z_near = 0.1
@@ -121,7 +117,8 @@ class MyGLProgram(Gtk.GLArea):
         self.light_intensity = np.array([0.6,0.6,0.6],dtype=np.float32)
         self.light_specular_color = np.array([1.0,1.0,1.0],dtype=np.float32)
         self.LINES = self.SPHERES = self.DOTS = self.DOTS_SURFACE = False
-        self.VDW = self.PRETTY_VDW = self.RIBBON = self.BALL_STICK = False
+        self.VDW = self.CRYSTAL = self.RIBBON = self.BALL_STICK = False
+        self.create_vaos()
     
     def reshape(self, widget, width, height):
         """ Resizing function, takes the widht and height of the widget
@@ -142,7 +139,37 @@ class MyGLProgram(Gtk.GLArea):
         self.queue_draw()
         return True
     
-    def load_shaders(self, vertex=None, fragment=None, geometry=None):
+    def create_gl_programs(self):
+        """ Function doc
+        """
+        import vismol_shaders as vm_shader
+        self.sphere_program = self.ribbon_program = self.ball_stick_program = self.load_shaders(vm_shader.vertex_shader_sphere, vm_shader.fragment_shader_sphere)
+        self.crystal_program = self.load_shaders(vm_shader.vertex_shader_crystal, vm_shader.fragment_shader_crystal)
+    
+    def create_vaos(self):
+        """ Function doc
+        """
+        # Ball-Stick representation
+        self.ball_stick_vao = []
+        self.bond_stick_vao = []
+        # Ribbon representation
+        self.ribbons_vao = []
+        # Covalent radius representation
+        self.spheres_vao = []
+        # Dots representation
+        self.dots_surf_vao = []
+        # Dotted surface representation
+        self.dots_vao = []
+        # Lines representation
+        self.lines_vao = []
+        # Van der Waals representation
+        self.vdw_vao = []
+        # Transparent Representataion
+        self.inner_cryst_vao = []
+        self.bond_cryst_vao = []
+        self.outer_cryst_vao = []
+    
+    def load_shaders(self, vertex, fragment):
         """ Here the shaders are loaded and compiled to an OpenGL program. By default
             the constructor shaders will be used, if you want to change the shaders
             use this function. The flag is used to create only one OpenGL program.
@@ -151,22 +178,20 @@ class MyGLProgram(Gtk.GLArea):
             vertex -- The vertex shader to be used
             fragment -- The fragment shader to be used
         """
-        my_vertex_shader = self.create_shader(self.vertex_shader, GL.GL_VERTEX_SHADER)
-        #my_geometry_shader = self.create_shader(self.geometry_shader, GL.GL_GEOMETRY_SHADER)
-        my_fragment_shader = self.create_shader(self.fragment_shader, GL.GL_FRAGMENT_SHADER)
-        self.program = GL.glCreateProgram()
-        GL.glAttachShader(self.program, my_vertex_shader)
-        #GL.glAttachShader(self.program, my_geometry_shader)
-        GL.glAttachShader(self.program, my_fragment_shader)
-        GL.glLinkProgram(self.program)
+        my_vertex_shader = self.create_shader(vertex, GL.GL_VERTEX_SHADER)
+        my_fragment_shader = self.create_shader(fragment, GL.GL_FRAGMENT_SHADER)
+        program = GL.glCreateProgram()
+        GL.glAttachShader(program, my_vertex_shader)
+        GL.glAttachShader(program, my_fragment_shader)
+        GL.glLinkProgram(program)
         print 'OpenGL version: ',GL.glGetString(GL.GL_VERSION)
         try:
             print 'OpenGL major version: ',GL.glGetDoublev(GL.GL_MAJOR_VERSION)
             print 'OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION)
         except:
             print 'OpenGL major version not found'
-        self.load_data()
         self.shader_flag = False
+        return program
         
     def create_shader(self, shader_prog, shader_type):
         """ Creates, links to a source, compiles and returns a shader.
@@ -191,77 +216,85 @@ class MyGLProgram(Gtk.GLArea):
         """ This is the function that will be called everytime the window
             needs to be re-drawed.
         """
+        if self.shader_flag:
+            self.create_gl_programs()
+            self.shader_flag = False
         if self.data is not None:
-            if self.shader_flag:
-                self.load_shaders()
+            if self.modified_data:
+                self.delete_vaos()
+                self.load_data()
             GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
                             self.bckgrnd_color[2],self.bckgrnd_color[3])
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
             
-            GL.glUseProgram(self.program)
-            
-            GL.glEnable(GL.GL_BLEND)
-            #GL.glBlendFunc(GL.GL_DST_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
-            GL.glBlendFunc(GL.GL_DST_ALPHA, GL.GL_ONE_MINUS_CONSTANT_ALPHA)
-            # MEJOR # GL.glBlendFunc(GL.GL_DST_ALPHA, GL.GL_ONE)
-            #GL.glBlendFunc(GL.GL_ONE, GL.GL_ONE)
-            GL.glEnable(GL.GL_CULL_FACE)
-            
-            self.load_matrices()
-            self.load_lights()
-            
-            if self.SPHERES:
-                self.draw_spheres()
-            if self.BALL_STICK:
+            if self.CRYSTAL:
+                GL.glUseProgram(self.crystal_program)
+                self.load_matrices(self.crystal_program)
+                self.load_lights(self.crystal_program)
+                self.draw_crystal()
+                GL.glUseProgram(0)
+                GL.glUseProgram(self.ball_stick_program)
+                self.load_matrices(self.ball_stick_program)
+                self.load_lights(self.ball_stick_program)
                 self.draw_ball_stick()
+                GL.glUseProgram(0)
+            if self.BALL_STICK:
+                GL.glUseProgram(self.ball_stick_program)
+                self.load_matrices(self.ball_stick_program)
+                self.load_lights(self.ball_stick_program)
+                self.draw_ball_stick()
+                GL.glUseProgram(0)
+            if self.SPHERES:
+                GL.glUseProgram(self.sphere_program)
+                self.load_matrices(self.sphere_program)
+                self.load_lights(self.sphere_program)
+                self.draw_spheres()
+                GL.glUseProgram(0)
             if self.RIBBON:
+                GL.glUseProgram(self.ribbon_program)
+                self.load_matrices(self.ribbon_program)
+                self.load_lights(self.ribbon_program)
                 self.draw_ribbons()
+                GL.glUseProgram(0)
             
-            GL.glUseProgram(0)
         else:
             GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
                             self.bckgrnd_color[2],self.bckgrnd_color[3])
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
     
-    def load_matrices(self):
+    def load_matrices(self, program):
         """ Load the matrices to OpenGL.
             
             model_mat -- transformation matrix for the objects rendered
             view_mat -- transformation matrix for the camera used
             projection_mat -- matrix for the space to be visualized in the scene
         """
-        model = GL.glGetUniformLocation(self.program, 'model_mat')
+        model = GL.glGetUniformLocation(program, 'model_mat')
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
-        view = GL.glGetUniformLocation(self.program, 'view_mat')
+        view = GL.glGetUniformLocation(program, 'view_mat')
         GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.get_view_matrix())
-        proj = GL.glGetUniformLocation(self.program, 'projection_mat')
+        proj = GL.glGetUniformLocation(program, 'projection_mat')
         GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.get_projection_matrix())
-        norm = GL.glGetUniformLocation(self.program, 'normal_mat')
+        norm = GL.glGetUniformLocation(program, 'normal_mat')
         GL.glUniformMatrix3fv(norm, 1, GL.GL_FALSE, self.normal_mat)
         return True
     
-    def load_lights(self):
+    def load_lights(self, program):
         """ Function doc
         """
-        #light_pos = GL.glGetUniformLocation(self.program, 'sun_light.v_direction')
-        #GL.glUniform3fv(light_pos, 1, self.light_position)
-        #light_col = GL.glGetUniformLocation(self.program, 'sun_light.v_color')
-        #GL.glUniform3fv(light_col, 1, self.light_color)
-        #amb_coef = GL.glGetUniformLocation(self.program, 'sun_light.ambient_intensity')
-        #GL.glUniform1fv(amb_coef, 1, self.light_ambient_coef)
-        light_pos = GL.glGetUniformLocation(self.program, 'my_light.position')
+        light_pos = GL.glGetUniformLocation(program, 'my_light.position')
         GL.glUniform3fv(light_pos, 1, self.light_position)
-        light_col = GL.glGetUniformLocation(self.program, 'my_light.color')
+        light_col = GL.glGetUniformLocation(program, 'my_light.color')
         GL.glUniform3fv(light_col, 1, self.light_color)
-        amb_coef = GL.glGetUniformLocation(self.program, 'my_light.ambient_coef')
+        amb_coef = GL.glGetUniformLocation(program, 'my_light.ambient_coef')
         GL.glUniform1fv(amb_coef, 1, self.light_ambient_coef)
-        shiny = GL.glGetUniformLocation(self.program, 'my_light.shininess')
+        shiny = GL.glGetUniformLocation(program, 'my_light.shininess')
         GL.glUniform1fv(shiny, 1, self.light_shininess)
-        intensity = GL.glGetUniformLocation(self.program, 'my_light.intensity')
+        intensity = GL.glGetUniformLocation(program, 'my_light.intensity')
         GL.glUniform3fv(intensity, 1, self.light_intensity)
-        spec_col = GL.glGetUniformLocation(self.program, 'my_light.specular_color')
+        spec_col = GL.glGetUniformLocation(program, 'my_light.specular_color')
         GL.glUniform3fv(spec_col, 1, self.light_specular_color)
-        cam_pos = GL.glGetUniformLocation(self.program, 'cam_pos')
+        cam_pos = GL.glGetUniformLocation(program, 'cam_pos')
         GL.glUniform3fv(cam_pos, 1, self.glcamera.get_position())
         return True
     
@@ -276,13 +309,9 @@ class MyGLProgram(Gtk.GLArea):
         self.dot_list         = []
         self.vdw_list         = []
         self.ball_stick_list  = []
-        self.ball_stick_vao   = []
-        self.bond_stick_vao   = []
-        self.ribbons_vao      = []
         self.bonds_list       = []
         self.wires_list       = []
         self.sphere_list      = []
-        self.spheres_vao      = []
         self.pretty_vdw_list  = []
         self.dot_surface_list = []
         for chain in self.data[self.frame_i].chains.values():
@@ -294,17 +323,26 @@ class MyGLProgram(Gtk.GLArea):
                         self.vdw_list.append(atom)
                     if atom.ball:
                         self.ball_stick_list.append(atom)
-                    if atom.wires:
-                        self.wires_list.append(atom)
                     if atom.sphere:
                         self.sphere_list.append(atom)
-                    if atom.pretty_vdw:
-                        self.pretty_vdw_list.append(atom)
                     if atom.dot_surface:
                         self.dot_surface_list.append(atom)
         
-        for atom in self.sphere_list:
-            vertices, indexes, colors = shapes.get_sphere(atom.pos, atom.cov_rad, atom.color, level='level_2')
+        self.make_gl_sphere(self.sphere_program, self.sphere_list, self.spheres_vao)
+        self.make_gl_sphere(self.ball_stick_program, self.ball_stick_list, self.ball_stick_vao, 0)
+        self.make_gl_cylinder(self.ball_stick_program, self.data[0].bonds, self.bond_stick_vao)
+        self.make_gl_cylinder(self.ribbon_program, self.data[0].ribbons, self.ribbons_vao)
+        
+        self.modified_data = False
+    
+    def make_gl_sphere(self, program, atom_list, vao_list, covalent=True):
+        """ Function doc
+        """
+        for atom in atom_list:
+            if covalent:
+                vertices, indexes, colors = shapes.get_sphere(atom.pos, atom.cov_rad, atom.color, level='level_2')
+            else:
+                vertices, indexes, colors = shapes.get_sphere(atom.pos, atom.ball_radius, atom.color, level='level_2')
             centers = [atom.pos[0],atom.pos[1],atom.pos[2]]*len(indexes)
             centers = np.array(centers,dtype=np.float32)
             vao = GL.glGenVertexArrays(1)
@@ -320,7 +358,7 @@ class MyGLProgram(Gtk.GLArea):
             GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
             GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*len(indexes), indexes, GL.GL_STATIC_DRAW)
             
-            att_position = GL.glGetAttribLocation(self.program, 'coordinate')
+            att_position = GL.glGetAttribLocation(program, 'coordinate')
             GL.glEnableVertexAttribArray(att_position)
             GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*vertices.itemsize, ctypes.c_void_p(0))
         
@@ -328,7 +366,7 @@ class MyGLProgram(Gtk.GLArea):
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, center_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, centers.itemsize*len(centers), centers, GL.GL_STATIC_DRAW)
             
-            att_center = GL.glGetAttribLocation(self.program, 'center')
+            att_center = GL.glGetAttribLocation(program, 'center')
             GL.glEnableVertexAttribArray(att_center)
             GL.glVertexAttribPointer(att_center, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*centers.itemsize, ctypes.c_void_p(0))
             
@@ -336,67 +374,28 @@ class MyGLProgram(Gtk.GLArea):
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*len(colors), colors, GL.GL_STATIC_DRAW)
             
-            att_colors = GL.glGetAttribLocation(self.program, 'vert_color')
+            att_colors = GL.glGetAttribLocation(program, 'vert_color')
             GL.glEnableVertexAttribArray(att_colors)
             GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
             
-            self.spheres_vao.append(vao)
+            vao_list.append(vao)
             GL.glBindVertexArray(0)
             GL.glDisableVertexAttribArray(att_position)
             GL.glDisableVertexAttribArray(att_colors)
             GL.glDisableVertexAttribArray(att_center)
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
             GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-        
-        for atom in self.ball_stick_list:
-            vertices, indexes, colors = shapes.get_sphere(atom.pos, atom.ball_radius, atom.color, level='level_2')
-            centers = [atom.pos[0],atom.pos[1],atom.pos[2]]*len(indexes)
-            centers = np.array(centers,dtype=np.float32)
-            vao = GL.glGenVertexArrays(1)
-            GL.glBindVertexArray(vao)
-            atom.vertices = len(vertices)
-            atom.triangles = len(indexes)
-            vert_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.itemsize*len(vertices), vertices, GL.GL_STATIC_DRAW)
-            
-            ind_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
-            GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*len(indexes), indexes, GL.GL_STATIC_DRAW)
-            
-            att_position = GL.glGetAttribLocation(self.program, 'coordinate')
-            GL.glEnableVertexAttribArray(att_position)
-            GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*vertices.itemsize, ctypes.c_void_p(0))
-            
-            center_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, center_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, centers.itemsize*len(centers), centers, GL.GL_STATIC_DRAW)
-            
-            att_center = GL.glGetAttribLocation(self.program, 'center')
-            GL.glEnableVertexAttribArray(att_center)
-            GL.glVertexAttribPointer(att_center, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*centers.itemsize, ctypes.c_void_p(0))
-            
-            col_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*len(colors), colors, GL.GL_STATIC_DRAW)
-            
-            att_colors = GL.glGetAttribLocation(self.program, 'vert_color')
-            GL.glEnableVertexAttribArray(att_colors)
-            GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
-            
-            self.ball_stick_vao.append(vao)
-            GL.glBindVertexArray(0)
-            GL.glDisableVertexAttribArray(att_position)
-            GL.glDisableVertexAttribArray(att_colors)
-            GL.glDisableVertexAttribArray(att_center)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-        
-        for bond in self.data[0].bonds:
-            vertices, indexes, colors, normals = shapes.get_cylinder(bond[0].pos,bond[0].color,bond[2],bond[3],bond[1],10,radius=0.1,level='level_6')
-            
-            self.stick_indexes = len(indexes)
-            
+    
+    def make_gl_cylinder(self, program, bond_list, vao_list, ribbon=False):
+        """ Function doc
+        """
+        for bond in bond_list:
+            if ribbon:
+                vertices, indexes, colors, normals = shapes.get_cylinder(bond[0].pos,bond[0].color,bond[2],bond[3],bond[1],10,radius=0.2,level='level_6')
+                self.ribbon_indexes = len(indexes)
+            else:
+                vertices, indexes, colors, normals = shapes.get_cylinder(bond[0].pos,bond[0].color,bond[2],bond[3],bond[1],10,radius=0.1,level='level_6')
+                self.stick_indexes = len(indexes)
             vao = GL.glGenVertexArrays(1)
             GL.glBindVertexArray(vao)
             vert_vbo = GL.glGenBuffers(1)
@@ -407,7 +406,7 @@ class MyGLProgram(Gtk.GLArea):
             GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
             GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*len(indexes), indexes, GL.GL_STATIC_DRAW)
             
-            att_position = GL.glGetAttribLocation(self.program, 'coordinate')
+            att_position = GL.glGetAttribLocation(program, 'coordinate')
             GL.glEnableVertexAttribArray(att_position)
             GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*vertices.itemsize, ctypes.c_void_p(0))
             
@@ -415,7 +414,7 @@ class MyGLProgram(Gtk.GLArea):
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, center_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, normals.itemsize*len(normals), normals, GL.GL_STATIC_DRAW)
             
-            att_center = GL.glGetAttribLocation(self.program, 'center')
+            att_center = GL.glGetAttribLocation(program, 'center')
             GL.glEnableVertexAttribArray(att_center)
             GL.glVertexAttribPointer(att_center, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*normals.itemsize, ctypes.c_void_p(0))
             
@@ -423,69 +422,31 @@ class MyGLProgram(Gtk.GLArea):
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*len(colors), colors, GL.GL_STATIC_DRAW)
             
-            att_colors = GL.glGetAttribLocation(self.program, 'vert_color')
+            att_colors = GL.glGetAttribLocation(program, 'vert_color')
             GL.glEnableVertexAttribArray(att_colors)
             GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
             
-            self.bond_stick_vao.append(vao)
+            vao_list.append(vao)
             GL.glBindVertexArray(0)
             GL.glDisableVertexAttribArray(att_position)
             GL.glDisableVertexAttribArray(att_colors)
             GL.glDisableVertexAttribArray(att_center)
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
             GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-        
-        for rib in self.data[0].ribbons:
-            vertices, indexes, colors, normals = shapes.get_cylinder(rib[0].pos,rib[0].color,rib[2],rib[3],rib[1],10,radius=0.2,level='level_6')
-            
-            self.ribbon_indexes = len(indexes)
-            
-            vao = GL.glGenVertexArrays(1)
-            GL.glBindVertexArray(vao)
-            vert_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.itemsize*len(vertices), vertices, GL.GL_STATIC_DRAW)
-            
-            ind_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
-            GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*len(indexes), indexes, GL.GL_STATIC_DRAW)
-            
-            att_position = GL.glGetAttribLocation(self.program, 'coordinate')
-            GL.glEnableVertexAttribArray(att_position)
-            GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*vertices.itemsize, ctypes.c_void_p(0))
-            
-            center_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, center_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, normals.itemsize*len(normals), normals, GL.GL_STATIC_DRAW)
-            
-            att_center = GL.glGetAttribLocation(self.program, 'center')
-            GL.glEnableVertexAttribArray(att_center)
-            GL.glVertexAttribPointer(att_center, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*normals.itemsize, ctypes.c_void_p(0))
-            
-            col_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*len(colors), colors, GL.GL_STATIC_DRAW)
-            
-            att_colors = GL.glGetAttribLocation(self.program, 'vert_color')
-            GL.glEnableVertexAttribArray(att_colors)
-            GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
-            
-            self.ribbons_vao.append(vao)
-            GL.glBindVertexArray(0)
-            GL.glDisableVertexAttribArray(att_position)
-            GL.glDisableVertexAttribArray(att_colors)
-            GL.glDisableVertexAttribArray(att_center)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-        
+    
     def draw_spheres(self):
         """ Function doc
         """
         assert(len(self.spheres_vao)>0)
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_DST_ALPHA, GL.GL_ONE)
+        GL.glEnable(GL.GL_CULL_FACE)
         for i,atom in enumerate(self.sphere_list):
             GL.glBindVertexArray(self.spheres_vao[i])
             GL.glDrawElements(GL.GL_TRIANGLES, atom.triangles, GL.GL_UNSIGNED_SHORT, None)
             GL.glBindVertexArray(0)
+        GL.glDisable(GL.GL_BLEND)
+        GL.glDisable(GL.GL_CULL_FACE)
     
     def draw_ball_stick(self):
         """ Function doc
@@ -543,50 +504,51 @@ class MyGLProgram(Gtk.GLArea):
         self.queue_draw()
     
     def pressed_l(self):
-        self.color = np.array([ 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0, 1.0, 0.0],dtype=np.float32)
-        
+        self.modified_data = True
         self.queue_draw()
         print 'Load data'
+    
+    def delete_vaos(self):
+        """ Function doc
+        """
+        # Ball-Stick representation
+        if len(self.ball_stick_vao)>0:
+            GL.glDeleteVertexArrays(len(self.ball_stick_vao), self.ball_stick_vao)
+            GL.glDeleteVertexArrays(len(self.bond_stick_vao), self.bond_stick_vao)
+            self.ball_stick_vao = []
+            self.bond_stick_vao = []
+        # Ribbon representation
+        if len(self.ribbons_vao)>0:
+            GL.glDeleteVertexArrays(len(self.ribbons_vao), self.ribbons_vao)
+            self.ribbons_vao = []
+        # Covalent radius representation
+        if len(self.spheres_vao)>0:
+            GL.glDeleteVertexArrays(len(self.spheres_vao), self.spheres_vao)
+            self.spheres_vao = []
+        # Dots representation
+        if len(self.dots_surf_vao)>0:
+            GL.glDeleteVertexArrays(len(self.dots_surf_vao), self.dots_surf_vao)
+            self.dots_surf_vao = []
+        # Dotted surface representation
+        if len(self.dots_vao)>0:
+            GL.glDeleteVertexArrays(len(self.dots_vao), self.dots_vao)
+            self.dots_vao = []
+        # Lines representation
+        if len(self.lines_vao)>0:
+            GL.glDeleteVertexArrays(len(self.lines_vao), self.lines_vao)
+            self.lines_vao = []
+        # Van der Waals representation
+        if len(self.vdw_vao)>0:
+            GL.glDeleteVertexArrays(len(self.vdw_vao), self.vdw_vao)
+            self.vdw_vao = []
+        # Transparent Representataion
+        if len(self.inner_cryst_vao)>0:
+            GL.glDeleteVertexArrays(len(self.inner_cryst_vao), self.inner_cryst_vao)
+            GL.glDeleteVertexArrays(len(self.bond_cryst_vao), self.bond_cryst_vao)
+            GL.glDeleteVertexArrays(len(self.outer_cryst_vao), self.outer_cryst_vao)
+            self.inner_cryst_vao = []
+            self.bond_cryst_vao = []
+            self.outer_cryst_vao = []
     
     def mouse_pressed(self, widget, event):
         left   = event.button==1 and event.type==Gdk.EventType.BUTTON_PRESS
@@ -613,7 +575,6 @@ class MyGLProgram(Gtk.GLArea):
             return
         self.mouse_x, self.mouse_y = x, y
         changed = False
-        #GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         if self.mouse_rotate:
             angle = math.sqrt(dx**2+dy**2)/float(self.width+1)*180.0
             self.model_mat = mop.my_glRotatef(self.model_mat, angle, [-dy, -dx, 0])

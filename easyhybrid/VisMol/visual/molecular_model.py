@@ -23,6 +23,7 @@
 #  
 
 import numpy as np
+import ctypes
 
 class Frame:
     """ Class doc """
@@ -102,7 +103,7 @@ class Atom:
 	self.sphere      = False
 	self.ball        = False
         self.vdw         = False
-        self.pretty_vdw  = False
+        self.crystal     = False
         self.dot         = False
         self.dot_surface = False
         self.surface     = False
