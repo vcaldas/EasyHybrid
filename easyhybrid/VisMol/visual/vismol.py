@@ -145,6 +145,7 @@ class MyGLProgram(Gtk.GLArea):
         import vismol_shaders as vm_shader
         self.sphere_program = self.ribbon_program = self.ball_stick_program = self.load_shaders(vm_shader.vertex_shader_sphere, vm_shader.fragment_shader_sphere)
         self.crystal_program = self.load_shaders(vm_shader.vertex_shader_crystal, vm_shader.fragment_shader_crystal)
+        self.dots_program = self.load_shaders(vm_shader.vertex_shader_dots, vm_shader.fragment_shader_dots)
     
     def create_vaos(self):
         """ Function doc
@@ -190,7 +191,6 @@ class MyGLProgram(Gtk.GLArea):
             print 'OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION)
         except:
             print 'OpenGL major version not found'
-        self.shader_flag = False
         return program
         
     def create_shader(self, shader_prog, shader_type):
@@ -228,15 +228,15 @@ class MyGLProgram(Gtk.GLArea):
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
             
             if self.CRYSTAL:
-                GL.glUseProgram(self.crystal_program)
-                self.load_matrices(self.crystal_program)
-                self.load_lights(self.crystal_program)
-                self.draw_crystal()
-                GL.glUseProgram(0)
                 GL.glUseProgram(self.ball_stick_program)
                 self.load_matrices(self.ball_stick_program)
                 self.load_lights(self.ball_stick_program)
                 self.draw_ball_stick()
+                GL.glUseProgram(0)
+                GL.glUseProgram(self.crystal_program)
+                self.load_matrices(self.crystal_program)
+                self.load_lights(self.crystal_program)
+                self.draw_crystal()
                 GL.glUseProgram(0)
             if self.BALL_STICK:
                 GL.glUseProgram(self.ball_stick_program)
@@ -255,6 +255,11 @@ class MyGLProgram(Gtk.GLArea):
                 self.load_matrices(self.ribbon_program)
                 self.load_lights(self.ribbon_program)
                 self.draw_ribbons()
+                GL.glUseProgram(0)
+            if self.DOTS_SURFACE:
+                GL.glUseProgram(self.dots_program)
+                self.load_matrices(self.dots_program)
+                self.draw_dots_surface()
                 GL.glUseProgram(0)
             
         else:
@@ -314,6 +319,7 @@ class MyGLProgram(Gtk.GLArea):
         self.sphere_list      = []
         self.pretty_vdw_list  = []
         self.dot_surface_list = []
+        self.crystal_list = []
         for chain in self.data[self.frame_i].chains.values():
             for residue in chain.residues.values():
                 for atom in residue.atoms.values():
@@ -327,13 +333,54 @@ class MyGLProgram(Gtk.GLArea):
                         self.sphere_list.append(atom)
                     if atom.dot_surface:
                         self.dot_surface_list.append(atom)
+                    if atom.crystal:
+                        self.crystal_list.append(atom)
         
+        self.make_gl_sphere(self.ball_stick_program, self.ball_stick_list, self.inner_cryst_vao, False)
+        self.make_gl_cylinder(self.ball_stick_program, self.data[0].bonds, self.bond_cryst_vao, False)
+        self.make_gl_sphere(self.crystal_program, self.crystal_list, self.outer_cryst_vao)
         self.make_gl_sphere(self.sphere_program, self.sphere_list, self.spheres_vao)
-        self.make_gl_sphere(self.ball_stick_program, self.ball_stick_list, self.ball_stick_vao, 0)
-        self.make_gl_cylinder(self.ball_stick_program, self.data[0].bonds, self.bond_stick_vao)
+        self.make_gl_dot_sphere(self.dots_program, self.dot_surface_list, self.dots_surf_vao)
+        self.make_gl_sphere(self.ball_stick_program, self.ball_stick_list, self.ball_stick_vao, False)
+        self.make_gl_cylinder(self.ball_stick_program, self.data[0].bonds, self.bond_stick_vao, False)
         self.make_gl_cylinder(self.ribbon_program, self.data[0].ribbons, self.ribbons_vao)
         
         self.modified_data = False
+    
+    def make_gl_dot_sphere(self, program, atom_list, vao_list):
+        """ Function doc
+        """
+        for atom in atom_list:
+            vertices, indexes, colors = shapes.get_sphere(atom.pos, atom.cov_rad, atom.color, level='level_2')
+            centers = [atom.pos[0],atom.pos[1],atom.pos[2]]*len(indexes)
+            centers = np.array(centers,dtype=np.float32)
+            vao = GL.glGenVertexArrays(1)
+            GL.glBindVertexArray(vao)
+            atom.vertices = len(vertices)
+            atom.triangles = len(indexes)
+        
+            vert_vbo = GL.glGenBuffers(1)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.itemsize*len(vertices), vertices, GL.GL_STATIC_DRAW)
+            
+            att_position = GL.glGetAttribLocation(program, 'coordinate')
+            GL.glEnableVertexAttribArray(att_position)
+            GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*vertices.itemsize, ctypes.c_void_p(0))
+            
+            col_vbo = GL.glGenBuffers(1)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*len(colors), colors, GL.GL_STATIC_DRAW)
+            
+            att_colors = GL.glGetAttribLocation(program, 'vert_color')
+            GL.glEnableVertexAttribArray(att_colors)
+            GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+            
+            vao_list.append(vao)
+            GL.glBindVertexArray(0)
+            GL.glDisableVertexAttribArray(att_position)
+            GL.glDisableVertexAttribArray(att_colors)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
     
     def make_gl_sphere(self, program, atom_list, vao_list, covalent=True):
         """ Function doc
@@ -386,7 +433,7 @@ class MyGLProgram(Gtk.GLArea):
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
             GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
     
-    def make_gl_cylinder(self, program, bond_list, vao_list, ribbon=False):
+    def make_gl_cylinder(self, program, bond_list, vao_list, ribbon=True):
         """ Function doc
         """
         for bond in bond_list:
@@ -434,15 +481,35 @@ class MyGLProgram(Gtk.GLArea):
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
             GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
     
+    def draw_dots_surface(self):
+        """ Function doc
+        """
+        assert(len(self.dots_surf_vao)>0)
+        GL.glPointSize(2)
+        for i,atom in enumerate(self.dot_surface_list):
+            GL.glBindVertexArray(self.dots_surf_vao[i])
+            GL.glDrawArrays(GL.GL_POINTS, 0, atom.vertices)
+            GL.glBindVertexArray(0)
+        GL.glPointSize(2)
+    
     def draw_spheres(self):
         """ Function doc
         """
         assert(len(self.spheres_vao)>0)
-        GL.glEnable(GL.GL_BLEND)
-        GL.glBlendFunc(GL.GL_DST_ALPHA, GL.GL_ONE)
-        GL.glEnable(GL.GL_CULL_FACE)
         for i,atom in enumerate(self.sphere_list):
             GL.glBindVertexArray(self.spheres_vao[i])
+            GL.glDrawElements(GL.GL_TRIANGLES, atom.triangles, GL.GL_UNSIGNED_SHORT, None)
+            GL.glBindVertexArray(0)
+    
+    def draw_crystal(self):
+        """ Function doc
+        """
+        assert(len(self.crystal_list)>0)
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_SRC_COLOR, GL.GL_ONE_MINUS_SRC_COLOR)
+        GL.glEnable(GL.GL_CULL_FACE)
+        for i,atom in enumerate(self.crystal_list):
+            GL.glBindVertexArray(self.outer_cryst_vao[i])
             GL.glDrawElements(GL.GL_TRIANGLES, atom.triangles, GL.GL_UNSIGNED_SHORT, None)
             GL.glBindVertexArray(0)
         GL.glDisable(GL.GL_BLEND)
@@ -469,7 +536,6 @@ class MyGLProgram(Gtk.GLArea):
             GL.glBindVertexArray(self.ribbons_vao[i])
             GL.glDrawElements(GL.GL_TRIANGLES, self.ribbon_indexes, GL.GL_UNSIGNED_SHORT, None)
             GL.glBindVertexArray(0)
-        
     
     def key_press(self, widget, event):
         """ The mouse_button function serves, as the names states, to catch
@@ -491,12 +557,20 @@ class MyGLProgram(Gtk.GLArea):
         print 'Exit!'
         Gtk.main_quit()
     
+    def pressed_d(self):
+        self.DOTS_SURFACE = not self.DOTS_SURFACE
+        self.queue_draw()
+    
     def pressed_s(self):
         self.SPHERES = not self.SPHERES
         self.queue_draw()
     
     def pressed_b(self):
         self.BALL_STICK = not self.BALL_STICK
+        self.queue_draw()
+    
+    def pressed_c(self):
+        self.CRYSTAL = not self.CRYSTAL
         self.queue_draw()
     
     def pressed_r(self):

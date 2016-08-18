@@ -401,12 +401,18 @@ uniform mat4 projection_mat;
 uniform mat3 normal_mat;
 
 in vec3 coordinate;
+in vec3 center;
 in vec3 vert_color;
 
+out vec3 frag_coord;
+out vec3 frag_normal;
 out vec3 frag_color;
 
 void main(){
-   gl_Position = projection_mat * view_mat * model_mat * vec4(coordinate, 1.0);
+   mat4 modelview = view_mat * model_mat;
+   gl_Position = projection_mat * modelview * vec4(coordinate, 1.0);
+   frag_coord = -vec3(modelview * vec4(coordinate, 1.0));
+   frag_normal = normalize(normal_mat * (coordinate - center));
    frag_color = vert_color;
 }
 """
@@ -423,6 +429,53 @@ struct Light {
 };
 
 uniform Light my_light;
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat3 normal_mat;
+uniform vec3 cam_pos;
+
+in vec3 frag_coord;
+in vec3 frag_color;
+in vec3 frag_normal;
+
+out vec4 final_color;
+
+void main(){
+   vec3 normal = normalize(frag_normal);
+   vec3 vert_to_light = normalize(my_light.position);
+   vec3 vert_to_cam = normalize(frag_coord);
+   
+   // Ambient Component
+   vec3 ambient = my_light.ambient_coef * frag_color * my_light.intensity;
+   
+   // Diffuse component
+   float diffuse_coef = max(0.0, dot(normal, vert_to_light));
+   vec3 diffuse = diffuse_coef * frag_color * my_light.intensity;
+   
+   final_color = vec4(ambient + diffuse, 0.6);
+}
+"""
+
+vertex_shader_dots = """
+#version 330
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 projection_mat;
+uniform mat3 normal_mat;
+
+in vec3 coordinate;
+in vec3 vert_color;
+
+out vec3 frag_color;
+
+void main(){
+   gl_Position = projection_mat * view_mat * model_mat * vec4(coordinate, 1.0);
+   frag_color = vert_color;
+}
+"""
+fragment_shader_dots = """
+#version 330
 
 in vec3 frag_color;
 

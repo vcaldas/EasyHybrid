@@ -43,12 +43,13 @@ def parse_pdb(infile):
 		at_res_n = line[17:20].strip()
 		at_ch = line[21]
 		atm = mm.Atom(name=at_name, index=at_index, pos=at_pos, residue=at_res_i)
-		atm.sphere     = True
-		atm.ball       = True
-		atm.vdw        = True
-		atm.pretty_vdw = True
-		atm.dot        = True
-		atm.wires      = True
+		atm.sphere = True
+		atm.ball = True
+		atm.vdw = True
+		atm.crystal = True
+		atm.dot = True
+		atm.dot_surface = True
+		atm.wires = True
 		if at_ch == ' ':
 		    at_ch = 'A'
 		if chains_m.has_key(at_ch):
