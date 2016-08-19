@@ -123,7 +123,7 @@ def my_glMultiplyMatricesf(mat1, mat2):
 def my_glRotatef(in_matrix, angle, dir_vec):
     vector = np.array(dir_vec, dtype=np.float32)
     assert(np.linalg.norm(vector)>0.0)
-    assert(angle>=0.0)
+    #assert(angle>=0.0)
     angle = angle*math.pi/180.0
     x,y,z = vector/np.linalg.norm(vector)
     c = math.cos(angle)

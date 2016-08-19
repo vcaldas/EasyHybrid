@@ -119,6 +119,7 @@ class MyGLProgram(Gtk.GLArea):
         self.LINES = self.SPHERES = self.DOTS = self.DOTS_SURFACE = False
         self.VDW = self.CRYSTAL = self.RIBBON = self.BALL_STICK = False
         self.create_vaos()
+        self.zero_pt_ref = np.array([0.0, 0.0, 0.0],dtype=np.float32)
     
     def reshape(self, widget, width, height):
         """ Resizing function, takes the widht and height of the widget
@@ -185,12 +186,12 @@ class MyGLProgram(Gtk.GLArea):
         GL.glAttachShader(program, my_vertex_shader)
         GL.glAttachShader(program, my_fragment_shader)
         GL.glLinkProgram(program)
-        print 'OpenGL version: ',GL.glGetString(GL.GL_VERSION)
-        try:
-            print 'OpenGL major version: ',GL.glGetDoublev(GL.GL_MAJOR_VERSION)
-            print 'OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION)
-        except:
-            print 'OpenGL major version not found'
+        #print 'OpenGL version: ',GL.glGetString(GL.GL_VERSION)
+        #try:
+            #print 'OpenGL major version: ',GL.glGetDoublev(GL.GL_MAJOR_VERSION)
+            #print 'OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION)
+        #except:
+            #print 'OpenGL major version not found'
         return program
         
     def create_shader(self, shader_prog, shader_type):
@@ -352,13 +353,10 @@ class MyGLProgram(Gtk.GLArea):
         """
         for atom in atom_list:
             vertices, indexes, colors = shapes.get_sphere(atom.pos, atom.cov_rad, atom.color, level='level_2')
-            centers = [atom.pos[0],atom.pos[1],atom.pos[2]]*len(indexes)
-            centers = np.array(centers,dtype=np.float32)
             vao = GL.glGenVertexArrays(1)
             GL.glBindVertexArray(vao)
-            atom.vertices = len(vertices)
-            atom.triangles = len(indexes)
-        
+            atom.vertices = len(vertices)/3
+            
             vert_vbo = GL.glGenBuffers(1)
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
             GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.itemsize*len(vertices), vertices, GL.GL_STATIC_DRAW)
@@ -394,7 +392,6 @@ class MyGLProgram(Gtk.GLArea):
             centers = np.array(centers,dtype=np.float32)
             vao = GL.glGenVertexArrays(1)
             GL.glBindVertexArray(vao)
-            atom.vertices = len(vertices)
             atom.triangles = len(indexes)
         
             vert_vbo = GL.glGenBuffers(1)
@@ -505,13 +502,16 @@ class MyGLProgram(Gtk.GLArea):
         """ Function doc
         """
         assert(len(self.crystal_list)>0)
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        #GL.glDepthFunc(GL.GL_EQUAL)
         GL.glEnable(GL.GL_BLEND)
-        GL.glBlendFunc(GL.GL_SRC_COLOR, GL.GL_ONE_MINUS_SRC_COLOR)
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_SRC_ALPHA)
         GL.glEnable(GL.GL_CULL_FACE)
         for i,atom in enumerate(self.crystal_list):
             GL.glBindVertexArray(self.outer_cryst_vao[i])
             GL.glDrawElements(GL.GL_TRIANGLES, atom.triangles, GL.GL_UNSIGNED_SHORT, None)
             GL.glBindVertexArray(0)
+        #GL.glDepthFunc(GL.GL_LESS)
         GL.glDisable(GL.GL_BLEND)
         GL.glDisable(GL.GL_CULL_FACE)
     
@@ -581,6 +581,24 @@ class MyGLProgram(Gtk.GLArea):
         self.modified_data = True
         self.queue_draw()
         print 'Load data'
+    
+    def pressed_m(self):
+        temp = np.matrix(self.model_mat[:3,:3]).I * np.matrix([2.030,-1.227,-0.502]).T
+        temp = temp.A1
+        self.model_mat[3,:3] = -temp
+        self.queue_draw()
+        print 'Load data'
+    
+    def pressed_n(self):
+        self.zero_pt_ref = np.array([2.030,-1.227,-0.502],dtype=np.float32)
+        self.model_mat = mop.my_glTranslatef(self.model_mat, self.zero_pt_ref)
+        self.queue_draw()
+        print 'Load data'
+    
+    def pressed_p(self):
+        """ Function doc
+        """
+        print self.model_mat, '<-- pos model_mat'
     
     def delete_vaos(self):
         """ Function doc

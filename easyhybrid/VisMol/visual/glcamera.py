@@ -25,6 +25,7 @@
 import math
 import numpy as np
 import matrix_operations as mop
+import operations as op
 
 class GLCamera():
     """ Class doc
@@ -119,8 +120,8 @@ class GLCamera():
         assert(self.position[0]!=target[0] and
                self.position[1]!=target[1] and
                self.position[2]!=target[2])
-        direction = mop.get_unit_vector(target-self.position)
-        self.vertical_angle = math.asin(direction[1])*180/math.pi
+        direction = op.unit_vector(target-self.position)
+        self.vertical_angle = -math.asin(direction[1])*180/math.pi
         self.horizontal_angle = -(math.atan2(-direction[0],-direction[2])*180/math.pi)
         self._normalize_angles()
         return True
