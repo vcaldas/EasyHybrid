@@ -22,8 +22,321 @@
 #  
 #  
 
-import numpy as np
 
+import pyximport; pyximport.install()
+import cfunctions
+
+import numpy as np
+import time
+
+from multiprocessing import Pool
+
+
+
+
+class MolObject:
+    """ Class doc """
+    
+    def __init__ (self, chains=None, bonds=None, mass_center=None):
+        """ Class initialiser """
+        
+        self.actived      = True
+                          
+        self.show_lines   = True
+        self.show_ribbons = False
+        self.show_sticks  = False
+        self.show_spheres = False
+        self.show_surface = False
+        
+        
+        
+        self.Type    = 'molecule'
+        self.label   = 'unkown'
+        
+        self.chains       = {}
+        
+        self.bonds        = []
+        self.mass_center  = np.array([0.0, 0.0, 0.0])
+        
+        self.frames       = []
+        self.atoms        = []
+        self.residues     = []
+        
+        self.coords       = []
+        
+        
+        
+        pass  
+
+
+
+    """
+    def f(self, i):
+        a = np.array(self.coords)
+        point = np.array ([self.coords[i], self.coords[i+1], self.coords[i+2]])
+        d = ((a-point)**2).sum(axis=1)  # compute distances
+        ndx = d.argsort() # indirect sort 
+        bonds
+        
+        #'''
+        for  index in ndx:
+            if d[index] >= 2.84:
+                break
+
+            
+            else:
+                if d[index] == 0.0:
+                    pass
+                else:
+                    pass
+                    ##print index, d[index]
+                    ##print point, a[index], d[index]
+                    bonds.append(point[0])
+                    bonds.append(point[1])
+                    bonds.append(point[2])
+                    bonds.append(a[index][0]) 
+                    bonds.append(a[index][1])
+                    bonds.append(a[index][2])
+
+        return bonds
+    
+    """
+    
+    """
+    def distances_from_point(self ):
+        bonds  = []
+        p = Pool(8)
+        results = (p.map (self.f, range(0, len(self.coords), 3)) )
+        for lista  in results:
+            bonds = bonds + lista
+        
+        return bonds
+        
+    """
+    
+    """
+    def p_generete_bonds_list (self, point, a):
+        
+        point = np.array ([self.coords[i], self.coords[i+1], self.coords[i+2]])
+        d = ((a-point)**2).sum(axis=1)  # compute distances
+        ndx = d.argsort() # indirect sort 
+        
+        #'''
+        for  index in ndx:
+            if d[index] >= 2.84:
+                break
+        
+            
+            else:
+                if d[index] == 0.0:
+                    pass
+                else:
+                    pass
+                    ##print index, d[index]
+                    ##print point, a[index], d[index]
+                    #bonds.append(point[0])
+                    #bonds.append(point[1])
+                    #bonds.append(point[2])
+                    #bonds.append(a[index][0]) 
+                    #bonds.append(a[index][1])
+                    #bonds.append(a[index][2])
+        #'''
+        return bonds 
+    """
+
+
+    def generete_atom_list (self):
+        """ Function doc """
+        bonds = []
+        NDIM = 3 # number of dimensions
+
+        a = np.array(self.coords)
+        a.shape = a.size / NDIM, NDIM
+        for i  in  range(0, len(self.coords), 3): 
+            point = np.array ([self.coords[i], self.coords[i+1], self.coords[i+2]])
+            d = ((a-point)**2).sum(axis=1)  # compute distances
+            ndx = d.argsort() # indirect sort 
+            
+            #'''
+            for  index in ndx:
+                if d[index] >= 2.84:
+                    break
+
+                else:
+                    if d[index] == 0.0:
+                        pass
+                    else:
+                        pass
+                        bonds.append(point[0])
+                        bonds.append(point[1])
+                        bonds.append(point[2])
+                        bonds.append(a[index][0]) 
+                        bonds.append(a[index][1])
+                        bonds.append(a[index][2])
+            #'''
+        return bonds 
+
+    
+    def generate_bonds (self):
+        """ Function doc """
+        print 'start'
+        initial = time.time()
+        #self.bonds = self.generete_atom_list()
+        self.bonds = cfunctions.C_generate_bonds (self.coords)
+        #self.bonds = cfunctions.C_np_generate_bonds (self.coords)
+        #self.bonds = self.distances_from_point()
+        print 'end'
+        #print self.bonds
+        final = time.time() 
+        print final - initial
+        
+
+
+    '''
+    def generate_bonds(self, atoms = None):
+        """ Make calculations for the bonds, this part of the code must be more efficient.
+        """
+        bonds_list = []
+        #print 'BEGINS TO CALCULATE DISTANCES'
+        #arr1 = np.array([0, 0, 1])
+        #for i in range(len(atoms)-1):
+        #for j in range(i+1, len(atoms)):
+            #if get_euclidean(atoms[i].pos, atoms[j].pos) <= (atoms[i].cov_rad + atoms[j].cov_rad):
+            #arr2 = unit_vector(atoms[j].pos - atoms[i].pos)
+            #angle = get_angle(arr1, arr2)
+            #vec_o = np.cross(arr1, arr2)
+            #length = get_euclidean(atoms[i].pos, atoms[j].pos)
+            #bond = (atoms[i], length, angle, vec_o)
+            #bonds_list.append(bond)
+        #print 'ENDS!'
+        
+        print 'start'
+        initial = time.time()
+        for i in range (0, len(self.coords),3):
+            for j in range (i+3, len(self.coords),3):
+                
+
+                dist =  [self.coords[i]   - self.coords[j]  ,
+                         self.coords[i+1] - self.coords[j+1],
+                         self.coords[i+2] - self.coords[j+2]]
+                
+                
+                if dist[0] >= 2.0 or dist[1] >= 2.0 or dist[2] >= 2.0:
+                    pass
+                
+                else:
+                    dist2 = (dist[0]**2 + dist[1]**2 + dist[2]**2)
+                    if dist2 <= 3.61:
+                        self.bonds.append(self.coords[i])
+                        self.bonds.append(self.coords[i]+1)
+                        self.bonds.append(self.coords[i]+2)
+                        
+                        self.bonds.append(self.coords[j])
+                        self.bonds.append(self.coords[j+1])
+                        self.bonds.append(self.coords[j+2])
+                        #print [self.coords[i],self.coords[i+1],self.coords[i+2]], [self.coords[j]  , self.coords[j+1],self.coords[j+2]], dist2
+                
+        #print self.bonds
+        
+        print 'end'
+        final = time.time() 
+        print final - initial
+        '''
+        
+        
+        
+        #print 'BEGINS TO CALCULATE DISTANCES'
+        #arr1 = np.array([0, 0, 1])
+        #for i in range(len(atoms)-1):
+        #    if i+25>=len(atoms):
+        #        limit = len(atoms)
+        #
+        #
+        #
+        #else:
+        #    limit = i+25
+        #for j in range(i+1, limit):
+        #    if get_euclidean(atoms[i].pos, atoms[j].pos) <= (atoms[i].cov_rad + atoms[j].cov_rad):
+        #    arr2 = unit_vector(atoms[j].pos - atoms[i].pos)
+        #    mid_point = (atoms[i].pos+atoms[j].pos)/2
+        #    angle = get_angle(arr1, arr2)
+        #    vec_o = np.cross(arr1, arr2)
+        #    length = get_euclidean(atoms[i].pos, atoms[j].pos)/2
+        #    bond = (atoms[i], length, angle, vec_o, mid_point)
+        #    bond2 = (atoms[j], length, angle+180, vec_o, mid_point)
+        #    bonds_list.append(bond)
+        #    bonds_list.append(bond2)
+        #print 'ENDS!'
+        #return bonds_list
+
+
+
+
+class Chain:
+    """ Class doc """
+    
+    def __init__ (self, name=None, residues=None, label=None):
+        """ Class initialiser """
+        self.residues = {}
+        self.backbone = []
+        self.name     = ''
+        self.label    = None
+        
+        #if residues is None:
+        #    residues = {}
+        #    self.residues = residues
+        #    self.name     = name
+        #self.frame    = frame
+        
+class Residue:
+    """ Class doc """
+    
+    def __init__ (self, atoms=None, 
+                        name='UNK', 
+                        index=None,
+                        chain=None):
+        """ Class initialiser """
+        self.atoms = []
+        self.resi  = index
+        self.resn  = name
+        self.chain = chain
+        
+        
+        #if atoms is None:
+        #    atoms = {}
+        #    self.atoms = atoms
+        #    self.name  = name
+        #    self.index = index
+        #    self.chain = chain
+
+
+class Atom:
+    """ Class doc """
+    
+    def __init__ (self, name='Xx', index=None, symbol='X', pos=None, resi = None, chain = ''):
+        """ Class initialiser """
+        import atom_types as at
+        
+        if pos is None:
+            pos = np.array([0.0, 0.0, 0.0])
+        
+        self.pos     = pos
+        self.index   = index
+        self.name    = name
+        self.symbol  = symbol
+        self.resi    = resi 
+        self.chain   = chain
+        
+        self.color       = at.get_color(name)
+        self.col_rgb     = at.get_color_rgb(name)
+        self.radius      = at.get_radius(name)
+        self.vdw_rad     = at.get_vdw_rad(name)
+        self.cov_rad     = at.get_cov_rad(name)
+        self.ball_radius = at.get_ball_rad(name)
+
+
+
+'''
 class Frame:
     """ Class doc """
     
@@ -55,6 +368,9 @@ class Frame:
 	    ribs = operations.generate_ribbons(chain.backbone)
 	    self.ribbons += ribs
 
+'''
+
+'''
 class Chain:
     """ Class doc """
     
@@ -66,7 +382,9 @@ class Chain:
         self.name     = name
 	self.frame    = frame
 	self.backbone = []
+'''
 
+'''
 class Residue:
     """ Class doc """
     
@@ -78,7 +396,9 @@ class Residue:
         self.name  = name
         self.index = index
         self.chain = chain
+'''
 
+'''
 class Atom:
     """ Class doc """
     
@@ -108,3 +428,4 @@ class Atom:
         self.surface     = False
         self.wires       = False
         #self.lines   = False
+'''

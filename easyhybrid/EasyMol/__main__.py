@@ -22,30 +22,26 @@
 #  
 #  
 
-import sys
-import pygtk
-pygtk.require('2.0')
-import gtk
-from visual import gl_draw_area as gda, vis_parser
+#import sys
+#import pygtk
+#pygtk.require('2.0')
+#import gtk
+#from visual import gl_draw_area as gda, vis_parser
+##from visual_gui import FileChooserWindow
+#from visual.vis_parser import parse_pdb
+
+from visual.gtkgui import GTKGUI
+from visual.easyMolObj import EasyMolSession
+
+
+
+
 
 def main():
-    frames = vis_parser.parse_pdb(sys.argv[1])
-    glarea = gda.GLCanvas(frames)
-    #glarea = gda.GLCanvas()
-    builder = gtk.Builder()
-    builder.add_from_file('EasyMol/visual_gui/main_window.glade')
-    window = builder.get_object('main_window')
-    boton = builder.get_object('btn_ball_stick')
-    #window.set_size_request(800,600)
-    handlers = {"on_btn_BallStick_clicked": glarea.switch_ball_stick,
-		"on_file_quit_activate": gtk.main_quit}
-    builder.connect_signals(handlers)
-    window.connect('key_press_event', glarea.key_press)
-    vbox = builder.get_object('vbox_main')
-    vbox.pack_end(glarea, True, True)
-    window.show_all()
-    gtk.main()
-    return 0
+    
+    EasyMol = EasyMolSession()
+    gtkgui  = GTKGUI(EasyMol)
+
 
 if __name__ == '__main__':
     main()

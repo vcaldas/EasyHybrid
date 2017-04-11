@@ -40,7 +40,7 @@ import operations as op
 class GLCanvas(gtk.gtkgl.DrawingArea):
     
     data   = None
-    fovy   = 30.0
+    fovy   = 50.0
     aspect = 0.0
     z_near = 1.0
     z_far  = 10.0
@@ -63,7 +63,12 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     mouse_rotate = mouse_pan = mouse_zoom = dragging = False
     LINES = DOTS_SURFACE = DOTS = BALL_STICK = VDW = PRETTY_VDW = RIBBON = SPHERES = WIRES = SELECTION = MODIFIED = False
     
-    def __init__(self, data=None, width=640, height=420):
+    
+    LineWidth = 3
+    PointSize = 10
+    
+    
+    def __init__(self, EasyMolSession=None, width=640, height=420):
 	""" Constructor of the GLCanvas object. Here you can change the
 	    default parameters for the size, change the names of the
 	    connection functions, modify OpenGL configurations.
@@ -74,7 +79,13 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    glconfig = gtk.gdkgl.Config(mode = (gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH))
 	gtk.gtkgl.DrawingArea.__init__(self, glconfig)
 	self.set_size_request(width, height)
-	self.data   = data
+	
+	
+	
+	self.EMSession = EasyMolSession
+	#self.data   = data
+	
+	
 	self.width  = width
 	self.height = height
 	self.connect_after('realize', self.initialize)
@@ -172,95 +183,198 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	return True
     
     def load_mol(self, data=None):
-	""" Loads the data (if is any) or replace it if new data is given.
-	    This is the core of the representations, and need to be more
-	    efficient.
-	"""
-	self.dot_list         = []
-	self.vdw_list         = []
-	self.ball_list        = []
-	self.bonds_list       = []
-	self.wires_list       = []
-	self.sphere_list      = []
-	self.pretty_vdw_list  = []
-	self.dot_surface_list = []
-	if data is None and self.data is None:
-	    print 'No data to load'
-	else:
-	    if data is not None:
-		for chain in data[self.frame_i].chains.values():
-		    for residue in chain.residues.values():
-			for atom in residue.atoms.values():
-			    if atom.dot:
-				self.dot_list.append(atom)
-			    if atom.vdw:
-				self.vdw_list.append(atom)
-			    if atom.ball:
-				self.ball_list.append(atom)
-			    if atom.wires:
-				self.wires_list.append(atom)
-			    if atom.sphere:
-				self.sphere_list.append(atom)
-			    if atom.pretty_vdw:
-				self.pretty_vdw_list.append(atom)
-			    if atom.dot_surface:
-				self.dot_surface_list.append(atom)
-	    else:
-		for chain in self.data[self.frame_i].chains.values():
-		    for residue in chain.residues.values():
-			for atom in residue.atoms.values():
-			    if atom.dot:
-				self.dot_list.append(atom)
-			    if atom.vdw:
-				self.vdw_list.append(atom)
-			    if atom.ball:
-				self.ball_list.append(atom)
-			    if atom.wires:
-				self.wires_list.append(atom)
-			    if atom.sphere:
-				self.sphere_list.append(atom)
-			    if atom.pretty_vdw:
-				self.pretty_vdw_list.append(atom)
-			    if atom.dot_surface:
-				self.dot_surface_list.append(atom)
-	    self.LINES = self.draw_lines()
-	    # Surface dots representation of the atoms
-	    for atom in self.dot_surface_list:
-		atom.dots_surf = op.get_surf_dots(atom)
-	    self.gl_points_list = glGenLists(1)
-	    glNewList(self.gl_points_list, GL_COMPILE)
-	    for atom in self.dot_surface_list:
-		for point in atom.dots_surf:
-		    rep.draw_dot(atom, point)
-	    glEndList()
+        """ Loads the data (if is any) or replace it if new data is given.
+            This is the core of the representations, and need to be more
+            efficient.
+        """
+        
+        glDisable(GL_LIGHT0)
+        glDisable(GL_LIGHT1)
+        glDisable(GL_LIGHT2)
+        glDisable(GL_LIGHTING)
+        glEnable(GL_COLOR_MATERIAL)
+        glEnable(GL_DEPTH_TEST)
+        #glPushName(atom.index)
+
+        
+        
+        #self.dot_list         = []
+        #self.vdw_list         = []
+        #self.ball_list        = []
+        #self.bonds_list       = []
+        #self.wires_list       = []
+        #self.sphere_list      = []
+        #self.pretty_vdw_list  = []
+        #self.dot_surface_list = []
+        n = 1
+        for Vobject in self.EMSession.Vobjects:
+            #print Vobject.label
+            
+            if Vobject.actived:
+                for chain in  Vobject.chains:
+                    
+                    
+                    #'''
+                    for res in Vobject.chains[chain].residues:
+                        for atom in Vobject.chains[chain].residues[res].atoms:
+                            glPushMatrix()
+                            
+                            glPushName(atom.index)
+                            
+                            glColor3f(atom.color[0], atom.color[1], atom.color[2])
+                            glPointSize(self.PointSize)
+                            glBegin(GL_POINTS)
+                            glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+                            glEnd()
+                            glPopName()
+                            glPopMatrix()
+                            #print atom.name, atom.pos
+                    #'''
+                    
+                   
+                    color = 1.0/n
+                    
+                    #'''
+                    for i in range(0, len(Vobject.chains[chain].backbone) -1):
+                        
+                        ATOM1 = Vobject.chains[chain].backbone[i]
+                        ATOM2 = Vobject.chains[chain].backbone[i+1]
+                        
+                        glEnable(GL_COLOR_MATERIAL)
+                        glEnable(GL_DEPTH_TEST)
+                        glPushMatrix()
+                        
+                        
+                        glColor3f(1,  color, 2*color)
+                        
+                        glLineWidth(self.LineWidth*3)
+                        #print Vobject.bonds[i],Vobject.bonds[i+1],Vobject.bonds[i+2], Vobject.bonds[i+3],Vobject.bonds[i+4],Vobject.bonds[i+5]
+                        glBegin(GL_LINES)
+                        
+                        glVertex3f(ATOM1.pos[0],ATOM1.pos[1],ATOM1.pos[2])
+                        glVertex3f(ATOM2.pos[0],ATOM2.pos[1],ATOM2.pos[2])
+                        
+                        glEnd()
+                        glPopName()
+                        glPopMatrix()
+                        
+                        #color += 0.001
+                    #'''
+            
+            
+                #'''
+                for i in range(0, len(Vobject.bonds),6):
+                    #glPushMatrix()
+                    #glDisable(GL_LIGHT0)
+                    #glDisable(GL_LIGHT1)
+                    #glDisable(GL_LIGHT2)
+                    #glDisable(GL_LIGHTING)
+                    glEnable(GL_COLOR_MATERIAL)
+                    glEnable(GL_DEPTH_TEST)
+                    glPushMatrix()
+                    glPushName(i/6)
+                    
+                    glColor3f(1, 1, 1)
+                    
+                    glLineWidth(self.LineWidth)
+                    #print Vobject.bonds[i],Vobject.bonds[i+1],Vobject.bonds[i+2], Vobject.bonds[i+3],Vobject.bonds[i+4],Vobject.bonds[i+5]
+                    glBegin(GL_LINES)
+                    
+                    glVertex3f(Vobject.bonds[i]  ,Vobject.bonds[i+1],Vobject.bonds[i+2])
+                    glVertex3f(Vobject.bonds[i+3],Vobject.bonds[i+4],Vobject.bonds[i+5])
+                    
+                    glEnd()
+                    glPopName()
+                    glPopMatrix()
+                #'''
+
+            else:
+                pass
+            n += 1
+        '''
+        if data is None and self.data is None:
+            print 'No data to load'
+        else:
+            if data is not None:
+            for chain in data[self.frame_i].chains.values():
+                for residue in chain.residues.values():
+                for atom in residue.atoms.values():
+                    if atom.dot:
+                    self.dot_list.append(atom)
+                    if atom.vdw:
+                    self.vdw_list.append(atom)
+                    if atom.ball:
+                    self.ball_list.append(atom)
+                    if atom.wires:
+                    self.wires_list.append(atom)
+                    if atom.sphere:
+                    self.sphere_list.append(atom)
+                    if atom.pretty_vdw:
+                    self.pretty_vdw_list.append(atom)
+                    if atom.dot_surface:
+                    self.dot_surface_list.append(atom)
+            else:
+            for chain in self.data[self.frame_i].chains.values():
+                for residue in chain.residues.values():
+                for atom in residue.atoms.values():
+                    if atom.dot:
+                    self.dot_list.append(atom)
+                    if atom.vdw:
+                    self.vdw_list.append(atom)
+                    if atom.ball:
+                    self.ball_list.append(atom)
+                    if atom.wires:
+                    self.wires_list.append(atom)
+                    if atom.sphere:
+                    self.sphere_list.append(atom)
+                    if atom.pretty_vdw:
+                    self.pretty_vdw_list.append(atom)
+                    if atom.dot_surface:
+                    self.dot_surface_list.append(atom)
+            self.LINES = self.draw_lines()
+            # Surface dots representation of the atoms
+            for atom in self.dot_surface_list:
+            atom.dots_surf = op.get_surf_dots(atom)
+            self.gl_points_list = glGenLists(1)
+            glNewList(self.gl_points_list, GL_COMPILE)
+            for atom in self.dot_surface_list:
+            for point in atom.dots_surf:
+                rep.draw_dot(atom, point)
+            glEndList()
+        '''
     
     def draw(self):
-	""" Defines wich type of representations will be displayed
-	"""
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-	glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
-	#if self.SELECTION:
-	for i,atom in enumerate(self.selected_atoms):
-	    if atom is not None:
-		rep.draw_selected(atom, i+2)
-	if self.DOTS_SURFACE:
-	    glCallList(self.gl_points_list[self.frame_i], GL_COMPILE)
-	if self.DOTS:
-	    glCallList(self.gl_point_list[self.frame_i], GL_COMPILE)
-	if self.BALL_STICK:
-	    glCallList(self.gl_ball_stick_list[self.frame_i], GL_COMPILE)
-	if self.WIRES:
-	    glCallList(self.gl_wires_list[self.frame_i], GL_COMPILE)
-	if self.LINES:
-	    glCallList(self.gl_lines_list[self.frame_i])
-	if self.VDW:
-	    glCallList(self.gl_vdw_list[self.frame_i], GL_COMPILE)
-	if self.PRETTY_VDW:
-	    glCallList(self.gl_pretty_vdw_list[self.frame_i], GL_COMPILE)
-	if self.RIBBON:
-	    glCallList(self.gl_ribbon_list[self.frame_i], GL_COMPILE)
-	if self.SPHERES:
-	    glCallList(self.gl_sphere_list[self.frame_i], GL_COMPILE)
+        """ Defines wich type of representations will be displayed
+        """
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+        glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
+        
+        if self.SELECTION:
+            for i,atom in enumerate(self.selected_atoms):
+                if atom is not None:
+                    rep.draw_selected(atom, i+2)
+        #if self.DOTS_SURFACE:
+        #    glCallList(self.gl_points_list[self.frame_i], GL_COMPILE)
+        #if self.DOTS:
+        #    glCallList(self.gl_point_list[self.frame_i], GL_COMPILE)
+        #if self.BALL_STICK:
+        #    glCallList(self.gl_ball_stick_list[self.frame_i], GL_COMPILE)
+        #if self.WIRES:
+        #    glCallList(self.gl_wires_list[self.frame_i], GL_COMPILE)
+        #if self.LINES:
+        #    glCallList(self.gl_lines_list[self.frame_i])
+        #if self.VDW:
+        #    glCallList(self.gl_vdw_list[self.frame_i], GL_COMPILE)
+        #if self.PRETTY_VDW:
+        #    glCallList(self.gl_pretty_vdw_list[self.frame_i], GL_COMPILE)
+        #if self.RIBBON:
+        #    glCallList(self.gl_ribbon_list[self.frame_i], GL_COMPILE)
+        #if self.SPHERES:
+        #    glCallList(self.gl_sphere_list[self.frame_i], GL_COMPILE)
+
+        self.load_mol()
+    
+    
     
     def draw_to_pick(self):
 	""" Drawing method only to select atoms.
@@ -292,58 +406,67 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    
 	    atom_pos is a vector containing the XYZ coordinates
 	    of the selected atom.
-	"""
-	if op.get_euclidean(self.target_point, atom_pos) != 0:
-	    cam_pos = self.get_cam_pos()
-	    glMatrixMode(GL_MODELVIEW)
-	    modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-	    up = modelview[:3, 1]
-	    zrp = self.zero_reference_point
-	    dist = op.get_euclidean(zrp, atom_pos)
-	    vec_dir = op.unit_vector([atom_pos[0]-zrp[0], atom_pos[1]-zrp[1], atom_pos[2]-zrp[2]])
-	    add_z = (self.z_far - self.z_near)/2
-	    dist_z = op.get_euclidean(cam_pos, zrp)
-	    if dist_z < add_z:
-		add_z = dist_z - 0.1
-	    cycles = 15
-	    to_add = float(dist/cycles)
-	    for i in range(1, cycles):
-		aum = i*to_add
-		pto = [zrp[0]+vec_dir[0]*aum, zrp[1]+vec_dir[1]*aum, zrp[2]+vec_dir[2]*aum]
-		self.z_far = dist_z + add_z
-		self.z_near = dist_z - add_z
-		self.fog_start = self.z_far - 1.5
-		self.fog_end = self.z_far
-		dist_z = op.get_euclidean(cam_pos, pto)
-		x, y, width, height = self.get_allocation()
-		glMatrixMode(GL_PROJECTION)
-		glLoadIdentity()
-		gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
-		glFogf(GL_FOG_START, self.fog_start)
-		glFogf(GL_FOG_END, self.fog_end)
-		glMatrixMode(GL_MODELVIEW)
-		glLoadIdentity()
-		gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
-			  pto[0], pto[1], pto[2],
-			  up[0], up[1], up[2])
-		self.window.invalidate_rect(self.allocation, False)
-		self.window.process_updates(False)
-	    if dist%0.1 > 0:
-		dist_z = op.get_euclidean(cam_pos, atom_pos)
-		self.z_far = dist_z + add_z
-		self.z_near = dist_z - add_z
-		self.fog_start = self.z_far - 1.5
-		self.fog_end = self.z_far
-		x, y, width, height = self.get_allocation()
-		glMatrixMode(GL_PROJECTION)
-		glLoadIdentity()
-		gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
-		glFogf(GL_FOG_START, self.fog_start)
-		glFogf(GL_FOG_END, self.fog_end)
-		glMatrixMode(GL_MODELVIEW)
-		glLoadIdentity()
-		gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], atom_pos[0], atom_pos[1], atom_pos[2], up[0], up[1], up[2])
-	    self.queue_draw()
+        """
+        if op.get_euclidean(self.target_point, atom_pos) != 0:
+            cam_pos = self.get_cam_pos()
+            glMatrixMode(GL_MODELVIEW)
+            modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+            up = modelview[:3, 1]
+            zrp = self.zero_reference_point
+            dist = op.get_euclidean(zrp, atom_pos)
+            vec_dir = op.unit_vector([atom_pos[0]-zrp[0], atom_pos[1]-zrp[1], atom_pos[2]-zrp[2]])
+            add_z = (self.z_far - self.z_near)/2
+            dist_z = op.get_euclidean(cam_pos, zrp)
+            if dist_z < add_z:
+                add_z = dist_z - 0.1
+            cycles = 15
+            to_add = float(dist/cycles)
+            
+            for i in range(1, cycles):
+                aum = i*to_add
+                pto = [zrp[0]+vec_dir[0]*aum, zrp[1]+vec_dir[1]*aum, zrp[2]+vec_dir[2]*aum]
+                self.z_far = dist_z + add_z
+                self.z_near = dist_z - add_z
+                self.fog_start = self.z_far - 1.5
+                self.fog_end = self.z_far
+                dist_z = op.get_euclidean(cam_pos, pto)
+                
+                x, y, width, height = self.get_allocation()
+                
+                glMatrixMode(GL_PROJECTION)
+                glLoadIdentity()
+                gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
+                
+                glFogf(GL_FOG_START, self.fog_start)
+                glFogf(GL_FOG_END, self.fog_end)
+                
+                glMatrixMode(GL_MODELVIEW)
+                glLoadIdentity()
+                gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2],
+                              pto[0], pto[1]    , pto[2],
+                              up[0] , up[1]     , up[2])
+                self.window.invalidate_rect(self.allocation, False)
+                self.window.process_updates(False)
+        
+            if dist%0.1 > 0:
+                dist_z = op.get_euclidean(cam_pos, atom_pos)
+                self.z_far = dist_z + add_z
+                self.z_near = dist_z - add_z
+
+                self.fog_start = self.z_far - 1.5
+
+                self.fog_end = self.z_far
+                x, y, width, height = self.get_allocation()
+
+                glMatrixMode(GL_PROJECTION)
+                glLoadIdentity()
+                gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
+                glFogf(GL_FOG_START, self.fog_start)
+                glFogf(GL_FOG_END, self.fog_end)
+                glMatrixMode(GL_MODELVIEW)
+                glLoadIdentity()
+                gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], atom_pos[0], atom_pos[1], atom_pos[2], up[0], up[1], up[2])
+                self.queue_draw()
     
     def key_press(self, widget, event):
 	""" The mouse_button function serves, as the names states, to catch
@@ -487,11 +610,14 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		self.frame_i = i
 		self.load_mol()
 		gl_pt_li = glGenLists(1)
+		
 		glNewList(gl_pt_li, GL_COMPILE)
 		for atom in self.dot_list:
 		    rep.draw_point(atom)
 		glEndList()
+		
 		self.gl_point_list.append(gl_pt_li)
+	    
 	return True
     
     def draw_lines(self):
@@ -736,80 +862,115 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		    self.target_point = selected.pos
     
     def mouse_motion(self, widget, event):
-	""" The mouse_motion function serves, as the names states, to perform
-	actions when the mouse is in movement.
-	"""
-	assert(widget==self)
+        """ The mouse_motion function serves, as the names states, to perform
+        actions when the mouse is in movement.
+        """
+        assert(widget==self)
         if event.is_hint:
             x, y, state = event.window.get_pointer()
         else:
             x = event.x
             y = event.y
             state = event.state
+
         dx = x - self.mouse_x
         dy = y - self.mouse_y
         if (dx==0 and dy==0):
-	    return
+            return
         self.mouse_x, self.mouse_y = x, y
-	changed = False
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-	if self.mouse_zoom:
-	    x, y, width, height = self.get_allocation()
-	    ax, ay, az = 0, 0, dy
-	    modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-	    #self.line_width_refresh()
-	    delta = ((self.z_far-self.z_near)/2)+ self.z_near
-	    delta = delta/200
-	    glLoadIdentity()
-	    inv = np.matrix(glGetDoublev(GL_MODELVIEW_MATRIX)).I
-	    bx = (inv[0,0]*ax + inv[1,0]*ay + inv[2,0]*az)/(1/(delta))
-	    by = (inv[0,1]*ax + inv[1,1]*ay + inv[2,1]*az)/(1/(delta))
-	    bz = (inv[0,2]*ax + inv[1,2]*ay + inv[2,2]*az)/(1/(delta))
-	    self.apply_trans(glTranslatef, bx, by, bz)
-	    glMultMatrixd(modelview)
-	    glMatrixMode(GL_PROJECTION)
-	    glLoadIdentity()
-	    self.z_near += -bz
-	    self.z_far += -bz
-	    self.fog_start += -bz
-	    self.fog_end += -bz
-	    if self.z_near >= 0.1:
-		gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
-	    else: 
-		gluPerspective(self.fovy, float(width)/float(height), 0.1, self.z_far)
-	    glFogf(GL_FOG_START, self.fog_start)
-	    glFogf(GL_FOG_END, self.fog_end)
-	    glMatrixMode(GL_MODELVIEW)
-	    changed = True
-	elif self.mouse_rotate:
-	    ax, ay, az = dy, dx, 0.0
-	    viewport = glGetIntegerv(GL_VIEWPORT)
-	    angle = math.sqrt(ax**2+ay**2+az**2)/float(viewport[2]+1)*180.0
-	    inv = np.matrix(glGetDoublev(GL_MODELVIEW_MATRIX)).I
-	    bx = (inv[0,0]*ax + inv[1,0]*ay + inv[2,0]*az)
-	    by = (inv[0,1]*ax + inv[1,1]*ay + inv[2,1]*az)
-	    bz = (inv[0,2]*ax + inv[1,2]*ay + inv[2,2]*az)
-	    self.apply_trans(glRotatef, angle, bx, by, bz)
-	    changed = True
-	elif self.mouse_pan:
-	    px, py, pz = self.pos(x, y)
-	    modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-	    glLoadIdentity()
-	    glTranslatef((px-self.drag_pos_x)*(self.z_far)/10, 
-			 (py-self.drag_pos_y)*(self.z_far)/10, 
-			 (pz-self.drag_pos_z)*(self.z_far)/10)
-	    glMultMatrixd(modelview)
-	    x = self.zero_reference_point[0]
-	    y = self.zero_reference_point[1]
-	    z = self.zero_reference_point[2]
-	    self.drag_pos_x = px
-	    self.drag_pos_y = py
-	    self.drag_pos_z = pz
-	    changed = True
-	if changed:
-	    self.queue_draw()
-	if state & gtk.gdk.BUTTON2_MASK:
-	    self.dragging = True
+        changed = False
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        
+        
+        if self.mouse_zoom:
+            x, y, width, height = self.get_allocation()
+            ax, ay, az = 0, 0, dy
+            modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+            #self.line_width_refresh()
+
+
+
+            delta = ((self.z_far-self.z_near)/2)+ self.z_near
+            delta = delta/200
+            glLoadIdentity()
+            inv = np.matrix(glGetDoublev(GL_MODELVIEW_MATRIX)).I
+            bx = (inv[0,0]*ax + inv[1,0]*ay + inv[2,0]*az)/(1/(delta))
+            by = (inv[0,1]*ax + inv[1,1]*ay + inv[2,1]*az)/(1/(delta))
+            bz = (inv[0,2]*ax + inv[1,2]*ay + inv[2,2]*az)/(1/(delta))
+            self.apply_trans(glTranslatef, bx, by, bz)
+            glMultMatrixd(modelview)
+            glMatrixMode(GL_PROJECTION)
+            glLoadIdentity()
+            self.z_near += -bz
+            self.z_far += -bz
+            self.fog_start += -bz
+            self.fog_end += -bz
+
+            #self.LineWidth = self.LineWidth/(self.z_far/10)
+            #self.PointSize = self.PointSize/(self.z_far/10)
+            
+            
+            # aqui tem que ser colocar a funcao que altera a grossura das linhas e pontos
+            
+            
+            #print self.LineWidth
+            
+            #LineWidth = self.LineWidth
+            #PointSize = self.PointSize
+            
+            #
+            #LineWidth = LineWidth/self.z_far
+            #PointSize = PointSize/self.z_far
+            #
+            #if LineWidth <=1:
+            #    LineWidth = 1
+            #
+            #
+            #
+            #else:
+            #    self.LineWidth = LineWidth 
+            #    self.PointSize = PointSize 
+
+            if self.z_near >= 0.1:
+                gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
+            else: 
+                gluPerspective(self.fovy, float(width)/float(height), 0.1, self.z_far)
+            glFogf(GL_FOG_START, self.fog_start)
+            glFogf(GL_FOG_END, self.fog_end)
+            glMatrixMode(GL_MODELVIEW)
+            changed = True
+        
+        elif self.mouse_rotate:
+            ax, ay, az = dy, dx, 0.0
+            viewport = glGetIntegerv(GL_VIEWPORT)
+            angle = math.sqrt(ax**2+ay**2+az**2)/float(viewport[2]+1)*180.0
+            inv = np.matrix(glGetDoublev(GL_MODELVIEW_MATRIX)).I
+            bx = (inv[0,0]*ax + inv[1,0]*ay + inv[2,0]*az)
+            by = (inv[0,1]*ax + inv[1,1]*ay + inv[2,1]*az)
+            bz = (inv[0,2]*ax + inv[1,2]*ay + inv[2,2]*az)
+            self.apply_trans(glRotatef, angle, bx, by, bz)
+            changed = True
+        
+        
+        elif self.mouse_pan:
+            px, py, pz = self.pos(x, y)
+            modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+            glLoadIdentity()
+            glTranslatef((px-self.drag_pos_x)*(self.z_far)/10, 
+                 (py-self.drag_pos_y)*(self.z_far)/10, 
+                 (pz-self.drag_pos_z)*(self.z_far)/10)
+            glMultMatrixd(modelview)
+            x = self.zero_reference_point[0]
+            y = self.zero_reference_point[1]
+            z = self.zero_reference_point[2]
+            self.drag_pos_x = px
+            self.drag_pos_y = py
+            self.drag_pos_z = pz
+            changed = True
+        if changed:
+            self.queue_draw()
+        if state & gtk.gdk.BUTTON2_MASK:
+            self.dragging = True
     
     def mouse_scroll(self, widget, event):
 	""" Change the z_near and z_far values (moves the fog)
