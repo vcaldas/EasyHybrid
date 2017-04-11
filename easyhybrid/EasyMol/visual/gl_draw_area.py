@@ -740,7 +740,8 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	"""
 	# Experimental, ONLY WORKS if all the atoms are numbered the same in all frames
 	for i in range(len(self.selected_atoms)):
-	    self.selected_atoms[i] = self.data[self.frame_i].atoms[self.selected_atoms[i].index-1]
+	    if self.selected_atoms[i] is not None:
+		self.selected_atoms[i] = self.data[self.frame_i].atoms[self.selected_atoms[i].index-1]
 	# Experimental, ONLY WORKS if all the atoms are numbered the same in all frames
 	reps = ['dots_surf', 'dots', 'vdw', 'pretty_vdw', 'ribbon', 'spheres', 'wires', 'ball_stick', 'lines']
 	for rep in reps:
