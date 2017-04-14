@@ -276,6 +276,29 @@ def draw_bond_stick(atom, length, angle, vec_o):
     glPopName()
     glPopMatrix()
 
+def draw_surface (Vobject, selection = None):
+    """ Function doc """
+    
+    for chain in  Vobject.chains:
+	#'''
+	for res in Vobject.chains[chain].residues:
+	    for atom in Vobject.chains[chain].residues[res].atoms:
+		glPushMatrix()
+		
+		glPushName(atom.index)
+		
+		glColor3f(atom.color[0], atom.color[1], atom.color[2])
+		glPointSize(self.PointSize*atom.vdw_rad)
+		glBegin(GL_POINTS)
+		glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+		glEnd()
+		glPopName()
+		glPopMatrix()
+    
+    
+    
+    
+
 def draw_selected(atom, slices):
     """ Draw a selection marker to an atom.
     """

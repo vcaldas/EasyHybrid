@@ -285,14 +285,6 @@ class TreeviewHistory(object):
             #print self.selectedID
             sys = self.EMSession.Vobjects[self.selectedID-1]
             self.EMSession.glarea.center_on_atom(sys.mass_center)
-
-      
-    
-    
-    
-    
-    
-    
     
     def on_menuitem_show_dots_button_release_event (self, item, event):
         """ Function doc """
