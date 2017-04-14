@@ -350,7 +350,7 @@ class GTKGUI (TreeviewHistory):
         
         self.EMSession = EMSession
         
-        
+        self.EMSession.glarea.funcao_de_click = self.test_popup_menu
         #window.set_size_request(800,600)
         #self.handlers = {"on_btn_BallStick_clicked": self.glarea.switch_ball_stick,
         #                 "on_file_quit_activate":    gtk.main_quit}
@@ -366,6 +366,11 @@ class GTKGUI (TreeviewHistory):
         self.builder.get_object('notebook1').hide()
 
         gtk.main()
+
+
+    def test_popup_menu (self, button = None):
+        """ Function doc """
+        print 'aquioh'
 
     '''
     def  on_treeview_history_select_cursor_parent(self, tree, path, column):

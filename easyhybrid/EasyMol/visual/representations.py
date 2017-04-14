@@ -278,23 +278,47 @@ def draw_bond_stick(atom, length, angle, vec_o):
 
 def draw_surface (Vobject, selection = None):
     """ Function doc """
+    sphere_vertices = {'level_0':
     
-    for chain in  Vobject.chains:
-	#'''
-	for res in Vobject.chains[chain].residues:
-	    for atom in Vobject.chains[chain].residues[res].atoms:
-		glPushMatrix()
-		
-		glPushName(atom.index)
-		
-		glColor3f(atom.color[0], atom.color[1], atom.color[2])
-		glPointSize(self.PointSize*atom.vdw_rad)
-		glBegin(GL_POINTS)
-		glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
-		glEnd()
-		glPopName()
-		glPopMatrix()
+    [ 0.850650787354,  0.525731086731,  0.000000000000,  #0
+     -0.850650787354,  0.525731086731,  0.000000000000,  #1
+     -0.850650787354, -0.525731086731,  0.000000000000,  #2
+      0.850650787354, -0.525731086731,  0.000000000000,  #3
+      0.525731086731,  0.000000000000,  0.850650787354,  #4
+      0.525731086731,  0.000000000000, -0.850650787354,  #5
+     -0.525731086731,  0.000000000000, -0.850650787354,  #6
+     -0.525731086731,  0.000000000000,  0.850650787354,  #7
+      0.000000000000,  0.850650787354,  0.525731086731,  #8
+      0.000000000000, -0.850650787354,  0.525731086731,  #9
+      0.000000000000, -0.850650787354, -0.525731086731,  #0
+      0.000000000000,  0.850650787354, -0.525731086731]  #1
+     }
     
+    sphere_triangles = {'level_0':
+      [ 4,     8,     7,     4,     7,     9,     5,     6,    11,     5,
+       10,     6,     0,     4,     3,     0,     3,     5,     2,     7,
+	1,     2,     1,     6,     8,     0,    11,     8,    11,     1,
+	9,    10,     3,     9,     2,    10,     8,     4,     0,    11,
+	0,     5,     4,     9,     3,     5,     3,    10,     7,     8,
+	1,     6,     1,    11,     7,     2,     9,     6,    10,     2]
+    }
+    
+    #r chain in  Vobject.chains:
+	##'''
+	#for res in Vobject.chains[chain].residues:
+	#    for atom in Vobject.chains[chain].residues[res].atoms:
+	#	glPushMatrix()
+	#	
+	#	glPushName(atom.index)
+	#	
+	#	glColor3f(atom.color[0], atom.color[1], atom.color[2])
+	#	glPointSize(self.PointSize*atom.vdw_rad)
+	#	glBegin(GL_POINTS)
+	#	glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+	#	glEnd()
+	#	glPopName()
+	#	glPopMatrix()
+    #
     
     
     
