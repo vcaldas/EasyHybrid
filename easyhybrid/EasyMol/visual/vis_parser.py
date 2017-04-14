@@ -35,8 +35,7 @@ def parse_pdb(infile):
     with open(infile, 'r') as pdb_file:
         
         mol_obj = mm.MolObject()
-        
-        
+    
         chains_m = {}
         residues = {}
         atoms    = []
@@ -46,10 +45,11 @@ def parse_pdb(infile):
         sum_x = 0
         sum_y = 0
         sum_z = 0
+        
         for line in pdb_file:
             if line[:4] == 'ATOM' or line[:6] == 'HETATM':
                 at_name = line[12:16].strip()
-                at_index = int(line[6:11])
+                #at_index = int(line[6:11])
                 at_pos = np.array([float(line[30:38]), float(line[38:46]), float(line[46:54])])
                 at_res_i = int(line[22:26])
                 at_res_n = line[17:20].strip()
@@ -124,13 +124,13 @@ def parse_pdb(infile):
         mol_obj.mass_center[1] = sum_y / total
         mol_obj.mass_center[2] = sum_z / total
 
-        print mol_obj.mass_center
+        #print mol_obj.mass_center
         return mol_obj
 
 
-sys = parse_pdb('/home/fernando/programs/EasyHybrid/pdbs/alanine.pdb')
-
-sys = parse_pdb('/home/fernando/programs/EasyHybrid/pdbs/1bx4.pdb')
+#sys = parse_pdb('/home/fernando/programs/EasyHybrid/pdbs/alanine.pdb')
+#
+#sys = parse_pdb('/home/fernando/programs/EasyHybrid/pdbs/1bx4.pdb')
 
 '''
 

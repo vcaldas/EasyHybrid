@@ -42,24 +42,20 @@ cpdef C_np_generate_bonds(list coords):
         #'''
     return bonds 
     
-    
-
-
-
-cpdef C_generate_bonds(list coords):
+cpdef C_generate_bonds2(list coords):
     
     #cdef double bonds[len(coords)]
     bonds = []
     cdef int i
     cdef int j
     cdef int num_threads
-    #cdef double dist_2
-    
-    #with nogil, parallel(num_threads=4):
-    #print coords
+
+
+
     for i in range (0, len(coords),3):
-        
-        for j in range (i+3, len(coords),3):
+       
+        for j in range (i+3, len(coords),3):    
+            
             
             if coords[i] - coords[j] >= 2.0  or coords[i+1] - coords[j+1] >= 2.0 or coords[i+2] - coords[j+2] >= 2.0:
                 pass
@@ -84,4 +80,115 @@ cpdef C_generate_bonds(list coords):
                     bonds.append(coords[j+2])
     #print bonds
     return bonds
+
+cpdef C_generate_bonds(list coords):
+    
+    #cdef double bonds[len(coords)]
+    bonds = []
+    cdef int i
+    cdef int j
+    cdef int num_threads
+
+
+
+    for i in range (0, len(coords),3):
+       
+        for j in range (i+3, len(coords),3):    
+            
+            if coords[i] - coords[j] >= 2.0  or coords[i+1] - coords[j+1] >= 2.0 or coords[i+2] - coords[j+2] >= 2.0:
+                pass
+                #print coords[i], coords[j]
+            
+            
+            else:
+                dist =  [coords[i]  - coords[j]  ,
+                        coords[i+1] - coords[j+1],
+                        coords[i+2] - coords[j+2]]
+                #print dist
+                dist2 = dist[0]**2 + dist[1]**2 + dist[2]**2
+
+                if dist2 <= 2.89:
+                    #print coords[i], coords[i+1], coords[i+2] ,coords[j] , coords[j+1], coords[j+2], dist2
+                    bonds.append(coords[i])
+                    bonds.append(coords[i+1])
+                    bonds.append(coords[i+2])
+
+                    bonds.append(coords[j])
+                    bonds.append(coords[j+1])
+                    bonds.append(coords[j+2])
+    #print bonds
+    return bonds
+
+cpdef C_generate_bonds3(atoms):
+    
+    #cdef double bonds[len(coords)]
+    bonds       = []
+    index_bonds = []
+    
+    cdef int i
+    cdef int j
+    cdef int num_threads
+
+    size =  len(atoms)
+    
+    if size >= 20:
+        limit = 20
+    else: 
+        limit = size
+
+    for i in range (0, size):
+        
+        if i + limit <= size:
+            pass
+        else:
+            limit = limit-1
+        
+        for j in range (i+1, i+ limit):    
+            if (atoms[i].pos[0] - atoms[j].pos[0] >= 2.0 or 
+                atoms[i].pos[1] - atoms[j].pos[1] >= 2.0 or 
+                atoms[i].pos[2] - atoms[j].pos[2] >= 2.0):
+                pass
+            
+            else:
+                dist =  [atoms[i].pos[0] - atoms[j].pos[0],
+                         atoms[i].pos[1] - atoms[j].pos[1],
+                         atoms[i].pos[2] - atoms[j].pos[2]]
+                dist2 = dist[0]**2 + dist[1]**2 + dist[2]**2
+
+                if dist2 <= ((atoms[i].cov_rad + atoms[j].cov_rad)**2) *1.1:
+                #if dist2 <= 2.89:
+                    index_bonds.append([i, j])
+                    
+                    #bonds.append(atoms[i].pos[0])
+                    #bonds.append(atoms[i].pos[1])
+                    #bonds.append(atoms[i].pos[2])
+                    #
+                    #bonds.append((atoms[i].pos[0] + atoms[j].pos[0])/2)
+                    #bonds.append((atoms[i].pos[1] + atoms[j].pos[1])/2)
+                    #bonds.append((atoms[i].pos[2] + atoms[j].pos[2])/2)
+                    #
+                    #
+                    #bonds.append(atoms[j].pos[0])
+                    #bonds.append(atoms[j].pos[1])
+                    #bonds.append(atoms[j].pos[2])
+                
+                else:
+                    pass
+    #return #bonds#, index_bonds
+    #print index_bonds
+    return index_bonds
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -495,6 +495,7 @@ class GTKGUI:
             
             if Vobject.actived:
                 actived = True
+                
                 #cell = self.builder.get_object('cellrenderertext2')
                 #cell.props.weight_set = True
                 #cell.props.weight = pango.WEIGHT_NORMAL
@@ -513,7 +514,7 @@ class GTKGUI:
         
         
         self.EMSession.glarea.load_mol()
-        self.EMSession.glarea.center_on_atom(sys.mass_center)
+        #self.EMSession.glarea.center_on_atom(sys.mass_center)
         
         
         '''

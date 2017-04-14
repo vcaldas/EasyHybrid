@@ -30,6 +30,7 @@ import numpy as np
 import time
 
 from multiprocessing import Pool
+import atom_types as at
 
 
 
@@ -182,7 +183,9 @@ class MolObject:
         print 'start'
         initial = time.time()
         #self.bonds = self.generete_atom_list()
-        self.bonds = cfunctions.C_generate_bonds (self.coords)
+        #self.bonds = cfunctions.C_generate_bonds (self.coords)
+        self.bonds = cfunctions.C_generate_bonds3 (self.atoms)
+
         #self.bonds = cfunctions.C_np_generate_bonds (self.coords)
         #self.bonds = self.distances_from_point()
         print 'end'
@@ -315,7 +318,6 @@ class Atom:
     
     def __init__ (self, name='Xx', index=None, symbol='X', pos=None, resi = None, chain = ''):
         """ Class initialiser """
-        import atom_types as at
         
         if pos is None:
             pos = np.array([0.0, 0.0, 0.0])
