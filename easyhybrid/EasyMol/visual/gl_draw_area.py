@@ -328,18 +328,6 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
         
-	for i,atom in enumerate(self.selected_atoms):
-	    if atom is not None:
-		glPushMatrix()
-		glPushName(atom.index)
-		glColor3f(0, 1, 1)
-		glPointSize(7)
-		glBegin(GL_POINTS)
-		glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
-		glEnd()
-		glPopName()
-		glPopMatrix()
-	
         #if self.SELECTION:
             #for i,atom in enumerate(self.selected_atoms):
                 #if atom is not None:
@@ -366,7 +354,19 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 
                 if Vobject.show_surface :
                     glCallList(Vobject.list_surface[frame], GL_COMPILE)
-
+	
+	for i,atom in enumerate(self.selected_atoms):
+	    if atom is not None:
+		glPushMatrix()
+		glDisable(GL_DEPTH_TEST)
+		glPushName(atom.index)
+		glColor3f(0, 1, 1)
+		glPointSize(15)
+		glBegin(GL_POINTS)
+		glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+		glEnd()
+		glPopName()
+		glPopMatrix()
 	
                      
         #if self.DOTS_SURFACE:
