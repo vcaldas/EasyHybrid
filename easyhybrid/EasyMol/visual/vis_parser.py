@@ -29,7 +29,7 @@ import numpy as np
 
 
 
-def parse_pdb(infile):
+def parse_pdb(infile = None, counter = 0, atom_dic_id = None ):
     """ Function doc """
     #frames = []
     with open(infile, 'r') as pdb_file:
@@ -54,8 +54,13 @@ def parse_pdb(infile):
                 at_res_i = int(line[22:26])
                 at_res_n = line[17:20].strip()
                 at_ch = line[21]
-                atm = mm.Atom(name=at_name, index=index, pos=at_pos, resi=at_res_i, chain = at_ch)
                 
+                atm = mm.Atom(name=at_name, index=index, pos=at_pos, resi=at_res_i, chain = at_ch, atom_id = counter)
+                
+                if atom_dic_id is not None:
+                    atom_dic_id[counter] = atm
+                
+                counter += 1
                 index += 1
                 
                 if chains_m.has_key(at_ch):
@@ -125,7 +130,7 @@ def parse_pdb(infile):
         mol_obj.mass_center[2] = sum_z / total
 
         #print mol_obj.mass_center
-        return mol_obj
+        return mol_obj, atom_dic_id
 
 
 #sys = parse_pdb('/home/fernando/programs/EasyHybrid/pdbs/alanine.pdb')

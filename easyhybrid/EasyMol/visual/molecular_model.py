@@ -178,7 +178,7 @@ class Residue:
 class Atom:
     """ Class doc """
     
-    def __init__ (self, name='Xx', index=None, symbol='X', pos=None, resi = None, chain = ''):
+    def __init__ (self, name='Xx', index=None, symbol='X', pos=None, resi = None, chain = '', atom_id = 0):
         """ Class initialiser """
         
         if pos is None:
@@ -191,6 +191,8 @@ class Atom:
         self.resi    = resi 
         self.chain   = chain
         
+	self.atom_id = atom_id
+	
         self.color       = at.get_color(name)
         self.col_rgb     = at.get_color_rgb(name)
         self.radius      = at.get_radius(name)

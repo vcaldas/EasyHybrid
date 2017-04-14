@@ -22,9 +22,34 @@
 #  
 #  
 from visual import gl_draw_area as gda, vis_parser
+from visual.vis_parser import parse_pdb
+
+
+
+
 
 class EasyMolSession:
     """ Class doc """
+
+    def load (self, infile):
+        """ Function doc """
+        
+        Vobject, self.atom_dic_id = parse_pdb(infile     = infile,  
+                                             counter     = self.atom_id_counter,  
+                                             atom_dic_id = self.atom_dic_id
+                                             )
+        
+        Vobject.generate_bonds()
+        self.atom_id_counter += len(Vobject.atoms)
+        self.Vobjects.append(Vobject)
+        print self.atom_dic_id
+        print self.atom_id_counter
+    
+    def delete(self, obj = None):
+        """ Function doc """
+    
+    def select (self, obj =  None):
+        """ Function doc """
 
     def orient (self, obj =  None):
         """ Function doc """  
@@ -54,6 +79,10 @@ class EasyMolSession:
         #frames = vis_parser.parse_pdb(sys.argv[1])
         self.Vobjects         = []
         
+        self.atom_id_counter  = 0
+        self.atom_dic_id      = {
+                                # atom_id : obj_atom 
+                                 }
         
         self.glarea            = gda.GLCanvas(self) # a gl area recebe 
         
@@ -65,6 +94,9 @@ class EasyMolSession:
                                  'bg_color'     : 'black',
                                  }
 
+        
+        
+        
         #self.builder = self.init_gtk(self.glarea)
         #self.builder.connect_signals(self)                                                #
 
