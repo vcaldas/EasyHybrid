@@ -328,12 +328,24 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
         
+	for i,atom in enumerate(self.selected_atoms):
+	    if atom is not None:
+		glPushMatrix()
+		glPushName(atom.index)
+		glColor3f(0, 1, 1)
+		glPointSize(7)
+		glBegin(GL_POINTS)
+		glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+		glEnd()
+		glPopName()
+		glPopMatrix()
+	
         #if self.SELECTION:
             #for i,atom in enumerate(self.selected_atoms):
                 #if atom is not None:
                     #rep.draw_selected(atom, i+2)
         
-        for Vobject in self.EMSession.Vobjects:           
+        for Vobject in self.EMSession.Vobjects:
             
             if Vobject.actived:   
                 
@@ -355,8 +367,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
                 if Vobject.show_surface :
                     glCallList(Vobject.list_surface[frame], GL_COMPILE)
 
-                  
-                  
+	
                      
         #if self.DOTS_SURFACE:
         #    glCallList(self.gl_points_list[self.frame_i], GL_COMPILE)
@@ -1249,11 +1260,10 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	"""
 	"""
 	picked = None
-	#print event, nearest, hits, "<---------"
-	print nearest, "<---------"
         if nearest != []:
-	    coords = self.EMSession.Vobjects[0].atoms[nearest[0]].pos
-	    print coords
+	    picked = self.EMSession.Vobjects[0].atoms[nearest[0]-1]
+	    coords = self.EMSession.Vobjects[0].atoms[nearest[0]-1].pos
+	    #print coords
         #if nearest != []:
 	    #for chain in self.data[self.frame_i].chains.values():
 		#for residue in chain.residues.values():
