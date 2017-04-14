@@ -359,7 +359,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    if atom is not None:
 		glPushMatrix()
 		glDisable(GL_DEPTH_TEST)
-		glPushName(atom.index)
+		glPushName(atom.atom_id)
 		glColor3f(0, 1, 1)
 		glPointSize(15)
 		glBegin(GL_POINTS)
@@ -704,7 +704,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    glEnable(GL_COLOR_MATERIAL)
 	    glEnable(GL_DEPTH_TEST)
 	    glPushMatrix()
-	    glPushName(bond[0].index)
+	    glPushName(bond[0].atom_id) # old glPushName(bond[0].index)
 	    glColor3f(bond[0].color[0], bond[0].color[1], bond[0].color[2])
 	    glLineWidth(3)
 	    glBegin(GL_LINES)
@@ -1261,8 +1261,11 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	"""
 	picked = None
         if nearest != []:
-	    picked = self.EMSession.Vobjects[0].atoms[nearest[0]-1]
-	    coords = self.EMSession.Vobjects[0].atoms[nearest[0]-1].pos
+	    picked = self.EMSession.atom_dic_id[nearest[0]]
+	    print nearest[0], 'Name: ', picked.name, 'index: ', picked.index, 'residue: ', picked.resi, picked.chain
+	    #coords = self.EMSession.Vobjects[0].atoms[nearest[0]-1].pos
+	
+	
 	    #print coords
         #if nearest != []:
 	    #for chain in self.data[self.frame_i].chains.values():

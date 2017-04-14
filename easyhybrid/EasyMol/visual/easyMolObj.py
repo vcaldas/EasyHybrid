@@ -42,8 +42,8 @@ class EasyMolSession:
         Vobject.generate_bonds()
         self.atom_id_counter += len(Vobject.atoms)
         self.Vobjects.append(Vobject)
-        print self.atom_dic_id
-        print self.atom_id_counter
+        #print self.atom_dic_id
+        #print self.atom_id_counter
     
     def delete(self, obj = None):
         """ Function doc """
@@ -65,7 +65,7 @@ class EasyMolSession:
     
     def disable (self, index):
         """ Function doc """
-        print type(index)
+        #print type(index)
         self.Vobjects[index].actived = False
         self.glarea.draw()
         
