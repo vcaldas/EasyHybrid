@@ -1252,8 +1252,28 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	#print event, nearest, hits, "<---------"
 	print nearest, "<---------"
         if nearest != []:
-	    coords = self.EMSession.Vobjects[0].atoms[nearest[0]].pos
-	    print coords
+	    resi   = self.EMSession.Vobjects[0].atoms[nearest[0]].resi
+	    chain  = self.EMSession.Vobjects[0].atoms[nearest[0]].chain
+	    print resi, chain
+	    glPushMatrix()
+	    atom = self.EMSession.Vobjects[0].atoms[nearest[0]]
+	    
+	    
+	    glPointSize(7)
+	    glColor3f(0,1,1)
+	    glBegin(GL_POINTS)
+	    glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+	    #atom in  self.EMSession.Vobjects[0].chain[chain].residues[resi]:
+            #
+		##glPushName(atom.index)
+		#glColor3f(0,1,1)
+		#glPointSize(7)
+		#glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+	    glEnd()
+	    #glPopName()
+	    glPopMatrix()
+	    glFlush()
+	    
         #if nearest != []:
 	    #for chain in self.data[self.frame_i].chains.values():
 		#for residue in chain.residues.values():

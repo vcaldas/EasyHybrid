@@ -513,39 +513,9 @@ class GTKGUI (TreeviewHistory):
             filename = chooser.get_filename()
         chooser.destroy()
 
-        #return filename
+
         
-        print filename
-        
-        sys = parse_pdb(filename)
-        #
-        ##print sys.atoms[0].name
-        ##sys.atoms[0].name = 'ATOM _ new name'
-        #
-        #for chain in  sys.chains:
-        #    for res in sys.chains[chain].residues:
-        #        for atom in sys.chains[chain].residues[res].atoms:
-        #            
-        #            print atom.name, atom.pos
-        #
-        #print sys.coords
-        ##print sys.coords[0]
-        #sys.coords[0] = .0
-        ##print sys.coords[0]
-        #print sys.coords
-        #
-        #
-        #for chain in  sys.chains:
-        #    for res in sys.chains[chain].residues:
-        #        for atom in sys.chains[chain].residues[res].atoms:
-        #            print atom.name, atom.pos
-        
-        
-        
-        
-        sys.generate_bonds()
-        
-        self.EMSession.Vobjects.append(sys)
+        self.EMSession.load(filename)
 
 
         liststore = self.builder.get_object('liststore2')
@@ -578,7 +548,7 @@ class GTKGUI (TreeviewHistory):
         
         
         #self.EMSession.glarea.load_mol()
-        self.EMSession.glarea.draw_lines(sys)
+        self.EMSession.glarea.draw_lines(self.EMSession.Vobjects[-1])
         #self.EMSession.glarea.draw_dots(sys)
         #self.EMSession.glarea.center_on_atom(sys.mass_center)
         
