@@ -6,7 +6,7 @@ from cython.parallel import prange, parallel
 import multiprocessing as mp
 import numpy as np
 
-
+'''
 #cpdef C_np_generate_bonds(list coords):
 #    bonds = []
 #    NDIM = 3 # number of dimensions
@@ -20,7 +20,7 @@ import numpy as np
 #        d = ((a-point)**2).sum(axis=1)  # compute distances
 #        ndx = d.argsort() # indirect sort 
 #        
-#        #'''
+#        #
 #        for  index in ndx:
 #            if d[index] >= 2.84:
 #                break
@@ -39,7 +39,7 @@ import numpy as np
 #                    bonds.append(a[index][0]) 
 #                    bonds.append(a[index][1])
 #                    bonds.append(a[index][2])
-#        #'''
+#        #
 #    return bonds 
 #    
 #cpdef C_generate_bonds2(list coords):
@@ -119,7 +119,7 @@ import numpy as np
 #    #print bonds
 #    return bonds
 #
-
+'''
 
 
 cpdef C_generate_bonds3(atoms):
@@ -165,10 +165,9 @@ cpdef C_generate_bonds3(atoms):
                 #if dist2 <= 2.89:
                     
                     distance = dist2**0.5
-                    
-                    midpoint = [(atoms[i].pos[0] + atoms[j].pos[0])/2,
-                                (atoms[i].pos[1] + atoms[j].pos[1])/2,
-                                (atoms[i].pos[2] + atoms[j].pos[2])/2]
+                    midpoint = [(atoms[i].pos[0] + atoms[j].pos[0])/2.0,
+                                (atoms[i].pos[1] + atoms[j].pos[1])/2.0,
+                                (atoms[i].pos[2] + atoms[j].pos[2])/2.0]
                     
                     #arr2  = unit_vector(v_dist)
                     #angle = get_angle(arr1, arr2)

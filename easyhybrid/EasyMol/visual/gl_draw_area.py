@@ -328,10 +328,10 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
         
-        if self.SELECTION:
-            for i,atom in enumerate(self.selected_atoms):
-                if atom is not None:
-                    rep.draw_selected(atom, i+2)
+        #if self.SELECTION:
+            #for i,atom in enumerate(self.selected_atoms):
+                #if atom is not None:
+                    #rep.draw_selected(atom, i+2)
         
         for Vobject in self.EMSession.Vobjects:           
             
@@ -685,54 +685,73 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         glNewList(gl_ln_li, GL_COMPILE)
         
         for bond in Vobject.bonds:
+	    
+	    glDisable(GL_LIGHT0)
+	    glDisable(GL_LIGHT1)
+	    glDisable(GL_LIGHT2)
+	    glDisable(GL_LIGHTING)
+	    glEnable(GL_COLOR_MATERIAL)
+	    glEnable(GL_DEPTH_TEST)
+	    glPushMatrix()
+	    glPushName(bond[0].index)
+	    glColor3f(bond[0].color[0], bond[0].color[1], bond[0].color[2])
+	    glLineWidth(3)
+	    glBegin(GL_LINES)
+	    glVertex3f(bond[0].pos[0], bond[0].pos[1], bond[0].pos[2])
+	    glVertex3f(bond[4][0], bond[4][1], bond[4][2])
+	    glEnd()
+	    glPopName()
+	    glPopMatrix()
+	    
+	    
             #glPushMatrix()
-            glDisable(GL_LIGHT0)
-            glDisable(GL_LIGHT1)
-            glDisable(GL_LIGHT2)
-            glDisable(GL_LIGHTING)
-            glEnable(GL_COLOR_MATERIAL)
-            glEnable(GL_DEPTH_TEST)
-            glPushMatrix()
-	    print type(bond[0]), bond[0]
-            glPushName(bond[0])
+            #glDisable(GL_LIGHT0)
+            #glDisable(GL_LIGHT1)
+            #glDisable(GL_LIGHT2)
+            #glDisable(GL_LIGHTING)
+            #glEnable(GL_COLOR_MATERIAL)
+            #glEnable(GL_DEPTH_TEST)
+            #glPushMatrix()
+	    #print type(bond[0]), bond[0]
+            #glPushName(bond[0].index)
             
-            #glColor3f(0, 1, 1)
+            ##glColor3f(0, 1, 1)
             
-            glColor3f(Vobject.atoms[bond[0]].color[0], 
-                      Vobject.atoms[bond[0]].color[1], 
-                      Vobject.atoms[bond[0]].color[2])
+            #glColor3f(Vobject.atoms[bond[0]].color[0], 
+                      #Vobject.atoms[bond[0]].color[1], 
+                      #Vobject.atoms[bond[0]].color[2])
             
-            glLineWidth(self.LineWidth)
+            #glLineWidth(self.LineWidth)
             
-            #glBegin(GL_LINES)
-            glBegin(GL_LINE_STRIP)
-            glVertex3f(Vobject.atoms[bond[0]].pos[0], 
-                       Vobject.atoms[bond[0]].pos[1], 
-                       Vobject.atoms[bond[0]].pos[2])
+            ##glBegin(GL_LINES)
+            #glBegin(GL_LINE_STRIP)
+            #glVertex3f(Vobject.atoms[bond[0]].pos[0], 
+                       #Vobject.atoms[bond[0]].pos[1], 
+                       #Vobject.atoms[bond[0]].pos[2])
             
             
-            glVertex3f((Vobject.atoms[bond[0]].pos[0] + Vobject.atoms[bond[1]].pos[0])/2, 
-                       (Vobject.atoms[bond[0]].pos[1] + Vobject.atoms[bond[1]].pos[1])/2, 
-                       (Vobject.atoms[bond[0]].pos[2] + Vobject.atoms[bond[1]].pos[2])/2)                    
+            #glVertex3f((Vobject.atoms[bond[0]].pos[0] + Vobject.atoms[bond[1]].pos[0])/2, 
+                       #(Vobject.atoms[bond[0]].pos[1] + Vobject.atoms[bond[1]].pos[1])/2, 
+                       #(Vobject.atoms[bond[0]].pos[2] + Vobject.atoms[bond[1]].pos[2])/2)                    
 
+            ##glPopName()
+            ##glPushName(bond[1])
+            
+            #glColor3f(Vobject.atoms[bond[1]].color[0], 
+                      #Vobject.atoms[bond[1]].color[1], 
+                      #Vobject.atoms[bond[1]].color[2])
+            
+            #glVertex3f((Vobject.atoms[bond[0]].pos[0] + Vobject.atoms[bond[1]].pos[0])/2, 
+                       #(Vobject.atoms[bond[0]].pos[1] + Vobject.atoms[bond[1]].pos[1])/2, 
+                       #(Vobject.atoms[bond[0]].pos[2] + Vobject.atoms[bond[1]].pos[2])/2) 
+
+            #glVertex3f(Vobject.atoms[bond[1]].pos[0], 
+                       #Vobject.atoms[bond[1]].pos[1], 
+                       #Vobject.atoms[bond[1]].pos[2])                    
+            
+            #glEnd()
             #glPopName()
-            #glPushName(bond[1])
-            
-            glColor3f(Vobject.atoms[bond[1]].color[0], 
-                      Vobject.atoms[bond[1]].color[1], 
-                      Vobject.atoms[bond[1]].color[2])
-            
-            glVertex3f((Vobject.atoms[bond[0]].pos[0] + Vobject.atoms[bond[1]].pos[0])/2, 
-                       (Vobject.atoms[bond[0]].pos[1] + Vobject.atoms[bond[1]].pos[1])/2, 
-                       (Vobject.atoms[bond[0]].pos[2] + Vobject.atoms[bond[1]].pos[2])/2) 
-
-            glVertex3f(Vobject.atoms[bond[1]].pos[0], 
-                       Vobject.atoms[bond[1]].pos[1], 
-                       Vobject.atoms[bond[1]].pos[2])                    
-            
-            glEnd()
-            glPopName()
-            glPopMatrix() 
+            #glPopMatrix() 
         
         
         #for res in Vobject.chains[chain].residues:
@@ -1213,14 +1232,11 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
         self.draw_to_pick()
-        #self.draw()
         glPopMatrix()
         hits = glRenderMode(GL_RENDER)
         nearest = []
         min_z = None
-	#print "picking", x, y, event
-	print "picking", hits
-        for hit in hits:
+	for hit in hits:
             if (len(hit.names) > 0) and ((min_z is None) or (hit.near < min_z)):
                 min_z = hit.near
                 nearest = hit.names
@@ -1235,6 +1251,9 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	picked = None
 	#print event, nearest, hits, "<---------"
 	print nearest, "<---------"
+        if nearest != []:
+	    coords = self.EMSession.Vobjects[0].atoms[nearest[0]].pos
+	    print coords
         #if nearest != []:
 	    #for chain in self.data[self.frame_i].chains.values():
 		#for residue in chain.residues.values():
