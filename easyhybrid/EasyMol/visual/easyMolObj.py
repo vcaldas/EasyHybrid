@@ -25,19 +25,29 @@ from visual import gl_draw_area as gda, vis_parser
 
 class EasyMolSession:
     """ Class doc """
-   
 
+    def orient (self, obj =  None):
+        """ Function doc """  
+
+    def center (self, obj =  None):
+        """ Function doc """  
+    
+    def hide (self, _type = 'lines', obj =  None):
+        """ Function doc """    
+    
+    def show (self, _type = 'lines', obj =  None):
+        """ Function doc """
     
     def disable (self, index):
         """ Function doc """
         print type(index)
         self.Vobjects[index].actived = False
-        self.glarea.load_mol()
+        self.glarea.draw()
         
     def enable (self, index):
         """ Function doc """
         self.Vobjects[index].actived = True
-        self.glarea.load_mol()
+        self.glarea.draw()
         
     def __init__ (self):
         """ Class initialiser """

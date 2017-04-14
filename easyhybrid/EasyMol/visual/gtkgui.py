@@ -270,10 +270,80 @@ class TreeviewHistory(object):
                 cmd.enable(self.project.settings['PyMOL_Obj'])
                 self.project.SystemCheck()
             
-    def on_menuitem_center_activate (self, item):
+    
+    def on_menuitem_center_activate (self, item, event):
         """ Function doc """
         
-class GTKGUI:
+        #print 'on_menuitem_center_activate'
+        tree          = self.builder.get_object('treeview2')
+        selection     = tree.get_selection()
+        model         = tree.get_model()
+        (model, iter) = selection.get_selected()
+        
+        if iter != None:
+            self.selectedID  = int(model.get_value(iter, 1))  # @+
+            #print self.selectedID
+            sys = self.EMSession.Vobjects[self.selectedID-1]
+            self.EMSession.glarea.center_on_atom(sys.mass_center)
+
+      
+    
+    
+    
+    
+    
+    
+    
+    def on_menuitem_show_dots_button_release_event (self, item, event):
+        """ Function doc """
+        print 'on_menuitem_show_dots_button_release_event'
+
+    
+    def on_menuitem_hide_dots_button_release_event (self, item, event):
+        """ Function doc """
+        print 'on_menuitem_hide_dots_button_release_event'
+    
+    
+        #self.EMSession.glarea.draw_dots(sys)
+    
+    
+    def on_menuitem_show_ribbons_button_release_event (self, item, event):
+        """ Function doc """
+        #print 'on_menuitem_center_activate'
+        tree          = self.builder.get_object('treeview2')
+        selection     = tree.get_selection()
+        model         = tree.get_model()
+        (model, iter) = selection.get_selected()
+        
+        if iter != None:
+            self.selectedID  = int(model.get_value(iter, 1))  # @+
+            #print self.selectedID
+            self.EMSession.Vobjects[self.selectedID-1].show_ribbons = True
+            self.EMSession.glarea.draw_ribbon(self.EMSession.Vobjects[self.selectedID-1])
+            #self.EMSession.glarea.center_on_atom(sys.mass_center)
+            self.EMSession.glarea.draw()
+
+    def on_menuitem_show_ribbons1_button_release_event (self, item, event):
+        """ Function doc """
+        #print 'on_menuitem_center_activate'
+        tree          = self.builder.get_object('treeview2')
+        selection     = tree.get_selection()
+        model         = tree.get_model()
+        (model, iter) = selection.get_selected()
+        
+        if iter != None:
+            self.selectedID  = int(model.get_value(iter, 1))  # @+
+            #print self.selectedID
+            self.EMSession.Vobjects[self.selectedID-1].show_ribbons = False
+            self.EMSession.glarea.draw_ribbon(self.EMSession.Vobjects[self.selectedID-1])
+            self.EMSession.glarea.draw()
+            #self.EMSession.glarea.center_on_atom(sys.mass_center)        
+        
+        
+        
+        
+        
+class GTKGUI (TreeviewHistory):
     """ Class doc """
     
     def __init__ (self, EMSession):
@@ -301,6 +371,8 @@ class GTKGUI:
         self.window.show_all()
         
         self.builder.get_object('toolbar_trajectory').hide()
+        self.builder.get_object('notebook1').hide()
+
         gtk.main()
 
     '''
@@ -513,7 +585,9 @@ class GTKGUI:
             n = n + 1
         
         
-        self.EMSession.glarea.load_mol()
+        #self.EMSession.glarea.load_mol()
+        self.EMSession.glarea.draw_lines(sys)
+        #self.EMSession.glarea.draw_dots(sys)
         #self.EMSession.glarea.center_on_atom(sys.mass_center)
         
         

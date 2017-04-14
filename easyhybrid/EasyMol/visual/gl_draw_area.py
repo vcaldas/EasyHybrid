@@ -65,11 +65,13 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     mouse_rotate = mouse_pan = mouse_zoom = dragging = False
     LINES = DOTS_SURFACE = DOTS = BALL_STICK = VDW = PRETTY_VDW = RIBBON = SPHERES = WIRES = SELECTION = MODIFIED = False
     
-    base_LineWidth = 2  /(z_far/50) # melhor esse criterio para o tamanho das linhas e pontos
-    base_PointSize = 3  /(z_far/50) #
-    LineWidth = base_LineWidth      #
-    PointSize = base_PointSize      #
-    
+    #base_LineWidth = 2  /(z_far/50) # melhor esse criterio para o tamanho das linhas e pontos
+    #base_PointSize = 3  /(z_far/50) #
+    #
+    #LineWidth = base_LineWidth      #
+    #PointSize = base_PointSize      #
+    LineWidth = 2
+    PointSize = 3
     
     def __init__(self, EasyMolSession=None, width=640, height=420):
 	""" Constructor of the GLCanvas object. Here you can change the
@@ -314,111 +316,13 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
                     glPopMatrix()
                 #final = time.time() 
                 #print final - initial
-                
-                
-                '''
-                for i in range(0, len(Vobject.bonds)-8,9):
-                    #glPushMatrix()
-                    #glDisable(GL_LIGHT0)
-                    #glDisable(GL_LIGHT1)
-                    #glDisable(GL_LIGHT2)
-                    #glDisable(GL_LIGHTING)
-                    glEnable(GL_COLOR_MATERIAL)
-                    glEnable(GL_DEPTH_TEST)
-                    glPushMatrix()
-                    glPushName(i/6)
-                    
-                    #glColor3f(0, 1, 1)
-                    glColor3f(Vobject.atoms[].color[0], 
-                              Vobject.atoms[].color[1], 
-                              Vobject.atoms[].color[2])
-                    
-                    glLineWidth(self.LineWidth)
-                    #print Vobject.bonds[i],Vobject.bonds[i+1],Vobject.bonds[i+2], Vobject.bonds[i+3],Vobject.bonds[i+4],Vobject.bonds[i+5]
-                    glBegin(GL_LINES)
-                    
-                    glVertex3f(Vobject.bonds[i]  ,Vobject.bonds[i+1],Vobject.bonds[i+2])
-                    glVertex3f(Vobject.bonds[i+3],Vobject.bonds[i+4],Vobject.bonds[i+5])
-                    
-                    #glColor3f(1, 1, 0)
-                    
-                    glColor3f(Vobject.atoms[].color[0], 
-                              Vobject.atoms[].color[1], 
-                              Vobject.atoms[].color[2])
-                              
-                    glVertex3f(Vobject.bonds[i+3],Vobject.bonds[i+4],Vobject.bonds[i+5])
-                    glVertex3f(Vobject.bonds[i+6],Vobject.bonds[i+7],Vobject.bonds[i+8])
-                    
-                    glEnd()
-                    glPopName()
-                    glPopMatrix()
-                #'''
 
             else:
                 pass
             n += 1
-        
-            #self.generate_surface_test()
-        
-        
-        
-        
-        
-        
-        
-        '''
-        if data is None and self.data is None:
-            print 'No data to load'
-        else:
-            if data is not None:
-            for chain in data[self.frame_i].chains.values():
-                for residue in chain.residues.values():
-                for atom in residue.atoms.values():
-                    if atom.dot:
-                    self.dot_list.append(atom)
-                    if atom.vdw:
-                    self.vdw_list.append(atom)
-                    if atom.ball:
-                    self.ball_list.append(atom)
-                    if atom.wires:
-                    self.wires_list.append(atom)
-                    if atom.sphere:
-                    self.sphere_list.append(atom)
-                    if atom.pretty_vdw:
-                    self.pretty_vdw_list.append(atom)
-                    if atom.dot_surface:
-                    self.dot_surface_list.append(atom)
-            else:
-            for chain in self.data[self.frame_i].chains.values():
-                for residue in chain.residues.values():
-                for atom in residue.atoms.values():
-                    if atom.dot:
-                    self.dot_list.append(atom)
-                    if atom.vdw:
-                    self.vdw_list.append(atom)
-                    if atom.ball:
-                    self.ball_list.append(atom)
-                    if atom.wires:
-                    self.wires_list.append(atom)
-                    if atom.sphere:
-                    self.sphere_list.append(atom)
-                    if atom.pretty_vdw:
-                    self.pretty_vdw_list.append(atom)
-                    if atom.dot_surface:
-                    self.dot_surface_list.append(atom)
-            self.LINES = self.draw_lines()
-            # Surface dots representation of the atoms
-            for atom in self.dot_surface_list:
-            atom.dots_surf = op.get_surf_dots(atom)
-            self.gl_points_list = glGenLists(1)
-            glNewList(self.gl_points_list, GL_COMPILE)
-            for atom in self.dot_surface_list:
-            for point in atom.dots_surf:
-                rep.draw_dot(atom, point)
-            glEndList()
-        '''
+
     
-    def draw(self):
+    def draw(self, frame = -1):
         """ Defines wich type of representations will be displayed
         """
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
@@ -428,6 +332,32 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
             for i,atom in enumerate(self.selected_atoms):
                 if atom is not None:
                     rep.draw_selected(atom, i+2)
+        
+        for Vobject in self.EMSession.Vobjects:           
+            
+            if Vobject.actived:   
+                
+                if Vobject.show_dots    :
+                    glCallList(Vobject.list_dots[frame], GL_COMPILE)
+                
+                if Vobject.show_lines   :
+                    glCallList(Vobject.list_lines[frame], GL_COMPILE)
+                
+                if Vobject.show_ribbons :
+                    glCallList(Vobject.list_ribbons[frame], GL_COMPILE)
+                
+                if Vobject.show_sticks  :
+                    glCallList(Vobject.list_sticks[frame], GL_COMPILE)
+
+                if Vobject.show_spheres :
+                    glCallList(Vobject.list_spheres[frame], GL_COMPILE)
+
+                if Vobject.show_surface :
+                    glCallList(Vobject.list_surface[frame], GL_COMPILE)
+
+                  
+                  
+                     
         #if self.DOTS_SURFACE:
         #    glCallList(self.gl_points_list[self.frame_i], GL_COMPILE)
         #if self.DOTS:
@@ -447,7 +377,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         #if self.SPHERES:
         #    glCallList(self.gl_sphere_list[self.frame_i], GL_COMPILE)
 
-        self.load_mol()
+        #self.load_mol()
     
     
     
@@ -674,41 +604,138 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		self.gl_ball_stick_list.append(gl_bs_li)
 	return True
     
-    def draw_dots(self):
-	""" Change the representation to Dots.
-	"""
-	#print 'Dots Representation'
-	# Center dots representations of the atoms
-	if self.gl_point_list == None or self.MODIFIED:
-	    self.gl_point_list = []
-	    for i in range(len(self.data)):
-		self.frame_i = i
-		self.load_mol()
-		gl_pt_li = glGenLists(1)
-		
-		glNewList(gl_pt_li, GL_COMPILE)
-		for atom in self.dot_list:
-		    rep.draw_point(atom)
-		glEndList()
-		
-		self.gl_point_list.append(gl_pt_li)
-	    
-	return True
+    def draw_dots(self, Vobject):
+        """ Change the representation to Dots.
+        """
+        #print 'Dots Representation'
+        # Center dots representations of the atoms
+        
+        gl_pt_li = glGenLists(1)
+        glNewList(gl_pt_li, GL_COMPILE)
+        
+        
+        if Vobject.actived:
+            for chain in  Vobject.chains:
+                for res in Vobject.chains[chain].residues:
+                    for atom in Vobject.chains[chain].residues[res].atoms:
+                        glPushMatrix()
+                        glPushName(atom.index)
+                        glColor3f(atom.color[0], atom.color[1], atom.color[2])
+                        glPointSize(self.PointSize*atom.vdw_rad)
+                        glBegin(GL_POINTS)
+                        glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+                        glEnd()
+                        glPopName()
+                        glPopMatrix()
+                        #print atom.name, atom.pos
+        
+        glEndList()
+        Vobject.list_dots.append(gl_pt_li)
+        
+        #if self.gl_point_list == None or self.MODIFIED:
+        #    self.gl_point_list = []
+        #    for i in range(len(self.data)):
+        #	self.frame_i = i
+        #	self.load_mol()
+        #	gl_pt_li = glGenLists(1)
+        #	
+        #	glNewList(gl_pt_li, GL_COMPILE)
+        #	for atom in self.dot_list:
+        #	    rep.draw_point(atom)
+        #	glEndList()
+        #	
+        #	self.gl_point_list.append(gl_pt_li)
+        #    
+        #return True
     
-    def draw_lines(self):
-	""" Change the representation to lines.
-	    It is the default representation.
-	"""
-	if self.gl_lines_list == None or self.MODIFIED:
-	    self.gl_lines_list = []
-	    for frame in self.data:
-		gl_ln_li = glGenLists(1)
-		glNewList(gl_ln_li, GL_COMPILE)
-		for bond in frame.bonds:
-		    rep.draw_bond_line(bond[0], bond[4])
-		glEndList()
-		self.gl_lines_list.append(gl_ln_li)
-	return True
+    def draw_lines(self, Vobject):
+        """ Change the representation to lines.
+            It is the default representation.
+        """
+        gl_ln_li = glGenLists(1)
+        glNewList(gl_ln_li, GL_COMPILE)
+        
+        for bond in Vobject.bonds:
+            #glPushMatrix()
+            glDisable(GL_LIGHT0)
+            glDisable(GL_LIGHT1)
+            glDisable(GL_LIGHT2)
+            glDisable(GL_LIGHTING)
+            glEnable(GL_COLOR_MATERIAL)
+            glEnable(GL_DEPTH_TEST)
+            glPushMatrix()
+            #glPushName(bond[0])
+            
+            #glColor3f(0, 1, 1)
+            
+            glColor3f(Vobject.atoms[bond[0]].color[0], 
+                      Vobject.atoms[bond[0]].color[1], 
+                      Vobject.atoms[bond[0]].color[2])
+            
+            glLineWidth(self.LineWidth)
+            
+            #glBegin(GL_LINES)
+            glBegin(GL_LINE_STRIP)
+            glVertex3f(Vobject.atoms[bond[0]].pos[0], 
+                       Vobject.atoms[bond[0]].pos[1], 
+                       Vobject.atoms[bond[0]].pos[2])
+            
+            
+            glVertex3f((Vobject.atoms[bond[0]].pos[0] + Vobject.atoms[bond[1]].pos[0])/2, 
+                       (Vobject.atoms[bond[0]].pos[1] + Vobject.atoms[bond[1]].pos[1])/2, 
+                       (Vobject.atoms[bond[0]].pos[2] + Vobject.atoms[bond[1]].pos[2])/2)                    
+
+            
+            glColor3f(Vobject.atoms[bond[1]].color[0], 
+                      Vobject.atoms[bond[1]].color[1], 
+                      Vobject.atoms[bond[1]].color[2])
+            
+            glVertex3f((Vobject.atoms[bond[0]].pos[0] + Vobject.atoms[bond[1]].pos[0])/2, 
+                       (Vobject.atoms[bond[0]].pos[1] + Vobject.atoms[bond[1]].pos[1])/2, 
+                       (Vobject.atoms[bond[0]].pos[2] + Vobject.atoms[bond[1]].pos[2])/2) 
+
+            glVertex3f(Vobject.atoms[bond[1]].pos[0], 
+                       Vobject.atoms[bond[1]].pos[1], 
+                       Vobject.atoms[bond[1]].pos[2])                    
+            
+            glEnd()
+            glPopName()
+            glPopMatrix() 
+        
+        
+        #for res in Vobject.chains[chain].residues:
+        #    for atom in Vobject.chains[chain].residues[res].atoms:
+        #        glPushMatrix()
+        #        
+        #        glPushName(atom.index)
+        #        
+        #        glColor3f(atom.color[0], atom.color[1], atom.color[2])
+        #        glPointSize(self.PointSize*atom.vdw_rad)
+        #        glBegin(GL_POINTS)
+        #        glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+        #        glEnd()
+        #        glPopName()
+        #        glPopMatrix()
+        #        #print atom.name, atom.pos
+
+        glEndList()
+        Vobject.list_lines.append(gl_ln_li)
+        
+    
+        '''
+        if self.gl_lines_list == None or self.MODIFIED:
+            self.gl_lines_list = []
+            for frame in self.data:
+            gl_ln_li = glGenLists(1)
+            glNewList(gl_ln_li, GL_COMPILE)
+            for bond in frame.bonds:
+                rep.draw_bond_line(bond[0], bond[4])
+            glEndList()
+            
+            self.gl_lines_list.append(gl_ln_li)
+        #'''
+        
+        return True
     
     def draw_pretty_vdw(self):
 	""" Change the representation to Pretty VDW.
@@ -735,21 +762,57 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		self.gl_pretty_vdw_list.append(gl_p_vdw_li)
 	return True
     
-    def draw_ribbon(self):
-	""" Change the representation to Ribbon.
-	"""
-	#print 'Ribbon Representation'
-	# Makes the ribbon representations
-	if self.gl_ribbon_list == None or self.MODIFIED:
-	    self.gl_ribbon_list = []
-	    for frame in self.data:
-		gl_rb_li = glGenLists(1)
-		glNewList(gl_rb_li, GL_COMPILE)
-		for ribbon in frame.ribbons:
-		    rep.draw_ribbon(ribbon[0], ribbon[1], ribbon[2], ribbon[3])
-		glEndList()
-		self.gl_ribbon_list.append(gl_rb_li)
-	return True
+    def draw_ribbon(self, Vobject):
+        """ Change the representation to Ribbon.
+        """
+        #print 'Ribbon Representation'
+        # Makes the ribbon representations
+
+        gl_rb_li = glGenLists(1)
+        glNewList(gl_rb_li, GL_COMPILE)
+        
+        if Vobject.actived:
+            for chain in  Vobject.chains:
+                for i in range(0, len(Vobject.chains[chain].backbone) -1):
+                    
+                    ATOM1 = Vobject.chains[chain].backbone[i]
+                    ATOM2 = Vobject.chains[chain].backbone[i+1]
+                    
+                    glEnable(GL_COLOR_MATERIAL)
+                    glEnable(GL_DEPTH_TEST)
+                    glPushMatrix()
+                    
+                    
+                    glColor3f(ATOM1.color[0],ATOM1.color[1], ATOM1.color[1])
+                    
+                    glLineWidth(self.LineWidth*3)
+                    #print Vobject.bonds[i],Vobject.bonds[i+1],Vobject.bonds[i+2], Vobject.bonds[i+3],Vobject.bonds[i+4],Vobject.bonds[i+5]
+                    glBegin(GL_LINES)
+                    
+                    glVertex3f(ATOM1.pos[0],ATOM1.pos[1],ATOM1.pos[2])
+                    glVertex3f(ATOM2.pos[0],ATOM2.pos[1],ATOM2.pos[2])
+                    
+                    glEnd()
+                    glPopName()
+                    glPopMatrix()
+
+        glEndList()
+        #self.gl_ribbon_list.append(gl_rb_li)   
+        Vobject.list_ribbons.append(gl_rb_li)
+         
+        #if self.gl_ribbon_list == None or self.MODIFIED:
+        #    self.gl_ribbon_list = []
+        #    for frame in self.data:
+        #	gl_rb_li = glGenLists(1)
+        #	glNewList(gl_rb_li, GL_COMPILE)
+        #	for ribbon in frame.ribbons:
+        #	    rep.draw_ribbon(ribbon[0], ribbon[1], ribbon[2], ribbon[3])
+        #	glEndList()
+        #	self.gl_ribbon_list.append(gl_rb_li)
+	
+    
+    
+    
     
     def draw_spheres(self):
 	""" Change the representation to Spheres.
@@ -984,9 +1047,9 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 
             
             
-            print self.LineWidth, self.PointSize, self.z_far
-            self.LineWidth = self.base_LineWidth/ (self.z_far/10)#(math.log10(self.z_far))
-            self.PointSize = self.base_PointSize/ (self.z_far/10)#(math.log10(self.z_far))
+            #print self.LineWidth, self.PointSize, self.z_far
+            #self.LineWidth = self.base_LineWidth/ (self.z_far/10)#(math.log10(self.z_far))
+            #self.PointSize = self.base_PointSize/ (self.z_far/10)#(math.log10(self.z_far))
             
             
             # aqui tem que ser colocar a funcao que altera a grossura das linhas e pontos
