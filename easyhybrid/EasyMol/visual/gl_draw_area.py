@@ -67,7 +67,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     
     #base_LineWidth = 2  /(z_far/50) # melhor esse criterio para o tamanho das linhas e pontos
     #base_PointSize = 3  /(z_far/50) #
-    #
+    funcao_de_click = None
     #LineWidth = base_LineWidth      #
     #PointSize = base_PointSize      #
     LineWidth = 2
@@ -1023,7 +1023,10 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         y = self.mouse_y = event.y
         self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(x, y)
 	if event.button == 1 and event.type == gtk.gdk.BUTTON_RELEASE:
-	    if math.fabs(self.pos_mouse[0]-x) <= self.pick_radius[0] and math.fabs(self.pos_mouse[1]-y) <= self.pick_radius[1]:
+	    if self.dragging:
+		self.dragging = False
+		pass
+	    elif math.fabs(self.pos_mouse[0]-x) <= self.pick_radius[0] and math.fabs(self.pos_mouse[1]-y) <= self.pick_radius[1]:
 		nearest, hits = self.pick(x, self.get_allocation().height-1-y, self.pick_radius[0], self.pick_radius[1], event)
 		selected = self.select(event, nearest, hits)
 		if selected is None:
@@ -1061,6 +1064,14 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		    self.center_on_atom(selected.pos)
 		    self.zero_reference_point = selected.pos
 		    self.target_point = selected.pos
+	if event.button == 3 and event.type == gtk.gdk.BUTTON_RELEASE:
+	    if self.dragging:
+		self.dragging = False
+		pass
+	    elif self.funcao_de_click is not None:
+		self.funcao_de_click()
+	    print event.x, event.y
+    
     
     def mouse_motion(self, widget, event):
         """ The mouse_motion function serves, as the names states, to perform
@@ -1174,7 +1185,11 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
             changed = True
         if changed:
             self.queue_draw()
+        if state & gtk.gdk.BUTTON1_MASK:
+            self.dragging = True
         if state & gtk.gdk.BUTTON2_MASK:
+            self.dragging = True
+        if state & gtk.gdk.BUTTON3_MASK:
             self.dragging = True
     
     def mouse_scroll(self, widget, event):
