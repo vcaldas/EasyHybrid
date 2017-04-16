@@ -701,7 +701,7 @@
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_file_quit_activate" swapped="no"/>
+                        <signal name="activate" handler="on_menuitem1_activate" swapped="no"/>
                       </object>
                     </child>
                   </object>
@@ -1650,6 +1650,34 @@
       </object>
     </child>
   </object>
+  <object class="GtkMenu" id="menu4">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkMenuItem" id="menuitem2">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">menuitem2</property>
+        <property name="use_underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menuitem3">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">menuitem3</property>
+        <property name="use_underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menuitem4">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">menuitem4</property>
+        <property name="use_underline">True</property>
+      </object>
+    </child>
+  </object>
   <object class="GtkMenu" id="treeview_menu">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1665,7 +1693,13 @@
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Center</property>
         <property name="use_underline">True</property>
-        <signal name="button-release-event" handler="on_menuitem_center_activate" swapped="no"/>
+        <signal name="button-release-event" handler="on_treeview_menuitem_button_release_event" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="menuitem10">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
       </object>
     </child>
     <child>
@@ -1684,6 +1718,7 @@
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Lines</property>
                 <property name="use_underline">True</property>
+                <signal name="button-release-event" handler="on_treeview_menuitem_button_release_event" swapped="no"/>
               </object>
             </child>
             <child>
@@ -1717,7 +1752,7 @@
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Ribbons</property>
                 <property name="use_underline">True</property>
-                <signal name="button-release-event" handler="on_menuitem_show_ribbons_button_release_event" swapped="no"/>
+                <signal name="button-release-event" handler="on_treeview_menuitem_button_release_event" swapped="no"/>
               </object>
             </child>
             <child>
@@ -1762,6 +1797,7 @@
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Lines</property>
                 <property name="use_underline">True</property>
+                <signal name="button-release-event" handler="on_treeview_menuitem_button_release_event" swapped="no"/>
               </object>
             </child>
             <child>
@@ -1790,16 +1826,52 @@
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="menuitem_show_ribbons1">
+              <object class="GtkMenuItem" id="menuitem_hide_ribbons">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Ribbons</property>
                 <property name="use_underline">True</property>
-                <signal name="button-release-event" handler="on_menuitem_show_ribbons1_button_release_event" swapped="no"/>
+                <signal name="button-release-event" handler="on_treeview_menuitem_button_release_event" swapped="no"/>
               </object>
             </child>
           </object>
         </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="menuitem9">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menuitem_import_trajectory">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Load date into molecule</property>
+        <property name="use_underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="menuitem5">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menuitem_rename">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Rename</property>
+        <property name="use_underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menuitem11">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">menuitem11</property>
+        <property name="use_underline">True</property>
       </object>
     </child>
   </object>

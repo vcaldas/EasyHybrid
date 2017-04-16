@@ -33,10 +33,11 @@ class EasyMolSession:
 
     def load (self, infile):
         """ Function doc """
-        
+        Vobject_id = len(self.Vobjects)
         Vobject, self.atom_dic_id = parse_pdb(infile     = infile,  
                                              counter     = self.atom_id_counter,  
-                                             atom_dic_id = self.atom_dic_id
+                                             atom_dic_id = self.atom_dic_id,
+					     Vobject_id  = Vobject_id
                                              )
         
         Vobject.generate_bonds()
@@ -45,6 +46,50 @@ class EasyMolSession:
         #print self.atom_dic_id
         #print self.atom_id_counter
     
+    def _hide_ribbons (self, Vobject_index ):
+        """ Function doc """
+        self.Vobjects[Vobject_index].show_ribbons = False
+        self.glarea.draw_ribbon(self.Vobjects[Vobject_index])
+        self.glarea.draw()
+    
+    def _show_ribbons (self, Vobject_index ):
+        """ Function doc """
+        self.Vobjects[Vobject_index].show_ribbons = True
+        self.glarea.draw_ribbon(self.Vobjects[Vobject_index])
+        self.glarea.draw()
+        
+    def _hide_lines (self, Vobject_index ):
+        """ Function doc """
+        self.Vobjects[Vobject_index].show_lines = False
+        self.glarea.draw_lines(self.Vobjects[Vobject_index])
+        self.glarea.draw()
+	#print 'aqui'
+
+    def _show_lines (self, Vobject_index ):
+        """ Function doc """
+        self.Vobjects[Vobject_index].show_lines = True
+        self.glarea.draw_lines(self.Vobjects[Vobject_index])
+        self.glarea.draw()
+	#print 'aqui'
+    
+    def hide (self, _type = 'lines', Vobject_index =  None):
+        """ Function doc """    
+        if _type == 'lines':
+            self._hide_lines (Vobject_index )
+	    #print 'aqui'
+
+        if _type == 'ribbons':
+            self._hide_ribbons (Vobject_index )
+        
+    def show (self, _type = 'lines', Vobject_index =  None):
+        """ Function doc """
+        if _type == 'lines':
+            self._show_lines (Vobject_index )
+	    #print 'aqui'
+        if _type == 'ribbons':
+            self._show_ribbons (Vobject_index )
+        
+
     def delete(self, obj = None):
         """ Function doc """
     
@@ -54,15 +99,12 @@ class EasyMolSession:
     def orient (self, obj =  None):
         """ Function doc """  
 
-    def center (self, obj =  None):
+    def center (self, Vobject_index =  None):
         """ Function doc """  
-    
-    def hide (self, _type = 'lines', obj =  None):
-        """ Function doc """    
-    
-    def show (self, _type = 'lines', obj =  None):
-        """ Function doc """
-    
+	mass_center = self.Vobjects[Vobject_index].mass_center
+	self.glarea.center_on_atom(mass_center)
+        
+        
     def disable (self, index):
         """ Function doc """
         #print type(index)
@@ -78,13 +120,16 @@ class EasyMolSession:
         """ Class initialiser """
         #frames = vis_parser.parse_pdb(sys.argv[1])
         self.Vobjects         = []
-        
+        self.Vobjects_dic     = {}        
+
         self.atom_id_counter  = 0
         self.atom_dic_id      = {
                                 # atom_id : obj_atom 
                                  }
         
         self.glarea            = gda.GLCanvas(self) # a gl area recebe 
+                
+        
         
         
         self.glarea_parameters = {
@@ -94,10 +139,6 @@ class EasyMolSession:
                                  'bg_color'     : 'black',
                                  }
 
-        
-        
-        
-        #self.builder = self.init_gtk(self.glarea)
-        #self.builder.connect_signals(self)                                                #
+
 
        

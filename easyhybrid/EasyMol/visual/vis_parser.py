@@ -29,7 +29,7 @@ import numpy as np
 
 
 
-def parse_pdb(infile = None, counter = 0, atom_dic_id = None ):
+def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None ):
     """ Function doc """
     #frames = []
     with open(infile, 'r') as pdb_file:
@@ -55,7 +55,13 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None ):
                 at_res_n = line[17:20].strip()
                 at_ch = line[21]
                 
-                atm = mm.Atom(name=at_name, index=index, pos=at_pos, resi=at_res_i, chain = at_ch, atom_id = counter)
+                atm = mm.Atom(name       =  at_name, 
+                              index      =  index, 
+                              pos        =  at_pos, 
+                              resi       =  at_res_i, 
+                              chain      =  at_ch, 
+                              atom_id    =  counter, 
+                              Vobject_id =  Vobject_id)
                 
                 if atom_dic_id is not None:
                     atom_dic_id[counter] = atm
