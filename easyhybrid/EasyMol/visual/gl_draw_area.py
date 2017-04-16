@@ -37,7 +37,7 @@ import math
 import representations as rep
 import operations as op
 import time
-
+from ctypes import c_int
 
 class GLCanvas(gtk.gtkgl.DrawingArea):
     
@@ -357,18 +357,41 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	
 	for i,atom in enumerate(self.selected_atoms):
 	    if atom is not None:
-		glPushMatrix()
-		glDisable(GL_DEPTH_TEST)
-		glPushName(atom.atom_id)
-		glColor3f(0, 1, 1)
-		glPointSize(15)
-		glBegin(GL_POINTS)
-		glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
-		glEnd()
-		glPopName()
-		glPopMatrix()
-	
-                     
+                glPushMatrix()
+                glDisable(GL_DEPTH_TEST)
+                #glPushName(atom.atom_id)
+                #glColor3f(0, 1, 1)
+                #glPointSize(15)
+                #glBegin(GL_POINTS)
+                #glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+                #glEnd()
+                #glPopName()
+                #glPopMatrix()
+                
+                #glPushMatrix()
+                #gl.glTranslate(self.parameters.lowerleft[0],self.parameters.lowerleft[1],0.0)
+                #gl.glRotate(self.parameters.orientation,0.0,0.0,1.0)
+                #modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+                #glLoadIdentity()
+                #glTranslatef(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+                
+                #modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+                #print modelview, '<--- modelview'
+                
+                glEnable(GL_LINE_SMOOTH)
+                glColor3f(1, 0, 0)
+                glLineWidth(2)
+                #print self.pos_mouse[0], self.pos_mouse[1]
+                #glWindowPos3f(float(atom.pos[0]), float( atom.pos[1]), float( atom.pos[2]))
+                #to_see = [self.zero_reference_point[0]-atom.pos[0], self.zero_reference_point[1]-atom.pos[1], self.zero_reference_point[2]-atom.pos[2]]
+                glTranslate(float(atom.pos[0]), float( atom.pos[1]), float( atom.pos[2]))
+                glRotate(0, 0, 1, 0)
+                glScalef(0.006, 0.006, 0.006)
+                glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, ord(str(i+1)))
+                glPopMatrix()
+                #glMultMatrixd(modelview)
+                
+                                     
         #if self.DOTS_SURFACE:
         #    glCallList(self.gl_points_list[self.frame_i], GL_COMPILE)
         #if self.DOTS:
