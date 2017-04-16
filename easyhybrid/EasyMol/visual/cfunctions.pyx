@@ -176,7 +176,7 @@ cpdef C_generate_bonds3(atoms):
                     angle = 0
                     vec_o = 0
                     
-                    #index_bonds.append([i, j])
+                    index_bonds.append([i, j])
                     
                     bonds.append((atoms[i], distance , angle    , vec_o, midpoint))
                     bonds.append((atoms[j], distance , angle+180, vec_o, midpoint))
@@ -199,7 +199,7 @@ cpdef C_generate_bonds3(atoms):
                     pass
     #return #bonds#, index_bonds
     #print index_bonds
-    return bonds
+    return bonds, index_bonds
     #return index_bonds
 
 

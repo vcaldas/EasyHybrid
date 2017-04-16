@@ -22,7 +22,7 @@
 #  
 #  
 from visual import gl_draw_area as gda, vis_parser
-from visual.vis_parser import parse_pdb
+from visual.vis_parser import parse_pdb, parse_xyz
 
 
 
@@ -34,16 +34,32 @@ class EasyMolSession:
     def load (self, infile):
         """ Function doc """
         Vobject_id = len(self.Vobjects)
-        Vobject, self.atom_dic_id = parse_pdb(infile     = infile,  
-                                             counter     = self.atom_id_counter,  
-                                             atom_dic_id = self.atom_dic_id,
-					     Vobject_id  = Vobject_id
-                                             )
         
+	
+	if infile[-3:] == 'pdb':
+	    Vobject, self.atom_dic_id = parse_pdb(infile     = infile,  
+						 counter     = self.atom_id_counter,  
+						 atom_dic_id = self.atom_dic_id,
+						 Vobject_id  = Vobject_id
+						 )
+        
+	if infile[-3:] == 'xyz':
+
+	    Vobject, self.atom_dic_id = parse_xyz(infile     = infile,  
+						 counter     = self.atom_id_counter,  
+						 atom_dic_id = self.atom_dic_id,
+						 Vobject_id  = Vobject_id
+						 )
+	
+	print 'number of frames: ',len(Vobject.frames) , '<---------------'
+	for frame in Vobject.frames:
+	    print 'framesize:', len(frame)
+	
         Vobject.generate_bonds()
         self.atom_id_counter += len(Vobject.atoms)
         self.Vobjects.append(Vobject)
-        #print self.atom_dic_id
+        
+	#print self.atom_dic_id
         #print self.atom_id_counter
     
     def _hide_ribbons (self, Vobject_index ):

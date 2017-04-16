@@ -72,6 +72,8 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     #PointSize = base_PointSize      #
     LineWidth = 2
     PointSize = 3
+    frame     = 0
+    
     
     def __init__(self, EasyMolSession=None, width=640, height=420):
 	""" Constructor of the GLCanvas object. Here you can change the
@@ -333,10 +335,30 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
                 #if atom is not None:
                     #rep.draw_selected(atom, i+2)
         
-        for Vobject in self.EMSession.Vobjects:
-            
+	#if Vobject.list_lines[frame]:
+	#    frames = len(Vobject.list_lines[frame])
+	#    frame = self.frame
+        #
+	#else:
+	#     pass
+	
+	frame = self.frame
+	
+	for Vobject in self.EMSession.Vobjects:
+
+	    
+	    for lista in Vobject.list_lines:
+		print lista
+    
             if Vobject.actived:   
-                
+
+		#frames = len(Vobject.list_lines[frame])
+		#
+		#if self.frame > frames:
+		#   frame = -1
+		#else:
+		#   frame = self.frame
+
                 if Vobject.show_dots    :
                     glCallList(Vobject.list_dots[frame], GL_COMPILE)
                 
@@ -542,6 +564,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	print 'Quitting'
 	quit()
     
+    
     def pressed_q(self):
 	""" Move frames.
 	"""
@@ -612,18 +635,20 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     def pressed_v(self):
 	""" Turn on/off the Van-Der-Waals representation.
 	"""
-	self.VDW = not self.VDW
-	self.draw_vdw()
-	self.queue_draw()
-	return True
+	self.frame -= 1
+	print self.frame
     
     def pressed_w(self):
 	""" Turn on/off the Wires representation.
 	"""
-	self.WIRES = not self.WIRES
-	self.draw_wires()
-	self.queue_draw()
-	return True
+	self.frame += 1
+	print self.frame
+
+	
+	#self.WIRES = not self.WIRES
+	#self.draw_wires()
+	#self.queue_draw()
+	#return True
     
     def draw_ball_stick(self):
 	""" Draws all the elements for Ball-Stick representation.
@@ -672,36 +697,92 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         glEndList()
         Vobject.list_dots.append(gl_pt_li)
     
-    def draw_lines(self, Vobject):
+    def draw_lines(self, Vobject = None , selection = None):
         """ Change the representation to lines.
             It is the default representation.
         """
-        gl_ln_li = glGenLists(1)
-        glNewList(gl_ln_li, GL_COMPILE)
-        
-        for bond in Vobject.bonds:
+	glDisable(GL_LIGHT0)
+	glDisable(GL_LIGHT1)
+	glDisable(GL_LIGHT2)
+	glDisable(GL_LIGHTING)
+	glEnable(GL_COLOR_MATERIAL)
+	glEnable(GL_DEPTH_TEST)
+	n = 1
+	for frame in Vobject.frames:
+	    gl_ln_li = glGenLists(n)
 	    
-	    glDisable(GL_LIGHT0)
-	    glDisable(GL_LIGHT1)
-	    glDisable(GL_LIGHT2)
-	    glDisable(GL_LIGHTING)
-	    glEnable(GL_COLOR_MATERIAL)
-	    glEnable(GL_DEPTH_TEST)
-	    glPushMatrix()
-	    glPushName(bond[0].atom_id) # old glPushName(bond[0].index)
-	    glColor3f(bond[0].color[0], bond[0].color[1], bond[0].color[2])
+	    glNewList(gl_ln_li, GL_COMPILE)
 	    glLineWidth(3)
-	    glBegin(GL_LINES)
-	    glVertex3f(bond[0].pos[0], bond[0].pos[1], bond[0].pos[2])
-	    glVertex3f(bond[4][0], bond[4][1], bond[4][2])
-	    glEnd()
-	    glPopName()
-	    glPopMatrix()
 
-        glEndList()
-        Vobject.list_lines.append(gl_ln_li)
-        return True
+	    for bond in Vobject.index_bonds:
+		
+		atom1    = Vobject.atoms[bond[0]]
+		atom2    = Vobject.atoms[bond[1]]
+		coord1   = frame[bond[0]]
+		coord2   = frame[bond[1]]
+
+		midcoord = [
+			    (coord1[0] + coord2[0])/2,	   
+			    (coord1[1] + coord2[1])/2,
+			    (coord1[2] + coord2[2])/2,
+			    ]
+		
+		glPushMatrix()		
+		glPushName(atom1.atom_id) 
+		glColor3f(atom1.color[0], 
+		          atom1.color[1], 
+			  atom1.color[2])
+
+		
+		glBegin(GL_LINES)
+		glVertex3f(coord1[0],coord1[1],coord1[2])
+		glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+		glEnd()
+		glPopName()
+		glPopMatrix()
+	    
+		
+		glPushMatrix()		
+		glPushName(atom2.atom_id) 
+		glColor3f (atom2.color[0], 
+		           atom2.color[1], 
+			   atom2.color[2])
+
+		glBegin(GL_LINES)
+		glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+		glVertex3f(coord2[0],coord2[1],coord2[2])
+
+		glEnd()
+		glPopName()
+		glPopMatrix()
+
+	    '''
+	    for bond in Vobject.bonds:
+		
+		glDisable(GL_LIGHT0)
+		glDisable(GL_LIGHT1)
+		glDisable(GL_LIGHT2)
+		glDisable(GL_LIGHTING)
+		glEnable(GL_COLOR_MATERIAL)
+		glEnable(GL_DEPTH_TEST)
+		glPushMatrix()
+		glPushName(bond[0].atom_id) # old glPushName(bond[0].index)
+		glColor3f(bond[0].color[0], bond[0].color[1], bond[0].color[2])
+		glLineWidth(3)
+		glBegin(GL_LINES)
+		glVertex3f(bond[0].pos[0], bond[0].pos[1], bond[0].pos[2])
+		glVertex3f(bond[4][0], bond[4][1], bond[4][2])
+		glEnd()
+		glPopName()
+		glPopMatrix()
+	    '''
+	    glEndList()
+	    Vobject.list_lines.append(gl_ln_li)
+        
+	n += 1
+	return True
     
+    '''
     def draw_pretty_vdw(self):
 	""" Change the representation to Pretty VDW.
 	"""
@@ -726,58 +807,46 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		glEndList()
 		self.gl_pretty_vdw_list.append(gl_p_vdw_li)
 	return True
+    '''
     
-    def draw_ribbon(self, Vobject):
+    def draw_ribbon(self, Vobject = None , selection = None):
         """ Change the representation to Ribbon.
         """
-        #print 'Ribbon Representation'
-        # Makes the ribbon representations
-
-        gl_rb_li = glGenLists(1)
-        glNewList(gl_rb_li, GL_COMPILE)
-        
-        if Vobject.actived:
-            for chain in  Vobject.chains:
-                for i in range(0, len(Vobject.chains[chain].backbone) -1):
-                    
-                    ATOM1 = Vobject.chains[chain].backbone[i]
-                    ATOM2 = Vobject.chains[chain].backbone[i+1]
-                    
-                    glEnable(GL_COLOR_MATERIAL)
-                    glEnable(GL_DEPTH_TEST)
-                    glPushMatrix()
-                    
-                    
-                    glColor3f(ATOM1.color[0],ATOM1.color[1], ATOM1.color[1])
-                    
-                    glLineWidth(self.LineWidth*3)
-                    #print Vobject.bonds[i],Vobject.bonds[i+1],Vobject.bonds[i+2], Vobject.bonds[i+3],Vobject.bonds[i+4],Vobject.bonds[i+5]
-                    glBegin(GL_LINES)
-                    
-                    glVertex3f(ATOM1.pos[0],ATOM1.pos[1],ATOM1.pos[2])
-                    glVertex3f(ATOM2.pos[0],ATOM2.pos[1],ATOM2.pos[2])
-                    
-                    glEnd()
-                    glPopName()
-                    glPopMatrix()
-
-        glEndList()
-        #self.gl_ribbon_list.append(gl_rb_li)   
-        Vobject.list_ribbons.append(gl_rb_li)
-         
-        #if self.gl_ribbon_list == None or self.MODIFIED:
-        #    self.gl_ribbon_list = []
-        #    for frame in self.data:
-        #	gl_rb_li = glGenLists(1)
-        #	glNewList(gl_rb_li, GL_COMPILE)
-        #	for ribbon in frame.ribbons:
-        #	    rep.draw_ribbon(ribbon[0], ribbon[1], ribbon[2], ribbon[3])
-        #	glEndList()
-        #	self.gl_ribbon_list.append(gl_rb_li)
 	
+	for frame in Vobject.frames:
+	    glEnable(GL_COLOR_MATERIAL)
+	    glEnable(GL_DEPTH_TEST)
+	    gl_rb_li = glGenLists(1)
+	    glLineWidth(self.LineWidth*3)
+	    
+	    glNewList(gl_rb_li, GL_COMPILE)
+	    #print 'aqui'
+	    
+	    if Vobject.actived:
+		for chain in  Vobject.chains:
+		    for i in range(0, len(Vobject.chains[chain].backbone) -1):
+			ATOM1  = Vobject.chains[chain].backbone[i]
+			ATOM2  = Vobject.chains[chain].backbone[i+1]
+			#if (ATOM1.resi - ATOM2.resi) == 1:	    
+			coord1 = frame[ATOM1.index -1]
+			coord2 = frame[ATOM2.index -1]
+			#print coord1, coord2
+			glPushMatrix()
+			glColor3f(ATOM1.color[0],ATOM1.color[1], ATOM1.color[1])
+			glBegin(GL_LINES)
+			
+			glVertex3f(coord1[0],coord1[1],coord1[2])
+			glVertex3f(coord2[0],coord2[1],coord2[2])
+			
+			glEnd()
+			glPopName()
+			glPopMatrix()
+
+	    glEndList()
+	    Vobject.list_ribbons.append(gl_rb_li)
+
     
-    
-    
+    '''
     
     def draw_spheres(self):
 	""" Change the representation to Spheres.
@@ -798,7 +867,9 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		glEndList()
 		self.gl_sphere_list.append(gl_sp_li)
 	return True
+    '''
     
+    '''
     def draw_vdw(self):
 	""" Change the representation to Van-Der-Waals.
 	"""
@@ -837,6 +908,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		glEndList()
 		self.gl_wires_list.append(gl_wr_li)
 	return True
+    '''
     
     def update_draw_view(self):
 	""" Redraws the representations with new data.
@@ -1210,7 +1282,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     
     #""" Following are the functions to use with glade-gtk.
     #"""
-    
+    '''
     def switch_ball_stick(self, button):
 	""" Turn on/off Ball-Stick representation.
 	"""
@@ -1275,7 +1347,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	self.draw_wires()
 	self.queue_draw()
 	return True
-
+    '''
         
     def generate_surface_test (self):
         """ Function doc """

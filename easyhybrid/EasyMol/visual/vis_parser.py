@@ -25,16 +25,125 @@
 import molecular_model as mm
 import numpy as np
 #import atom_types as atypes
+from pprint import pprint
+
+def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None ):
+    """ Function doc """
+    #frames = []
+    
+    with open(infile, 'r') as xyz_file:        
+        xyz_lines = xyz_file.readlines()
+        
+        total_size      = len(xyz_lines)    
+        xyz_model_size  = int(xyz_lines[0])
+        model_size      = xyz_model_size+2   # include first and secound lines in a xyzfile
+        
+        models     = []
+        for i in range(0, total_size/model_size): 
+            #print (i*model_size) , (i+1)*model_size
+            model = xyz_lines[(i*model_size) : (i+1)*model_size]
+            models.append(model)
+
+        pprint (models[-1][2:])
+        
+        Vobject  = mm.Vobject()
+        chains_m = {}
+        residues = {}
+        atoms    = []
+        
+        index = 1
+        sum_x = 0
+        sum_y = 0
+        sum_z = 0  
+        
+        
+        frame = []
+        for line in models[0][2:]:
+            line2 = line.split()
+            #print line2, [float(line[1]), float(line[2]), float(line[3])]
+            at_name  = line2[0].strip()
+            at_pos   = np.array([float(line2[1]), float(line2[2]), float(line2[3])])
+            at_res_i = 1
+            at_res_n = 'UNK'
+            at_ch    = 'A'
+            
+            #print at_name, '<--------'
+            atm = mm.Atom(name       =  at_name, 
+                          index      =  index, 
+                          pos        =  at_pos, 
+                          resi       =  at_res_i, 
+                          chain      =  at_ch, 
+                          atom_id    =  counter, 
+                          Vobject_id =  Vobject_id)
 
 
+            if atom_dic_id is not None:
+                atom_dic_id[counter] = atm
+            
+            counter += 1
+            index   += 1
+        
+            coords = []
+            
+            if chains_m.has_key(at_ch):
+                ch = chains_m[at_ch]
+            else:
+                ch = mm.Chain(name=at_ch, label = 'UNK')
+                chains_m[at_ch] = ch
 
+            if ch.residues.has_key(at_res_i):
+                res = ch.residues[at_res_i]
+                ch.residues[at_res_i].atoms.append(atm)
+                Vobject.atoms.append(atm)
+                frame.append([atm.pos[0],atm.pos[1],atm.pos[2]])
+
+            else:
+                res = mm.Residue(name=at_res_n, index=at_res_i, chain=at_ch)
+                ch.residues[at_res_i] = res
+                ch.residues[at_res_i].atoms.append(atm)
+                Vobject.atoms.append(atm)
+                frame.append([atm.pos[0],atm.pos[1],atm.pos[2]])
+
+            sum_x += atm.pos[0]
+            sum_y += atm.pos[1]
+            sum_z += atm.pos[2]
+        
+        # add a new frame to frames list
+        Vobject.frames.append(frame)
+        Vobject.chains = chains_m
+        total = len(Vobject.atoms)
+        
+        Vobject.mass_center[0] = sum_x / total
+        Vobject.mass_center[1] = sum_y / total
+        Vobject.mass_center[2] = sum_z / total
+        
+
+        for model_i  in models[1:]:
+            frame = []
+            for line in model[2:]:
+                line2 = line.split()
+                #print line2, [float(line[1]), float(line[2]), float(line[3])]
+                #at_name  = line2[0].strip()
+                #at_pos   = np.array([float(line2[1]), float(line2[2]), float(line2[3])])
+                frame.append([float(line2[1]), float(line2[2]), float(line2[3])])
+            
+            Vobject.frames.append(frame)
+        
+            
+        #print atom_dic_id
+        return Vobject, atom_dic_id
+
+        
+        
+        
+  
 
 def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None ):
     """ Function doc """
     #frames = []
     with open(infile, 'r') as pdb_file:
         
-        mol_obj = mm.MolObject()
+        Vobject = mm.Vobject()
     
         chains_m = {}
         residues = {}
@@ -45,7 +154,7 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         sum_x = 0
         sum_y = 0
         sum_z = 0
-        
+        frame = []
         for line in pdb_file:
             if line[:4] == 'ATOM' or line[:6] == 'HETATM':
                 at_name = line[12:16].strip()
@@ -81,21 +190,18 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
                     res = ch.residues[at_res_i]
                     #print 'existe'
                     ch.residues[at_res_i].atoms.append(atm)
-                    mol_obj.atoms.append(atm)
-                    
-                    mol_obj.coords.append(atm.pos[0])
-                    mol_obj.coords.append(atm.pos[1])
-                    mol_obj.coords.append(atm.pos[2])
+                    Vobject.atoms.append(atm)
+                    frame.append([atm.pos[0],atm.pos[1],atm.pos[2]])
+
 
                 else:
                     #print at_res_n, at_res_i, at_ch
                     res = mm.Residue(name=at_res_n, index=at_res_i, chain=at_ch)
                     ch.residues[at_res_i] = res
                     ch.residues[at_res_i].atoms.append(atm)
-                    mol_obj.atoms.append(atm)
-                    mol_obj.coords.append(atm.pos[0])
-                    mol_obj.coords.append(atm.pos[1])
-                    mol_obj.coords.append(atm.pos[2])
+                    Vobject.atoms.append(atm)
+                    frame.append([atm.pos[0],atm.pos[1],atm.pos[2]])
+
                 
                 if atm.name == 'CA':
                     ch.backbone.append(atm)
@@ -116,7 +222,7 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
                 
                 #elif line[:6] == 'ENDMDL':
                 #
-                #    mol_obj.chains = chains_m
+                #    Vobject.chains = chains_m
                 #    #frame.atoms = atoms
                 #    #frame.load_bonds()
                 #    #frame.load_ribbons()
@@ -126,17 +232,21 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
                 #    #atoms = []
                 ##print atoms
         
+        # add a new frame to frames list
+        Vobject.frames.append(frame)
+        Vobject.chains = chains_m
         
-        mol_obj.chains = chains_m
+        total = len(Vobject.atoms)
         
-        total = len(mol_obj.atoms)
-        
-        mol_obj.mass_center[0] = sum_x / total
-        mol_obj.mass_center[1] = sum_y / total
-        mol_obj.mass_center[2] = sum_z / total
+        Vobject.mass_center[0] = sum_x / total
+        Vobject.mass_center[1] = sum_y / total
+        Vobject.mass_center[2] = sum_z / total
 
-        #print mol_obj.mass_center
-        return mol_obj, atom_dic_id
+        #print Vobject.mass_center
+        return Vobject, atom_dic_id
+
+
+#parse_xyz(infile = '/home/fernando/programs/EasyHybrid/pdbs/1gab.xyz')
 
 
 #sys = parse_pdb('/home/fernando/programs/EasyHybrid/pdbs/alanine.pdb')

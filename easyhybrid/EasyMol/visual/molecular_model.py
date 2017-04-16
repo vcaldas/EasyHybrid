@@ -35,7 +35,7 @@ import atom_types as at
 
 
 
-class MolObject:
+class Vobject:
     """ Class doc """
     
     def __init__ (self, chains=None, bonds=None, mass_center=None):
@@ -66,17 +66,19 @@ class MolObject:
         
         
         self.chains       = {}
-        self.bonds        = []
-        self.mass_center  = np.array([0.0, 0.0, 0.0])
+        
+	self.bonds        = []
+        self.index_bonds  = []
+	
+	self.mass_center  = np.array([0.0, 0.0, 0.0])
         
         self.frames       = []
         self.atoms        = []
         self.residues     = []
         
+	self.coords       = []
         
-        
-        self.coords       = []
-        pass  
+	pass  
 
 
     def generete_atom_list (self):
@@ -117,37 +119,13 @@ class MolObject:
         initial = time.time()
         #self.bonds = self.generete_atom_list()
         #self.bonds = cfunctions.C_generate_bonds (self.coords)
-        self.bonds = cfunctions.C_generate_bonds3 (self.atoms)
+        self.bonds, self.index_bonds = cfunctions.C_generate_bonds3 (self.atoms)
         #self.bonds = cfunctions.C_np_generate_bonds (self.coords)
         #self.bonds = self.distances_from_point()
         print 'end'
-        #print self.bonds
         final = time.time() 
         print final - initial
 
-        #print 'BEGINS TO CALCULATE DISTANCES'
-        #arr1 = np.array([0, 0, 1])
-        #for i in range(len(atoms)-1):
-        #    if i+25>=len(atoms):
-        #        limit = len(atoms)
-        #
-        #
-        #
-        #else:
-        #    limit = i+25
-        #for j in range(i+1, limit):
-        #    if get_euclidean(atoms[i].pos, atoms[j].pos) <= (atoms[i].cov_rad + atoms[j].cov_rad):
-        #    arr2 = unit_vector(atoms[j].pos - atoms[i].pos)
-        #    mid_point = (atoms[i].pos+atoms[j].pos)/2
-        #    angle = get_angle(arr1, arr2)
-        #    vec_o = np.cross(arr1, arr2)
-        #    length = get_euclidean(atoms[i].pos, atoms[j].pos)/2
-        #    bond = (atoms[i], length, angle, vec_o, mid_point)
-        #    bond2 = (atoms[j], length, angle+180, vec_o, mid_point)
-        #    bonds_list.append(bond)
-        #    bonds_list.append(bond2)
-        #print 'ENDS!'
-        #return bonds_list
 
 
 class Chain:
