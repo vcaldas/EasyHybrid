@@ -13,7 +13,8 @@ class TreeviewHistory(object):
     def __init__ (self):
         """ Class initialiser """
         pass
-
+    
+    '''
     def on_treeview2_show_logFile (self, item):
         """ Function doc """
         #pprint(self.project.settings['job_history'][self.selectedID]['log'])
@@ -77,7 +78,7 @@ class TreeviewHistory(object):
         file_out  = 'exportXYZ.xyz'
         state     = -1
 
-        '''
+        """
                                                   d i a l o g
                                          #  -  I M P O R T A N T  -  #
                             #---------------------------------------------------------#
@@ -91,7 +92,7 @@ class TreeviewHistory(object):
                             #  6 -do something                                        #
                             #  7 -restore the actual dialog - optional                #
                             #---------------------------------------------------------#
-        '''
+        """
 
         self.builder.get_object('MessageDialogQuestion').format_secondary_text("Set object: " +PyMOL_Obj +" as active?")
         dialog = self.builder.get_object('MessageDialogQuestion')
@@ -234,7 +235,7 @@ class TreeviewHistory(object):
             
         else:
             #pprint (self.project.settings['job_history'][str(ID)])
-            '''
+            """
                                                       d i a l o g
                                              #  -  I M P O R T A N T  -  #
                                 #---------------------------------------------------------#
@@ -248,7 +249,7 @@ class TreeviewHistory(object):
                                 #  6 -do something                                        #
                                 #  7 -restore the actual dialog - optional                #
                                 #---------------------------------------------------------#
-            '''
+            """
 
             self.builder.get_object('MessageDialogQuestion').format_secondary_text("Delete object: " +PyMOL_Obj +"?")
             dialog = self.builder.get_object('MessageDialogQuestion')
@@ -270,7 +271,6 @@ class TreeviewHistory(object):
                 cmd.enable(self.project.settings['PyMOL_Obj'])
                 self.project.SystemCheck()
             
-    
     def on_menuitem_center_activate (self, item, event):
         """ Function doc """
         
@@ -290,15 +290,10 @@ class TreeviewHistory(object):
         """ Function doc """
         print 'on_menuitem_show_dots_button_release_event'
 
-    
     def on_menuitem_hide_dots_button_release_event (self, item, event):
         """ Function doc """
         print 'on_menuitem_hide_dots_button_release_event'
-    
-    
-        #self.EMSession.glarea.draw_dots(sys)
-    
-    
+       
     def on_menuitem_show_ribbons_button_release_event (self, item, event):
         """ Function doc """
         #print 'on_menuitem_center_activate'
@@ -309,13 +304,10 @@ class TreeviewHistory(object):
         
         if iter != None:
             self.selectedID  = int(model.get_value(iter, 1))  # @+
-            #print self.selectedID
-            self.EMSession.Vobjects[self.selectedID-1].show_ribbons = True
-            self.EMSession.glarea.draw_ribbon(self.EMSession.Vobjects[self.selectedID-1])
-            #self.EMSession.glarea.center_on_atom(sys.mass_center)
-            self.EMSession.glarea.draw()
+            self.EMSession.show (_type = 'ribbons', Vobject_index = self.selectedID -1)
 
-    def on_menuitem_show_ribbons1_button_release_event (self, item, event):
+
+    def on_menuitem_hide_ribbons1_button_release_event (self, item, event):
         """ Function doc """
         #print 'on_menuitem_center_activate'
         tree          = self.builder.get_object('treeview2')
@@ -325,13 +317,62 @@ class TreeviewHistory(object):
         
         if iter != None:
             self.selectedID  = int(model.get_value(iter, 1))  # @+
-            #print self.selectedID
-            self.EMSession.Vobjects[self.selectedID-1].show_ribbons = False
-            self.EMSession.glarea.draw_ribbon(self.EMSession.Vobjects[self.selectedID-1])
-            self.EMSession.glarea.draw()
-            #self.EMSession.glarea.center_on_atom(sys.mass_center)        
+            self.EMSession.hide (_type = 'ribbons', Vobject_index = self.selectedID -1)       
+        
+    '''
+    
+    def on_treeview_menuitem_button_release_event (self, item, event):
+        """ Function doc """
+        #print 'on_menuitem_center_activate'
+        tree          = self.builder.get_object('treeview2')
+        selection     = tree.get_selection()
+        model         = tree.get_model()
+        (model, iter) = selection.get_selected()
+        
+        #print 'aqui', item
+
+
+        #-------------------------------------#
+        #             C E N T E R             #
+        #-------------------------------------#
+        if item == self.builder.get_object('menuitem_center'):
+            #print 'aqui'
+            if iter != None:
+                self.selectedID  = int(model.get_value(iter, 1))  # @+
+                self.EMSession.center(Vobject_index = self.selectedID -1)
+                #self.EMSession.glarea.center_on_atom(sys.mass_center)
+
+        #-------------------------------------#
+        #               L I N E S             #
+        #-------------------------------------#
+        if item == self.builder.get_object('menuitem_hide_lines'):
+            #print 'aqui'
+            if iter != None:
+                self.selectedID  = int(model.get_value(iter, 1))  # @+
+                self.EMSession.hide (_type = 'lines', Vobject_index = self.selectedID -1)  
         
         
+        if item == self.builder.get_object('menuitem_show_lines'):
+            #print 'aqui'
+
+            if iter != None:
+                self.selectedID  = int(model.get_value(iter, 1))  # @+
+                self.EMSession.show (_type = 'lines', Vobject_index = self.selectedID -1)  
+            
+        
+        #-------------------------------------#
+        #            R I B B O N S            #
+        #-------------------------------------#
+        if item == self.builder.get_object('menuitem_hide_ribbons'):
+            if iter != None:
+                self.selectedID  = int(model.get_value(iter, 1))  # @+
+                self.EMSession.hide (_type = 'ribbons', Vobject_index = self.selectedID -1)  
+        
+        
+        if item == self.builder.get_object('menuitem_show_ribbons'):
+            if iter != None:
+                self.selectedID  = int(model.get_value(iter, 1))  # @+
+                self.EMSession.show (_type = 'ribbons', Vobject_index = self.selectedID -1)  
         
         
         
@@ -368,71 +409,15 @@ class GTKGUI (TreeviewHistory):
         gtk.main()
 
 
-    def test_popup_menu (self, button = None):
+    def test_popup_menu (self, event = None):
         """ Function doc """
         print 'aquioh'
-
-    '''
-    def  on_treeview_history_select_cursor_parent(self, tree, path, column):
-        """ Function doc """
-        print 'aaaa'
-        model = tree.get_model()  # @+
-        iter = model.get_iter(path)  # @+
-        pymol_object = model.get_value(iter, 2)  # @+
-        true_or_false = model.get_value(iter, 0)
+        widget = self.builder.get_object('menu4')
+        widget.popup(None, None, None, event.button, event.time)
 
 
-        if true_or_false == False:
-            cmd.enable(pymol_object)
-            true_or_false = True
-            model.set(iter, 0, true_or_false)
-
-        else:
-            cmd.disable(pymol_object)
-            true_or_false = False
-            model.set(iter, 0, true_or_false)
-    '''
-    '''
-    def row_activated(self, tree, path, column):
-
-        model = tree.get_model()
-        iter = model.get_iter(path)
-        pymol_object = model.get_value(iter, 0)
-
-        string2 = 'select sele, '+ pymol_object
-        cmd.do(string2)
-        cmd.enable('sele')
-        print 'row_activated'
-    '''
-    
-    '''
-    def row_activated2(self, tree, path, column):
-        #model = tree.get_model()  # @+
-        #iter = model.get_iter(path)  # @+
-        #ID = model.get_value(iter, 1)  # @+
-        print 'row_activated2'
-        
-        
-        model = tree.get_model()  # @+
-        iter = model.get_iter(path)  # @+
-        pymol_object = model.get_value(iter, 2)  # @+
-        true_or_false = model.get_value(iter, 0)
-
-
-        if true_or_false == False:
-            #cmd.enable(pymol_object)
-            true_or_false = True
-            model.set(iter, 0, true_or_false)
-
-        else:
-            #cmd.disable(pymol_object)
-            true_or_false = False
-            model.set(iter, 0, true_or_false)
-    '''
-    
     def on_treeview_PyMOL_Objects_button_release_event(self, tree, event):
         if event.button == 3:
-            #print "Mostrar menu de contexto botao3"
             selection     = tree.get_selection()
             model         = tree.get_model()
             (model, iter) = selection.get_selected()
@@ -453,13 +438,11 @@ class GTKGUI (TreeviewHistory):
             (model, iter) = selection.get_selected()
             pymol_object = model.get_value(iter, 0)
             print 'button == 2'
-            #string2 = 'select sele, '+ pymol_object
-            #cmd.do(string2)
-            #cmd.center('sele')
-
+            
+            self.selectedID  = int(model.get_value(iter, 1))  # @+
+            self.EMSession.center(Vobject_index = self.selectedID -1)
 
         if event.button == 1:
-            #print "Mostrar menu de contexto botao1"
             selection     = tree.get_selection()
             model         = tree.get_model()
             (model, iter) = selection.get_selected()
@@ -483,6 +466,7 @@ class GTKGUI (TreeviewHistory):
                     true_or_false = False
                     model.set(iter, 0, true_or_false)
                     self.EMSession.glarea.queue_draw()
+
 
     def on_menuitem1_activate(self, menuitem, click=None):
         print 'openfile'
@@ -517,27 +501,19 @@ class GTKGUI (TreeviewHistory):
         if response == gtk.RESPONSE_OK:
             filename = chooser.get_filename()
         chooser.destroy()
-
-
-        
         self.EMSession.load(filename)
-
 
         liststore = self.builder.get_object('liststore2')
         model = liststore  
         model.clear()
         n = 0
-        
         i = 1
         actived = False
+
         for Vobject in self.EMSession.Vobjects:
             
             if Vobject.actived:
                 actived = True
-                
-                #cell = self.builder.get_object('cellrenderertext2')
-                #cell.props.weight_set = True
-                #cell.props.weight = pango.WEIGHT_NORMAL
             else:
                 actived = False
 
@@ -550,47 +526,7 @@ class GTKGUI (TreeviewHistory):
             model.append(data)
             i +=1
             n = n + 1
-        
-        
-        #self.EMSession.glarea.load_mol()
+
         self.EMSession.glarea.draw_lines(self.EMSession.Vobjects[-1])
-        #self.EMSession.glarea.draw_dots(sys)
-        #self.EMSession.glarea.center_on_atom(sys.mass_center)
-        
-        
-        '''
-        for i in numbers2:
-            i = str(i)
-            cell = self.builder.get_object('cellrenderertext2')
-            cell.props.weight_set = True
-            cell.props.weight = pango.WEIGHT_NORMAL
-            data = [False, i                          ,
-                           job_history[i]['object']   , #job_history[i][0],
-                           job_history[i]['type']     , #job_history[i][1],
-                           job_history[i]['potencial'],
-                           ' '                       
-                           ] #job_history[i][2]]
 
-            
-            if job_history[i]['object'] == pymol_id:
-                
-                #print '\n\n'
-                #print job_history[i]['object']
-                #print '\n\n'
-                
-                cell = self.builder.get_object('cellrenderertext2')
-                #cell.props.weight_set = True
-                cell.props.weight = pango.WEIGHT_BOLD
-                
-                data = [True, i                          ,
-                              job_history[i]['object']   , 
-                              job_history[i]['type']     ,
-                              job_history[i]['potencial'],
-                              ' A! '
-                              ]
-        '''
-    
-
-    
-    
     

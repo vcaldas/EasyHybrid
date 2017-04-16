@@ -575,7 +575,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     def pressed_1(self):
 	""" Changes color to white.
 	"""
-	color = [1.0, 1.0, 1.0, 0.0]
+	color = [0.2, 0.2, 0.2, 0.0]
 	self.change_background(color)
     
     def pressed_2(self):
@@ -694,22 +694,6 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
         
         glEndList()
         Vobject.list_dots.append(gl_pt_li)
-        
-        #if self.gl_point_list == None or self.MODIFIED:
-        #    self.gl_point_list = []
-        #    for i in range(len(self.data)):
-        #	self.frame_i = i
-        #	self.load_mol()
-        #	gl_pt_li = glGenLists(1)
-        #	
-        #	glNewList(gl_pt_li, GL_COMPILE)
-        #	for atom in self.dot_list:
-        #	    rep.draw_point(atom)
-        #	glEndList()
-        #	
-        #	self.gl_point_list.append(gl_pt_li)
-        #    
-        #return True
     
     def draw_lines(self, Vobject):
         """ Change the representation to lines.
@@ -736,90 +720,9 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    glEnd()
 	    glPopName()
 	    glPopMatrix()
-	    
-	    
-            #glPushMatrix()
-            #glDisable(GL_LIGHT0)
-            #glDisable(GL_LIGHT1)
-            #glDisable(GL_LIGHT2)
-            #glDisable(GL_LIGHTING)
-            #glEnable(GL_COLOR_MATERIAL)
-            #glEnable(GL_DEPTH_TEST)
-            #glPushMatrix()
-	    #print type(bond[0]), bond[0]
-            #glPushName(bond[0].index)
-            
-            ##glColor3f(0, 1, 1)
-            
-            #glColor3f(Vobject.atoms[bond[0]].color[0], 
-                      #Vobject.atoms[bond[0]].color[1], 
-                      #Vobject.atoms[bond[0]].color[2])
-            
-            #glLineWidth(self.LineWidth)
-            
-            ##glBegin(GL_LINES)
-            #glBegin(GL_LINE_STRIP)
-            #glVertex3f(Vobject.atoms[bond[0]].pos[0], 
-                       #Vobject.atoms[bond[0]].pos[1], 
-                       #Vobject.atoms[bond[0]].pos[2])
-            
-            
-            #glVertex3f((Vobject.atoms[bond[0]].pos[0] + Vobject.atoms[bond[1]].pos[0])/2, 
-                       #(Vobject.atoms[bond[0]].pos[1] + Vobject.atoms[bond[1]].pos[1])/2, 
-                       #(Vobject.atoms[bond[0]].pos[2] + Vobject.atoms[bond[1]].pos[2])/2)                    
-
-            ##glPopName()
-            ##glPushName(bond[1])
-            
-            #glColor3f(Vobject.atoms[bond[1]].color[0], 
-                      #Vobject.atoms[bond[1]].color[1], 
-                      #Vobject.atoms[bond[1]].color[2])
-            
-            #glVertex3f((Vobject.atoms[bond[0]].pos[0] + Vobject.atoms[bond[1]].pos[0])/2, 
-                       #(Vobject.atoms[bond[0]].pos[1] + Vobject.atoms[bond[1]].pos[1])/2, 
-                       #(Vobject.atoms[bond[0]].pos[2] + Vobject.atoms[bond[1]].pos[2])/2) 
-
-            #glVertex3f(Vobject.atoms[bond[1]].pos[0], 
-                       #Vobject.atoms[bond[1]].pos[1], 
-                       #Vobject.atoms[bond[1]].pos[2])                    
-            
-            #glEnd()
-            #glPopName()
-            #glPopMatrix() 
-        
-        
-        #for res in Vobject.chains[chain].residues:
-        #    for atom in Vobject.chains[chain].residues[res].atoms:
-        #        glPushMatrix()
-        #        
-        #        glPushName(atom.index)
-        #        
-        #        glColor3f(atom.color[0], atom.color[1], atom.color[2])
-        #        glPointSize(self.PointSize*atom.vdw_rad)
-        #        glBegin(GL_POINTS)
-        #        glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
-        #        glEnd()
-        #        glPopName()
-        #        glPopMatrix()
-        #        #print atom.name, atom.pos
 
         glEndList()
         Vobject.list_lines.append(gl_ln_li)
-        
-    
-        '''
-        if self.gl_lines_list == None or self.MODIFIED:
-            self.gl_lines_list = []
-            for frame in self.data:
-            gl_ln_li = glGenLists(1)
-            glNewList(gl_ln_li, GL_COMPILE)
-            for bond in frame.bonds:
-                rep.draw_bond_line(bond[0], bond[4])
-            glEndList()
-            
-            self.gl_lines_list.append(gl_ln_li)
-        #'''
-        
         return True
     
     def draw_pretty_vdw(self):
@@ -1092,7 +995,7 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 		self.dragging = False
 		pass
 	    elif self.funcao_de_click is not None:
-		self.funcao_de_click()
+		self.funcao_de_click(event)
 	    print event.x, event.y
     
     
@@ -1300,7 +1203,13 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	picked = None
         if nearest != []:
 	    picked = self.EMSession.atom_dic_id[nearest[0]]
-	    print nearest[0], 'Name: ', picked.name, 'index: ', picked.index, 'residue: ', picked.resi, picked.chain
+	    
+	    print nearest[0], 'vobj_id', picked.Vobject_id ,'Name: ', picked.name, 'index: ', picked.index, 'residue: ', picked.resi, picked.chain
+	    
+	    for atom in self.EMSession.Vobjects[picked.Vobject_id].chains[picked.chain].residues[picked.resi].atoms:
+		print (atom.name, atom.resi, atom.index)
+		#nearest.append()
+	    
 	    #coords = self.EMSession.Vobjects[0].atoms[nearest[0]-1].pos
 	
 	
