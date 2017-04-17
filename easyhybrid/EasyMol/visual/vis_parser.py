@@ -117,18 +117,20 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         Vobject.mass_center[1] = sum_y / total
         Vobject.mass_center[2] = sum_z / total
         
-
+        n = 1
         for model_i  in models[1:]:
             frame = []
-            for line in model[2:]:
+            for line in model_i[2:]:
                 line2 = line.split()
                 #print line2, [float(line[1]), float(line[2]), float(line[3])]
                 #at_name  = line2[0].strip()
                 #at_pos   = np.array([float(line2[1]), float(line2[2]), float(line2[3])])
                 frame.append([float(line2[1]), float(line2[2]), float(line2[3])])
             
+            #pprint (n) 
+            #pprint (frame)
             Vobject.frames.append(frame)
-        
+            n += 1
             
         #print atom_dic_id
         return Vobject, atom_dic_id

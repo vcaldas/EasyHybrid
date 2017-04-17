@@ -58,7 +58,7 @@ class EasyMolSession:
         Vobject.generate_bonds()
         self.atom_id_counter += len(Vobject.atoms)
         self.Vobjects.append(Vobject)
-        
+        self.glarea.queue_draw()
 	#print self.atom_dic_id
         #print self.atom_id_counter
     

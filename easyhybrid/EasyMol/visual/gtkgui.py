@@ -327,10 +327,6 @@ class TreeviewHistory(object):
         tree          = self.builder.get_object('treeview2')
         selection     = tree.get_selection()
         model         = tree.get_model()
-        (model, iter) = selection.get_selected()
-        
-        #print 'aqui', item
-
 
         #-------------------------------------#
         #             C E N T E R             #
@@ -345,16 +341,14 @@ class TreeviewHistory(object):
         #-------------------------------------#
         #               L I N E S             #
         #-------------------------------------#
+        """ hide """
         if item == self.builder.get_object('menuitem_hide_lines'):
-            #print 'aqui'
             if iter != None:
                 self.selectedID  = int(model.get_value(iter, 1))  # @+
                 self.EMSession.hide (_type = 'lines', Vobject_index = self.selectedID -1)  
         
-        
+        """ show """
         if item == self.builder.get_object('menuitem_show_lines'):
-            #print 'aqui'
-
             if iter != None:
                 self.selectedID  = int(model.get_value(iter, 1))  # @+
                 self.EMSession.show (_type = 'lines', Vobject_index = self.selectedID -1)  
@@ -363,12 +357,13 @@ class TreeviewHistory(object):
         #-------------------------------------#
         #            R I B B O N S            #
         #-------------------------------------#
+        """ hide """
         if item == self.builder.get_object('menuitem_hide_ribbons'):
             if iter != None:
                 self.selectedID  = int(model.get_value(iter, 1))  # @+
                 self.EMSession.hide (_type = 'ribbons', Vobject_index = self.selectedID -1)  
         
-        
+        """ show """
         if item == self.builder.get_object('menuitem_show_ribbons'):
             if iter != None:
                 self.selectedID  = int(model.get_value(iter, 1))  # @+
@@ -405,6 +400,8 @@ class GTKGUI (TreeviewHistory):
         
         self.builder.get_object('toolbar_trajectory').hide()
         self.builder.get_object('notebook1').hide()
+        
+        
 
         gtk.main()
 

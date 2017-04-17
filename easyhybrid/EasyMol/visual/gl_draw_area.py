@@ -347,8 +347,8 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	for Vobject in self.EMSession.Vobjects:
 
 	    
-	    for lista in Vobject.list_lines:
-		print lista
+	    #for lista in Vobject.list_lines:
+	    #print lista
     
             if Vobject.actived:   
 
@@ -660,13 +660,14 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	"""
 	self.frame -= 1
 	print self.frame
-    
+	self.queue_draw()
+
     def pressed_w(self):
 	""" Turn on/off the Wires representation.
 	"""
 	self.frame += 1
 	print self.frame
-
+        self.queue_draw()
 	
 	#self.WIRES = not self.WIRES
 	#self.draw_wires()
@@ -1278,8 +1279,8 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    
 	    print nearest[0], 'vobj_id', picked.Vobject_id ,'Name: ', picked.name, 'index: ', picked.index, 'residue: ', picked.resi, picked.chain
 	    
-	    for atom in self.EMSession.Vobjects[picked.Vobject_id].chains[picked.chain].residues[picked.resi].atoms:
-		print (atom.name, atom.resi, atom.index)
+	    #for atom in self.EMSession.Vobjects[picked.Vobject_id].chains[picked.chain].residues[picked.resi].atoms:
+	    #	print (atom.name, atom.resi, atom.index)
 		#nearest.append()
 	    
 	    #coords = self.EMSession.Vobjects[0].atoms[nearest[0]-1].pos
