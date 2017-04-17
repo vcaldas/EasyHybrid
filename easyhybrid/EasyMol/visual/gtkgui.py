@@ -327,6 +327,7 @@ class TreeviewHistory(object):
         tree          = self.builder.get_object('treeview2')
         selection     = tree.get_selection()
         model         = tree.get_model()
+        (model, iter) = selection.get_selected()
 
         #-------------------------------------#
         #             C E N T E R             #
