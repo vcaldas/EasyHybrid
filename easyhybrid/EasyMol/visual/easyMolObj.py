@@ -78,15 +78,11 @@ class EasyMolSession:
         """ Function doc """
         self.Vobjects[Vobject_index].show_lines = False
         self.glarea.draw_lines(self.Vobjects[Vobject_index])
-        self.glarea.draw()
-	#print 'aqui'
 
     def _show_lines (self, Vobject_index ):
         """ Function doc """
         self.Vobjects[Vobject_index].show_lines = True
         self.glarea.draw_lines(self.Vobjects[Vobject_index])
-        self.glarea.draw()
-	#print 'aqui'
     
     def hide (self, _type = 'lines', Vobject_index =  None):
         """ Function doc """    
@@ -96,7 +92,8 @@ class EasyMolSession:
 
         if _type == 'ribbons':
             self._hide_ribbons (Vobject_index )
-        
+	self.glarea.queue_draw()
+
     def show (self, _type = 'lines', Vobject_index =  None):
         """ Function doc """
         if _type == 'lines':
@@ -104,7 +101,7 @@ class EasyMolSession:
 	    #print 'aqui'
         if _type == 'ribbons':
             self._show_ribbons (Vobject_index )
-        
+	self.glarea.queue_draw()
 
     def delete(self, obj = None):
         """ Function doc """
