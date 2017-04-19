@@ -841,11 +841,9 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    glEnable(GL_COLOR_MATERIAL)
 	    glEnable(GL_DEPTH_TEST)
 	    gl_rb_li = glGenLists(1)
-	    glLineWidth(self.LineWidth*3)
-	    
 	    glNewList(gl_rb_li, GL_COMPILE)
 	    #print 'aqui'
-	    
+	    glLineWidth(7)
 	    if Vobject.actived:
 		for chain in  Vobject.chains:
 		    for i in range(0, len(Vobject.chains[chain].backbone) -1):

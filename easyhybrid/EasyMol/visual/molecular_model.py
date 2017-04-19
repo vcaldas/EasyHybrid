@@ -61,8 +61,8 @@ class Vobject:
         self.show_surface = False
         self.list_surface = []
         
-        self.Type    = 'molecule'
-        self.label   = 'unkown'
+        self.Type  = 'molecule'
+        self.label = 'unkown'
         
         
         self.chains       = {}
@@ -77,7 +77,6 @@ class Vobject:
         self.residues     = []
         
 	self.coords       = []
-        
 	pass  
 
 
