@@ -351,31 +351,31 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
 	    #print lista
     
             if Vobject.actived:   
+		
+		input_frame = frame
+		
+		if input_frame >= (len(Vobject.frames)-1):
+		    
+		    input_frame = len(Vobject.frames) -1
 
-		#frames = len(Vobject.list_lines[frame])
-		#
-		#if self.frame > frames:
-		#   frame = -1
-		#else:
-		#   frame = self.frame
 
                 if Vobject.show_dots    :
-                    glCallList(Vobject.list_dots[frame], GL_COMPILE)
+                    glCallList(Vobject.list_dots[input_frame], GL_COMPILE)
                 
                 if Vobject.show_lines   :
-                    glCallList(Vobject.list_lines[frame], GL_COMPILE)
+                    glCallList(Vobject.list_lines[input_frame], GL_COMPILE)
                 
                 if Vobject.show_ribbons :
-                    glCallList(Vobject.list_ribbons[frame], GL_COMPILE)
+                    glCallList(Vobject.list_ribbons[input_frame], GL_COMPILE)
                 
                 if Vobject.show_sticks  :
-                    glCallList(Vobject.list_sticks[frame], GL_COMPILE)
+                    glCallList(Vobject.list_sticks[input_frame], GL_COMPILE)
 
                 if Vobject.show_spheres :
-                    glCallList(Vobject.list_spheres[frame], GL_COMPILE)
+                    glCallList(Vobject.list_spheres[input_frame], GL_COMPILE)
 
                 if Vobject.show_surface :
-                    glCallList(Vobject.list_surface[frame], GL_COMPILE)
+                    glCallList(Vobject.list_surface[input_frame], GL_COMPILE)
 	
 	for i,atom in enumerate(self.selected_atoms):
 	    if atom is not None:
