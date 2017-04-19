@@ -19,10 +19,10 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
-#  
-#  
-from visual import gl_draw_area as gda, vis_parser
-from visual.vis_parser import parse_pdb, parse_xyz
+#
+#
+from easyhybrid.EasyMol.visual import gl_draw_area as gda, vis_parser
+from easyhybrid.EasyMol.visual.vis_parser import parse_pdb, parse_xyz
 
 
 

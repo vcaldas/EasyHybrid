@@ -14,8 +14,8 @@ class TrajectoryTool :
         """ Function doc """
         if self.actived  ==  False:
             self.builder = gtk.Builder()
-            self.builder.add_from_file('EasyMol/visual_gui/AnimateTrajectory.glade')
-            
+            self.builder.add_from_file('easyhybrid/EasyMol/visual_gui/AnimateTrajectory.glade')
+
 	    self.window = self.builder.get_object('window1')
 	    self.builder.connect_signals(self)
 	    self.window.show_all()

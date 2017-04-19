@@ -3,8 +3,8 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 #from visual_gui import FileChooserWindow
-from visual.vis_parser import parse_pdb
-from visual_gui.AnimateTrajectory import TrajectoryTool
+from easyhybrid.EasyMol.visual.vis_parser import parse_pdb
+from easyhybrid.EasyMol.visual_gui.AnimateTrajectory import TrajectoryTool
 
 import gobject
 
@@ -553,7 +553,7 @@ class GTKGUI (TreeviewHistory , WindowControl, ToolBarMenu):
         """ Class initialiser """
         #glarea = gda.GLCanvas()
         self.builder = gtk.Builder()
-        self.builder.add_from_file('EasyMol/visual_gui/main_window.glade')
+        self.builder.add_from_file('easyhybrid/EasyMol/visual_gui/main_window.glade')
 
         self.window = self.builder.get_object('main_window')
         self.boton =  self.builder.get_object('btn_ball_stick')
