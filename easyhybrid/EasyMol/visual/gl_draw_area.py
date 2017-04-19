@@ -352,12 +352,16 @@ class GLCanvas(gtk.gtkgl.DrawingArea):
     
             if Vobject.actived:   
 		
+		
+		#-------------------------------------------------------
+		# Necessary, once trajectories have different sizes
+		#-------------------------------------------------------
 		input_frame = frame
 		
 		if input_frame >= (len(Vobject.frames)-1):
 		    
 		    input_frame = len(Vobject.frames) -1
-
+		#-------------------------------------------------------
 
                 if Vobject.show_dots    :
                     glCallList(Vobject.list_dots[input_frame], GL_COMPILE)
