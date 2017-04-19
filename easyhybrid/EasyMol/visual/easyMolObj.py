@@ -31,6 +31,8 @@ from visual.vis_parser import parse_pdb, parse_xyz
 class EasyMolSession:
     """ Class doc """
 
+    
+    
     def load (self, infile):
         """ Function doc """
         Vobject_id = len(self.Vobjects)
@@ -59,8 +61,6 @@ class EasyMolSession:
         self.atom_id_counter += len(Vobject.atoms)
         self.Vobjects.append(Vobject)
         self.glarea.queue_draw()
-	#print self.atom_dic_id
-        #print self.atom_id_counter
     
     def _hide_ribbons (self, Vobject_index ):
         """ Function doc """
@@ -129,6 +129,30 @@ class EasyMolSession:
         self.Vobjects[index].actived = True
         self.glarea.draw()
         
+    def set_frame (self, frame = 0):
+	""" Function doc """
+	self.glarea.frame = frame
+        self.glarea.queue_draw()
+    
+    def get_frame (self):
+	""" Function doc """
+	""" Function doc """
+	frame = self.glarea.frame
+	return frame
+	
+    def get_vobject_list (self):
+	""" Function doc """
+	
+	Vobjects_dic = {}
+	
+	for Vobject in self.Vobjects:
+	    index = self.Vobjects.index(Vobject)
+	    label = Vobject.label
+	    Vobjects_dic[index] = label
+	
+	return Vobjects_dic
+	
+	
     def __init__ (self):
         """ Class initialiser """
         #frames = vis_parser.parse_pdb(sys.argv[1])

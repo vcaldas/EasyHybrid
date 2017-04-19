@@ -1,44 +1,58 @@
 import gtk
 
-class GTKGUI :
+class TrajectoryTool :
     """ Class doc """
     
-    def __init__ (self, EMSession):
+    def __init__ (self, GTKSession):
         """ Class initialiser """
-        #glarea = gda.GLCanvas()
-        self.builder = gtk.Builder()
-        self.builder.add_from_file('AnimateTrajectory.glade')
-
-        self.window = self.builder.get_object('window1')
-        #self.boton =  self.builder.get_object('btn_ball_stick')
-        #self.builder.connect_signals(self)
-        #
-        #self.EMSession = EMSession
-        #
-        #self.EMSession.glarea.funcao_de_click = self.test_popup_menu
-        ##window.set_size_request(800,600)
-        ##self.handlers = {"on_btn_BallStick_clicked": self.glarea.switch_ball_stick,
-        ##                 "on_file_quit_activate":    gtk.main_quit}
-        ##self.builder.connect_signals(self.handlers)
-        #
-        #self.window.connect('key_press_event', self.EMSession.glarea.key_press)
-        #
-        #self.vbox = self.builder.get_object('vbox1')
-        #self.vbox.pack_start(self.EMSession.glarea, True, True)
-        self.window.show_all()
-        #
-        #self.builder.get_object('toolbar_trajectory').hide()
-        #self.builder.get_object('notebook1').hide()
         
-        
+	self.actived =  False
+	self.GTKSession = GTKSession
+	#self.EMSession =  GTKSession.EMSession
 
-        gtk.main()
+    def open_window (self, text = None):
+        """ Function doc """
+        if self.actived  ==  False:
+            self.builder = gtk.Builder()
+            self.builder.add_from_file('EasyMol/visual_gui/AnimateTrajectory.glade')
+            
+	    self.window = self.builder.get_object('window1')
+	    self.builder.connect_signals(self)
+	    self.window.show_all()
+	    
+	    scale = self.builder.get_object("trajectory_hscale")  
+	    scale.set_range(1, 100)                               
+	    scale.set_increments(1, 10)                           
+	    actual_frame = int(self.GTKSession.EMSession.get_frame())
+	    scale.set_digits(actual_frame)                        
+	    gtk.main()
 
+    def on_TrajectoryTool_HSCALE_update (self, MIN = 1, MAX = 100):
+        """ Function doc """
+        #MAX  = int(self.builder.get_object('trajectory_max_entrey').get_text())
+        #MIN  = int(self.builder.get_object('trajectory_min_entrey').get_text())
+
+        scale = self.builder.get_object("trajectory_hscale")
+        scale.set_range(MIN, MAX)
+        scale.set_increments(1, 10)
+        scale.set_digits(0)
+    
+    def on_TrajectoryTool_BarSetFrame(self, hscale, text= None,  data=None):            # SETUP  trajectory window
+        valor = hscale.get_value()
+	
+	if self.GTKSession.EMSession != None:
+	    self.GTKSession.EMSession.set_frame(int(valor-1))
+	else:
+	    print valor
+
+    def on_animate_trajectory_window_destroy(self, widget):
+        """ Function doc """
+        self.actived  =  False
+	self.GTKSession.builder.get_object('toolbutton_trajectory_tool').set_active(False)
 
 def main():
-    
     #EasyMol = EasyMolSession()
-    gtkgui  = GTKGUI(None)
+    trajectoryTool  = TrajectoryTool(None)
 
 
 if __name__ == '__main__':

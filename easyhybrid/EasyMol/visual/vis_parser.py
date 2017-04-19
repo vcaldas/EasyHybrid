@@ -23,6 +23,7 @@
 #  
 
 import molecular_model as mm
+import os
 import numpy as np
 #import atom_types as atypes
 from pprint import pprint
@@ -32,8 +33,9 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
     #frames = []
     
     with open(infile, 'r') as xyz_file:        
+        label = os.path.basename(infile)
+
         xyz_lines = xyz_file.readlines()
-        
         total_size      = len(xyz_lines)    
         xyz_model_size  = int(xyz_lines[0])
         model_size      = xyz_model_size+2   # include first and secound lines in a xyzfile
@@ -131,7 +133,7 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
             #pprint (frame)
             Vobject.frames.append(frame)
             n += 1
-            
+        Vobject.label  = label
         #print atom_dic_id
         return Vobject, atom_dic_id
 
@@ -144,6 +146,8 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
     """ Function doc """
     #frames = []
     with open(infile, 'r') as pdb_file:
+        label = os.path.basename(infile)
+
         
         Vobject = mm.Vobject()
     
@@ -243,7 +247,7 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         Vobject.mass_center[0] = sum_x / total
         Vobject.mass_center[1] = sum_y / total
         Vobject.mass_center[2] = sum_z / total
-
+        Vobject.label  = label
         #print Vobject.mass_center
         return Vobject, atom_dic_id
 

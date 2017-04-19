@@ -4,8 +4,182 @@ pygtk.require('2.0')
 import gtk
 #from visual_gui import FileChooserWindow
 from visual.vis_parser import parse_pdb
+from visual_gui.AnimateTrajectory import TrajectoryTool
+
+import gobject
+
+
+
+class WindowControl():
+
+    """ Class doc 
+    Needed to fill the contents of combobox, 
+    spin buttons and other widgets.
+
+    - this object has been created for the 
+    EasyHybrid_main class contains only those 
+    methods associated with the events.
+
+    """
+
+    def __init__(self, builder):
+        """ Class initialiser """
+        self.builder = builder
+        self.FileChooserWindow_TrueFalse = False
+        self.window3                     = False  # not available yet
+        self.ScanWindow                  = False
+        self.Scan2DWindow                = False
+
+    def SETUP_COMBOBOXES(self, combobox=None, combolist=[], active=0):
+        """ Function doc """
+
+        cbox = self.builder.get_object(combobox)  # ----> combobox_MM_model
+        store = gtk.ListStore(gobject.TYPE_STRING)
+        cbox.set_model(store)
+
+        for i in combolist:
+            cbox.append_text(i)
+
+        cell = gtk.CellRendererText()
+        cbox.pack_start(cell, True)
+        cbox.add_attribute(cell, 'text', 0)
+        cbox.set_active(active)
+        #'01_main_window_combobox_MM_model'
+
+    def TREEVIEW_ADD_DATA(self, liststore=None, pymol_objects=[], active=0):
+        """ Function doc """
+        model = liststore  # @+
+        model.clear()
+        n = 0
+        for i in pymol_objects:
+            data = [i]
+            model.append(data)
+            n = n + 1
+
+    def TREEVIEW_ADD_DATA2(self, liststore=None, job_history={}, pymol_id=None):
+        """ Function doc """
+
+        model = liststore  
+        model.clear()
+        n = 0
+                       
+                       
+                       
+                         # this is necessary to sort the job_history #
+        #-----------------------------------------------------------------------------#
+        numbers  = list(job_history)                                                  #
+        #print job_history                                                             #
+        numbers2 = []                                                                 #
+        #print numbers                                                                 #
+                                                                                      #
+        for i in numbers:                                                             #
+            numbers2.append(int(i))                                                   #
+        numbers2.sort()                                                               #
+        #print numbers2                                                                #
+        #-----------------------------------------------------------------------------#
+
+
+        for i in numbers2:
+            i = str(i)
+            cell = self.builder.get_object('cellrenderertext2')
+            cell.props.weight_set = True
+            cell.props.weight = pango.WEIGHT_NORMAL
+            data = [False, i                          ,
+                           job_history[i]['object']   , #job_history[i][0],
+                           job_history[i]['type']     , #job_history[i][1],
+                           job_history[i]['potencial'],
+                           ' '                       
+                           ] #job_history[i][2]]
+
+            
+            if job_history[i]['object'] == pymol_id:
+                
+                #print '\n\n'
+                #print job_history[i]['object']
+                #print '\n\n'
+                
+                cell = self.builder.get_object('cellrenderertext2')
+                #cell.props.weight_set = True
+                cell.props.weight = pango.WEIGHT_BOLD
+                
+                data = [True, i                          ,
+                              job_history[i]['object']   , 
+                              job_history[i]['type']     ,
+                              job_history[i]['potencial'],
+                              ' A! '
+                              ]
+
+            model.append(data)
+            n = n + 1
+        
+
+        '''
+        for i in job_history:
+            cell = self.builder.get_object('cellrenderertext2')
+            cell.props.weight_set = True
+            cell.props.weight = pango.WEIGHT_NORMAL
+            data = [False, job_history[i]['object']   , #job_history[i][0],
+                           job_history[i]['type']     , #job_history[i][1],
+                           job_history[i]['potencial']] #job_history[i][2]]
+            
+
+            
+            if job_history[i]['object'] == pymol_id:
+               
+                cell = self.builder.get_object('cellrenderertext2')
+                #cell.props.weight_set = True
+                cell.props.weight = pango.WEIGHT_BOLD
+                
+                data = [True, job_history[i]['object']   , 
+                              job_history[i]['type']     ,
+                              job_history[i]['potencial']]
+
+            model.append(data)
+            n = n + 1
+        '''
+
+
+    def STATUSBAR_SET_TEXT(self, text):
+        """ Function doc """
+        self.builder.get_object('statusbar1').push(0, text)
+
+    def SETUP_SPINBUTTON (self, spinbutton, config):
+        """ Function doc """
+        adjustment  = gtk.Adjustment(config[0],config[1],config[2],config[3],config[4],config[5])
+        SpinButton  = self.builder.get_object(spinbutton)
+        SpinButton.set_adjustment(adjustment)	
+        SpinButton.update()
+
 
     
+class ToolBarMenu:
+    """ Class doc """
+    
+    def __init__ (self):
+        """ Class initialiser """
+        pass
+    
+    def on_toolbarbuttons_click (self, button):
+        """ Function doc """
+        if button == self.builder.get_object('toolbutton_trajectory_tool'):
+            
+            if button.get_active() == True:
+                self.TrajectoryTool.open_window()
+                self.TrajectoryTool.actived =  True
+            else:
+                print ('desligado')
+                self.TrajectoryTool.window.destroy()
+                self.TrajectoryTool.actived =  False
+                #cmd.set('valence', 0.0)
+                #self.builder.get_object('handlebox1').hide()
+
+
+
+
+
+
+
+
 
 class TreeviewHistory(object):
     """ Class doc """
@@ -372,7 +546,7 @@ class TreeviewHistory(object):
         
         
         
-class GTKGUI (TreeviewHistory):
+class GTKGUI (TreeviewHistory , WindowControl, ToolBarMenu):
     """ Class doc """
     
     def __init__ (self, EMSession):
@@ -401,6 +575,30 @@ class GTKGUI (TreeviewHistory):
         
         self.builder.get_object('toolbar_trajectory').hide()
         self.builder.get_object('notebook1').hide()
+        
+        
+              #------------------------------------------------#
+              #-                 WindowControl                 #
+              #------------------------------------------------#
+        #------------------------------------------------------------#
+        self.window_control = WindowControl(self.builder)            #
+
+        #------------------------------------------------------------#
+
+        #--------------------- Setup ComboBoxes ---------------------#
+        #                                                            #
+        combobox = 'combobox1'                                       #
+        combolist = ["Atom", "Residue", "Chain", "Molecule"]         #
+        self.window_control.SETUP_COMBOBOXES(combobox, combolist, 1) #
+        #------------------------------------------------------------#
+        
+        
+        
+        
+
+        #------------------------------ EasyHybrid Dialogs -------------------------------------#
+        #                                                                                       #
+        self.TrajectoryTool = TrajectoryTool(self) 
         
         
 
@@ -499,6 +697,7 @@ class GTKGUI (TreeviewHistory):
         if response == gtk.RESPONSE_OK:
             filename = chooser.get_filename()
         chooser.destroy()
+        
         self.EMSession.load(filename)
 
         liststore = self.builder.get_object('liststore2')
@@ -516,9 +715,9 @@ class GTKGUI (TreeviewHistory):
                 actived = False
 
             data = [actived, i        ,
-                   Vobject.label   , 
-                   Vobject.Type    , 
-                   'None',
+                   Vobject.label      , 
+                   str(len(Vobject.atoms)) , 
+                   str(len(Vobject.frames)),
                    ' '                       
                    ]
             model.append(data)
@@ -527,4 +726,11 @@ class GTKGUI (TreeviewHistory):
 
         self.EMSession.glarea.draw_lines(self.EMSession.Vobjects[-1])
 
-    
+
+    def on_Quit_activate (self, menuitem):
+            """ Function doc """
+            print '''\n\nThanks for using EasyHybrid \n\n'''
+            gtk.main_quit()
+            #cmd.quit()
+            sys.exit()
+

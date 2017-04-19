@@ -54,6 +54,8 @@
   </object>
   <object class="GtkWindow" id="window1">
     <property name="can_focus">False</property>
+    <signal name="destroy-event" handler="on_animate_trajectory_window_destroy" swapped="no"/>
+    <signal name="destroy" handler="on_animate_trajectory_window_destroy" swapped="no"/>
     <child>
       <object class="GtkAlignment" id="alignment1">
         <property name="visible">True</property>
@@ -71,9 +73,11 @@
             </child>
             <child>
               <object class="GtkHScale" id="trajectory_hscale">
+                <property name="width_request">450</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="round_digits">1</property>
+                <signal name="change-value" handler="on_TrajectoryTool_BarSetFrame" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -173,6 +177,7 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkEntry" id="trajectory_min_entrey">
+                        <property name="width_request">50</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
