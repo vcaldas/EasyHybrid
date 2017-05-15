@@ -27,7 +27,7 @@ import os
 import numpy as np
 #import atom_types as atypes
 from pprint import pprint
-
+import random
 def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None ):
     """ Function doc """
     #frames = []
@@ -252,10 +252,101 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         return Vobject, atom_dic_id
 
 
+
+def parse_pdb2(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None ):
+    """ Function doc """
+    import time
+    
+    print (infile)
+    initial = time.time()
+    with open(infile, 'r') as pdb_file:
+        label = os.path.basename(infile)
+        pdb_file = pdb_file.readlines()
+        print (len(pdb_file))
+        
+        new_lines = []
+        coords     = []
+        
+        for line in pdb_file:
+            if line[:4] == 'ATOM' or line[:6] == 'HETATM':
+                at_name = line[12:16].strip()
+                #at_index = int(line[6:11])
+                
+                coords.append(float(line[30:38]))
+                coords.append(float(line[38:46])) 
+                coords.append(float(line[46:54]))
+                
+                #at_pos = np.array([float(line[30:38]), float(line[38:46]), float(line[46:54])])
+                at_res_i = int(line[22:26])
+                at_res_n = line[17:20].strip()
+                at_ch    = line[21]
+                
+                
+                new_lines.append([at_name,at_res_i,at_res_n, at_ch])
+       
+        #print  round(min(coords[::3]) ), round(max(coords[::3]) ) , round(max(coords[::3]) )- round(min(coords[::3]) ),  (round(max(coords[::3]) )- round(min(coords[::3]) ))/10
+        #print  round(min(coords[1::3])), round(max(coords[1::3])) , round(max(coords[1::3]))- round(min(coords[1::3])),  (round(max(coords[1::3]))- round(min(coords[1::3])))/10
+        #print  round(min(coords[2::3])), round(max(coords[2::3])) , round(max(coords[2::3]))- round(min(coords[2::3])),  (round(max(coords[2::3]))- round(min(coords[2::3])))/10
+        
+        x_coords = coords[ ::3]
+        y_coords = coords[1::3]
+        z_coords = coords[2::3]
+        
+        x_max  =  round(max(x_coords)) 
+        y_max  =  round(max(y_coords)) 
+        z_max  =  round(max(z_coords)) 
+        
+        x_min  =  round(min(x_coords)) 
+        y_min  =  round(min(y_coords)) 
+        z_min  =  round(min(z_coords)) 
+    
+        sector_size = 10
+
+        x_sector = []
+        y_sector = []
+        z_sector = []
+
+        for x in  x_coords:
+            x_sector.append(int(round(x/sector_size)))
+        
+        for y in  y_coords:
+            y_sector.append(int(round(y/sector_size)))
+        
+        for z in  z_coords:
+            z_sector.append(int(round(z/sector_size)))
+        
+        x_sector_min = min(x_sector)
+        y_sector_min = min(y_sector)
+        z_sector_min = min(z_sector)
+        
+        #if x_sector_min < 0:
+        #    map(lambda(n): n + x_sector_min, x_sector)
+        #
+        #if y_sector_min < 0:
+        #    map(lambda(n): n + y_sector_min, y_sector)
+        #
+        #if z_sector_min < 0:
+        #    map(lambda(n): n + z_sector_min, z_sector)
+                          
+        print min(x_sector), max(x_sector)
+        print min(y_sector), max(y_sector)
+        print min(z_sector), max(z_sector)
+        
+      
+
+    print (time.time() - initial)
+
+
+def soma_int (x):
+    
+    """ Function doc """
+    
+
+
 #parse_xyz(infile = '/home/fernando/programs/EasyHybrid/pdbs/1gab.xyz')
 
 
-#sys = parse_pdb('/home/fernando/programs/EasyHybrid/pdbs/alanine.pdb')
+sys = parse_pdb2('/home/fernando/Desktop/step5_assembly.pdb')
 #
 #sys = parse_pdb('/home/fernando/programs/EasyHybrid/pdbs/1bx4.pdb')
 
