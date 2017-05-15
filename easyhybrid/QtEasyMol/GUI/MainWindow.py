@@ -2,13 +2,12 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Fri May 12 15:57:36 2017
+# Created: Mon May 15 14:24:20 2017
 #      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PySide import QtCore, QtGui
-from GLWidget import GLWidget
 
 class Ui_EasyMol(object):
     def setupUi(self, EasyMol):
@@ -16,12 +15,7 @@ class Ui_EasyMol(object):
         EasyMol.resize(1026, 759)
         self.centralwidget = QtGui.QWidget(EasyMol)
         self.centralwidget.setObjectName("centralwidget")
-        
-
-        self.glWidget = GLWidget(EasyMol)
-        #self.setCentralWidget(self.glWidget)
         EasyMol.setCentralWidget(self.centralwidget)
-
         self.menubar = QtGui.QMenuBar(EasyMol)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1026, 27))
         self.menubar.setObjectName("menubar")
@@ -212,14 +206,4 @@ class Ui_EasyMol(object):
         self.actionDelete_System.setText(QtGui.QApplication.translate("EasyMol", "Delete System", None, QtGui.QApplication.UnicodeUTF8))
         self.actionShow_Cell.setText(QtGui.QApplication.translate("EasyMol", "Show Cell", None, QtGui.QApplication.UnicodeUTF8))
         self.actionPreferences.setText(QtGui.QApplication.translate("EasyMol", "Preferences", None, QtGui.QApplication.UnicodeUTF8))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    EasyMol = QtGui.QMainWindow()
-    ui = Ui_EasyMol()
-    ui.setupUi(EasyMol)
-    EasyMol.show()
-    sys.exit(app.exec_())
 

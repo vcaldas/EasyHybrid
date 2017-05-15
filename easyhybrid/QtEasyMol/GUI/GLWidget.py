@@ -16,7 +16,7 @@ except ImportError:
     sys.exit(1)
 
 class GLWidget(QtOpenGL.QGLWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, glmenu = None):
         QtOpenGL.QGLWidget.__init__(self, parent)
 
         self.object = 0
