@@ -24,6 +24,7 @@
 
 import numpy as np
 import operations as op
+import representations as rep
 import math
 import OpenGL
 from OpenGL.GL import *
@@ -58,13 +59,16 @@ class DrawArea(QtOpenGL.QGLWidget):
         self.zrp = target_point = np.array([0, 0, 0])
         self.mouse_rotate = mouse_pan = mouse_zoom = dragging = False
         self.drag_pos_x = self.drag_pos_y = self.drag_pos_z = 0.0
+        self.frame_i = 0
         self.LINES = self.DOTS = self.BALL_STICK = self.VDW = self.PRETTY_VDW = self.RIBBON = self.SPHERES = self.WIRES = self.SELECTION = self.MODIFIED = False
+        self.gl_ball_stick_list = self.gl_point_list = self.gl_lines_list = self.gl_pretty_vdw_list = self.gl_ribbon_list =  self.gl_sphere_list = self.gl_vdw_list = self.gl_wires_list = None
     
     def initializeGL(self):
         """ Inside the realize function, you should put all you OpenGL
         	initialization code, e.g. set the projection matrix,
         	the modelview matrix, position of the camera.
         """
+        glutInit()
         # All OpenGL initialization code goes here
         glMaterialfv(GL_FRONT,GL_AMBIENT, (.7,.7,.7,1.))
         glMaterialfv(GL_FRONT,GL_DIFFUSE, (.8,.8,.8,1.))
@@ -130,21 +134,21 @@ class DrawArea(QtOpenGL.QGLWidget):
         glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
         
         if self.DOTS:
-            glCallList(self.gl_point_list[self.frame_i], GL_COMPILE)
+            glCallList(self.gl_point_list[self.frame_i])
         if self.BALL_STICK:
-            glCallList(self.gl_ball_stick_list[self.frame_i], GL_COMPILE)
+            glCallList(self.gl_ball_stick_list[self.frame_i])
         if self.WIRES:
-            glCallList(self.gl_wires_list[self.frame_i], GL_COMPILE)
+            glCallList(self.gl_wires_list[self.frame_i])
         if self.LINES:
             glCallList(self.gl_lines_list[self.frame_i])
         if self.VDW:
-            glCallList(self.gl_vdw_list[self.frame_i], GL_COMPILE)
+            glCallList(self.gl_vdw_list[self.frame_i])
         if self.PRETTY_VDW:
-            glCallList(self.gl_pretty_vdw_list[self.frame_i], GL_COMPILE)
+            glCallList(self.gl_pretty_vdw_list[self.frame_i])
         if self.RIBBON:
-            glCallList(self.gl_ribbon_list[self.frame_i], GL_COMPILE)
+            glCallList(self.gl_ribbon_list[self.frame_i])
         if self.SPHERES:
-            glCallList(self.gl_sphere_list[self.frame_i], GL_COMPILE)
+            glCallList(self.gl_sphere_list[self.frame_i])
     
     def minimumSizeHint(self):
         return QtCore.QSize(400, 400)
@@ -460,7 +464,7 @@ class DrawArea(QtOpenGL.QGLWidget):
                                 self.sphere_list.append(atom)
                             if atom.pretty_vdw:
                                 self.pretty_vdw_list.append(atom)
-            self.LINES = self.draw_lines()
+            #self.LINES = self.draw_lines()
     
     def keyPressEvent(self, event):
         """ The mouse_button function serves, as the names states, to catch
@@ -471,18 +475,18 @@ class DrawArea(QtOpenGL.QGLWidget):
             for customized actions) and maintained, i.e. it's the same as
             using Ctrl+Z to undo an action.
         """
-        k_name = event.key()
-        func = getattr(self, 'pressed_' + k_name, None)
-        print k_name, 'key Pressed'
-        if func:
-            func()
-        return True
-        #if (event.key() == QtCore.Qt.Key_Escape):
-        #    self.close()
-        #if (event.key() == QtCore.Qt.Key_L):
-        #    self.load_mol()
-        #if (event.key() == QtCore.Qt.Key_B):
-        #    self.pressed_b()
+        #k_name = event.key()
+        #func = getattr(self, 'pressed_' + k_name, None)
+        #print k_name, 'key Pressed'
+        #if func:
+        #    func()
+        #return True
+        if (event.key() == QtCore.Qt.Key_Escape):
+            self.close()
+        if (event.key() == QtCore.Qt.Key_B):
+            self.pressed_B()
+        if (event.key() == QtCore.Qt.Key_S):
+            self.pressed_s()
     
     def pressed_Key_Escape(self):
         """ Turn on/off Ball-Stick representation.
