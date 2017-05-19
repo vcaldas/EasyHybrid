@@ -56,7 +56,7 @@ class DrawArea(QtOpenGL.QGLWidget):
         self.pick_radius = [10, 10]
         self.pos_mouse = [None, None]
         self.gl_backgrd = [0.0, 0.0, 0.0, 0.0]
-        self.zrp = target_point = np.array([0, 0, 0])
+        self.zrp = self.target_point = np.array([0, 0, 0])
         self.mouse_rotate = mouse_pan = mouse_zoom = dragging = False
         self.drag_pos_x = self.drag_pos_y = self.drag_pos_z = 0.0
         self.frame_i = 0
@@ -181,8 +181,12 @@ class DrawArea(QtOpenGL.QGLWidget):
            
         """
         if (event.button() == QtCore.Qt.LeftButton):
-            nearest, hits = self.pick(x, self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
+            nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
             selected = self.select(nearest, hits)
+            if selected is not None:
+                self.center_on_atom(selected.pos)
+                self.zrp = selected.pos
+                self.target_point = selected.pos
     
     def mouseReleaseEvent(self, event):
         """
@@ -212,7 +216,9 @@ class DrawArea(QtOpenGL.QGLWidget):
             bx = (inv[0,0]*ax + inv[1,0]*ay)
             by = (inv[0,1]*ax + inv[1,1]*ay)
             bz = (inv[0,2]*ax + inv[1,2]*ay)
+            glTranslate(self.zrp[0],self.zrp[1],self.zrp[2])
             glRotatef(angle,bx,by,bz)
+            glTranslate(-self.zrp[0],-self.zrp[1],-self.zrp[2])
             changed = True
         elif (self.mouse_zoom):
             glMatrixMode(GL_MODELVIEW)
@@ -323,10 +329,10 @@ class DrawArea(QtOpenGL.QGLWidget):
                 self.fog_start = self.z_far - 1.5
                 self.fog_end = self.z_far
                 dist_z = op.get_euclidean(cam_pos, pto)
-                x, y, width, height = self.get_allocation()
+                #x, y, width, height = self.get_allocation()
                 glMatrixMode(GL_PROJECTION)
                 glLoadIdentity()
-                gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
+                gluPerspective(self.fovy, float(self.width)/float(self.height), self.z_near, self.z_far)
                 glFogf(GL_FOG_START, self.fog_start)
                 glFogf(GL_FOG_END, self.fog_end)
                 glMatrixMode(GL_MODELVIEW)
@@ -341,10 +347,10 @@ class DrawArea(QtOpenGL.QGLWidget):
                 self.z_near = dist_z - add_z
                 self.fog_start = self.z_far - 1.5
                 self.fog_end = self.z_far
-                x, y, width, height = self.get_allocation()
+                #x, y, width, height = self.get_allocation()
                 glMatrixMode(GL_PROJECTION)
                 glLoadIdentity()
-                gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
+                gluPerspective(self.fovy, float(self.width)/float(self.height), self.z_near, self.z_far)
                 glFogf(GL_FOG_START, self.fog_start)
                 glFogf(GL_FOG_END, self.fog_end)
                 glMatrixMode(GL_MODELVIEW)
