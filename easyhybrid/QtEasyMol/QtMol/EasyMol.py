@@ -407,9 +407,9 @@ class DrawArea(QtOpenGL.QGLWidget):
         """
         picked = None
         if nearest != []:
-            for chain in self.data[self.frame_i].chains.values():
-                for residue in chain.residues.values():
-                    for atom in residue.atoms.values():
+            for chain in list(self.data[self.frame_i].chains.values()):
+                for residue in list(chain.residues.values()):
+                    for atom in list(residue.atoms.values()):
                         if atom.index == nearest[0]:
                             picked = atom
                             break
@@ -436,12 +436,12 @@ class DrawArea(QtOpenGL.QGLWidget):
         self.sphere_list      = []
         self.pretty_vdw_list  = []
         if data is None and self.data is None:
-            print 'No data to load'
+            print('No data to load')
         else:
             if data is not None:
-                for chain in data[self.frame_i].chains.values():
-                    for residue in chain.residues.values():
-                        for atom in residue.atoms.values():
+                for chain in list(data[self.frame_i].chains.values()):
+                    for residue in list(chain.residues.values()):
+                        for atom in list(residue.atoms.values()):
                             if atom.dot:
                                 self.dot_list.append(atom)
                             if atom.vdw:
@@ -455,9 +455,9 @@ class DrawArea(QtOpenGL.QGLWidget):
                             if atom.pretty_vdw:
                                 self.pretty_vdw_list.append(atom)
             else:
-                for chain in self.data[self.frame_i].chains.values():
-                    for residue in chain.residues.values():
-                        for atom in residue.atoms.values():
+                for chain in list(self.data[self.frame_i].chains.values()):
+                    for residue in list(chain.residues.values()):
+                        for atom in list(residue.atoms.values()):
                             if atom.dot:
                                 self.dot_list.append(atom)
                             if atom.vdw:
@@ -481,12 +481,6 @@ class DrawArea(QtOpenGL.QGLWidget):
             for customized actions) and maintained, i.e. it's the same as
             using Ctrl+Z to undo an action.
         """
-        #k_name = event.key()
-        #func = getattr(self, 'pressed_' + k_name, None)
-        #print k_name, 'key Pressed'
-        #if func:
-        #    func()
-        #return True
         if (event.key() == QtCore.Qt.Key_Escape):
             self.close()
         if (event.key() == QtCore.Qt.Key_B):
@@ -566,7 +560,6 @@ class DrawArea(QtOpenGL.QGLWidget):
     def draw_ball_stick(self):
         """ Draws all the elements for Ball-Stick representation.
         """
-        #print 'Ball-Stick Representation'
         if self.gl_ball_stick_list == None or self.MODIFIED:
             self.gl_ball_stick_list = []
             for i in range(len(self.data)):
@@ -585,7 +578,6 @@ class DrawArea(QtOpenGL.QGLWidget):
     def draw_dots(self):
         """ Change the representation to Dots.
         """
-        #print 'Dots Representation'
         # Center dots representations of the atoms
         if self.gl_point_list == None or self.MODIFIED:
             self.gl_point_list = []
@@ -618,7 +610,6 @@ class DrawArea(QtOpenGL.QGLWidget):
     def draw_pretty_vdw(self):
         """ Change the representation to Pretty VDW.
         """
-        #print 'Pretty Van-Der-Waals Representation'
         # Ball representation.
         if self.gl_pretty_vdw_list == None or self.MODIFIED:
             self.gl_pretty_vdw_list = []
@@ -643,7 +634,6 @@ class DrawArea(QtOpenGL.QGLWidget):
     def draw_ribbon(self):
         """ Change the representation to Ribbon.
         """
-        #print 'Ribbon Representation'
         # Makes the ribbon representations
         if self.gl_ribbon_list == None or self.MODIFIED:
             self.gl_ribbon_list = []
@@ -659,7 +649,7 @@ class DrawArea(QtOpenGL.QGLWidget):
     def draw_spheres(self):
         """ Change the representation to Spheres.
         """
-        #print 'Spheres Representation'
+        #print('Spheres Representation')
         # Sphere representation of the atoms, the difference between the ball
         # representation is that sphere uses the covalent radius and ball the
         # atomic radius.
@@ -679,7 +669,6 @@ class DrawArea(QtOpenGL.QGLWidget):
     def draw_vdw(self):
         """ Change the representation to Van-Der-Waals.
         """
-        #print 'Van-Der-Waals Representation'
         # Makes the van-der-walls representation of the atoms.
         if self.gl_vdw_list == None or self.MODIFIED:
             self.gl_vdw_list = []
@@ -697,7 +686,6 @@ class DrawArea(QtOpenGL.QGLWidget):
     def draw_wires(self):
         """ Change the representation to Wires.
         """
-        #print 'Wired Representation'
         # Wires representation.
         if self.gl_wires_list == None or self.MODIFIED:
             self.gl_wires_list = []

@@ -51,19 +51,22 @@ def parse_pdb(infile):
                 atm.wires      = True
                 if at_ch == ' ':
                     at_ch = 'A'
-                if chains_m.has_key(at_ch):
+                #if chains_m.has_key(at_ch):
+                if at_ch in chains_m:
                     ch = chains_m[at_ch]
                 else:
                     ch = mm.Chain(name=at_ch, frame=frame)
                     chains_m[at_ch] = ch
-                if ch.residues.has_key(at_res_i):
+                #if ch.residues.has_key(at_res_i):
+                if at_res_i in ch.residues:
                     res = ch.residues[at_res_i]
                 else:
                     res = mm.Residue(name=at_res_n, index=at_res_i, chain=at_ch)
                     ch.residues[at_res_i] = res
                 if atm.name == 'CA':
                     ch.backbone.append(atm)
-                if not res.atoms.has_key(at_index):
+                #if not res.atoms.has_key(at_index):
+                if at_index not in res.atoms:
                     res.atoms[at_index] = atm
                 atoms.append(atm)
             elif line[:6] == 'ENDMDL':
