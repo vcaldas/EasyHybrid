@@ -63,6 +63,9 @@ class EasyMolSession:
         
         pprint(self.Vobjects)
         self.glwidget.draw_lines(self.Vobjects[-1])
+        
+        return True
+        
     
     def _hide_ribbons (self, Vobject_index ):
         """ Function doc """

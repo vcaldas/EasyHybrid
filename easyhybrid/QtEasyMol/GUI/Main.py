@@ -20,36 +20,38 @@ from GLarea.easyMolObj import EasyMolSession
 from GLarea.GLWidget   import GLWidget
 
 
+
+
+
+
+
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         
         self.setupUi(self)
         
-        
-        #icon6 = QIcon()
-        #icon6.addPixmap(QPixmap("/home/fernando/programs/EasyHybrid/easyhybrid/QtEasyMol/GUI/NewProject.png"), QIcon.Normal, QIcon.Off)
-        #self.actionNew_Project.setIcon(icon6)
-        
-        self.treeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.treeWidget.customContextMenuRequested.connect(self.openMenu)
+        self.listView.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.listView.customContextMenuRequested.connect(self.open_list_view_menu)
         self.actionOpen.triggered.connect(self.showDialog)
         glmenu = [self.actionOpen]
-        
 
         self.glwidget = GLWidget(self, glmenu = glmenu)
         self.EasyMol  = EasyMolSession(glwidget =  self.glwidget)
-        
-        
-        #import GLarea.vis_parser as vp
-        #self.glwidget.data = vp.parse_pdb("/home/fernando/programs/EasyHybrid/easyhybrid/QtEasyMol/QtMol/pdbs/1l2y.pdb")
-        
+
         self.setCentralWidget(self.glwidget)
         self.show()
-        #self.EasyMol.load("/home/fernando/programs/EasyHybrid/easyhybrid/QtEasyMol/QtMol/pdbs/1l2y.pdb")
-        #self.EasyMol.load("/home/fernando/programs/EasyHybrid/pdbs/glicose2.pdb")
     
    
+    def setup_icons (self):
+        """ Function doc """
+        icon6 = QIcon()
+        icon6.addPixmap(QPixmap("/home/fernando/programs/EasyHybrid/easyhybrid/QtEasyMol/GUI/NewProject.png"), QIcon.Normal, QIcon.Off)
+        self.actionNew_Project.setIcon(icon6)
+        
+        
+        
+        
     
     def showDialog(self):
         '''
@@ -67,37 +69,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         dialog = QFileDialog()
         fname, _ = dialog.getOpenFileName(self, 'Open file','/home', filters, options)
         
-        self.EasyMol.load(fname)
-        
-        self.updateGui()
-        
-        return fname
-        #f = open(fname, 'r')
+        if self.EasyMol.load(fname):
+            self.update_list_view()
+        else:
+            pass
+            
+        #return fname
 
-
-    def updateGui (self):
+    def update_list_view (self):
         """ Function doc """
-        lista = self.EasyMol.get_vobject_list()
-        print(lista)
-        tree        = self.treeWidget
-        headerItem  = QTreeWidgetItem()
-        item        = QTreeWidgetItem()
-
-        for i in lista:
-            parent = QTreeWidgetItem(tree)
-            parent.setText(0, lista[i])
-            parent.setFlags(parent.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
-            parent.setCheckState(0, Qt.Unchecked)
-        tree.show() 
-
-    def openMenu(self, position):
-        #print ('menu')
+        Vobjects_list = self.EasyMol.get_vobject_list()
         
-        indexes = self.treeWidget.selectedIndexes()
+        
+        model = QStandardItemModel(self.listView)
+        
+        for key in Vobjects_list:
+            # create an item with a caption
+            item = QStandardItem(Vobjects_list[key])
+
+            # add a checkbox to it
+            item.setCheckable(True)
+
+            # Add the item to the model
+            model.appendRow(item)
+
+        # Apply the model to the list view
+        self.listView.setModel(model)
+ 
+
+    def open_list_view_menu(self, position):
+        #print ('menu')
+        pass
+        
+        indexes = self.listView.selectedIndexes()
         print (indexes)
         
         if len(indexes) > 0:
-
+        
              level = 0
              index = indexes[0]
              while index.parent().isValid():
@@ -113,8 +121,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             menu.addAction(self.tr("Edit object/container"))
         elif level == 2:
             menu.addAction(self.tr("Edit object"))
-
-        menu.exec_(self.treeWidget.viewport().mapToGlobal(position))
+        
+        menu.exec_(self.listView.viewport().mapToGlobal(position))
 
 
 

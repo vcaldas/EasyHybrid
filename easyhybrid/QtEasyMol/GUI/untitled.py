@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'untitled.ui'
 #
-# Created: Mon May 22 04:14:25 2017
+# Created: Mon May 22 20:17:37 2017
 #      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -42,10 +42,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setSpacing(3)
         self.horizontalLayout.setContentsMargins(3, 3, 3, 3)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.treeWidget = QtGui.QTreeWidget(self.dockWidgetContents)
-        self.treeWidget.setObjectName("treeWidget")
-        self.treeWidget.headerItem().setText(0, "1")
-        self.horizontalLayout.addWidget(self.treeWidget)
+        self.listView = QtGui.QListView(self.dockWidgetContents)
+        self.listView.setObjectName("listView")
+        self.horizontalLayout.addWidget(self.listView)
         self.dockWidget.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
         self.dockWidget_2 = QtGui.QDockWidget(MainWindow)
