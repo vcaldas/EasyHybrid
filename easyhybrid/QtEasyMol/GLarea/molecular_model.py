@@ -58,6 +58,9 @@ class Vobject:
         self.show_spheres = False
         self.list_spheres = []
         
+        self.show_ball_and_stick = False
+        self.list_ball_and_stick = []
+        
         self.show_surface = False
         self.list_surface = []
         

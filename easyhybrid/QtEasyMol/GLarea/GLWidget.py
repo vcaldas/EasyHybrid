@@ -22,6 +22,7 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import *
 import GLarea.operations as op
 import GLarea.representations as rep
+from GLarea.vector_math import Vector
 
 
 class GLWidget(QtOpenGL.QGLWidget):
@@ -194,6 +195,13 @@ class GLWidget(QtOpenGL.QGLWidget):
                 if input_frame >= (len(Vobject.frames)-1):
                     input_frame = len(Vobject.frames) -1
 
+
+
+                glDisable(GL_LIGHT0)
+                glDisable(GL_LIGHTING)
+                glDisable(GL_COLOR_MATERIAL)
+                glDisable(GL_DEPTH_TEST)
+                                
                 if Vobject.show_dots    :
                     glCallList(Vobject.list_dots[input_frame], GL_COMPILE)
 
@@ -203,9 +211,19 @@ class GLWidget(QtOpenGL.QGLWidget):
                 if Vobject.show_ribbons :
                     glCallList(Vobject.list_ribbons[input_frame], GL_COMPILE)
 
+                
+                
+                glEnable(GL_LIGHT0)
+                glEnable(GL_LIGHTING)
+                glEnable(GL_COLOR_MATERIAL)
+                glEnable(GL_DEPTH_TEST)
+                
                 if Vobject.show_sticks  :
-                    glCallList(Vobject.list_sticks[input_frame], GL_COMPILE)
+                    glCallList(Vobject.list_sticks        [input_frame], GL_COMPILE)
 
+                if Vobject.show_ball_and_stick :
+                    glCallList(Vobject.list_ball_and_stick[input_frame], GL_COMPILE)
+                
                 if Vobject.show_spheres :
                     glCallList(Vobject.list_spheres[input_frame], GL_COMPILE)
 
@@ -893,10 +911,13 @@ class GLWidget(QtOpenGL.QGLWidget):
         for frame in Vobject.frames:
             glEnable(GL_COLOR_MATERIAL)
             glEnable(GL_DEPTH_TEST)
+            
             gl_rb_li = glGenLists(1)
             glNewList(gl_rb_li, GL_COMPILE)
             #print 'aqui'
             glLineWidth(7)
+
+            #'''
             if Vobject.actived:
                 for chain in  Vobject.chains:
                     for i in range(0, len(Vobject.chains[chain].backbone) -1):
@@ -918,10 +939,128 @@ class GLWidget(QtOpenGL.QGLWidget):
                         glPopMatrix()
 
             glEndList()
+            #'''
             Vobject.list_ribbons.append(gl_rb_li)
 
     
+    
+    def draw_spheres(self):
+        """ Change the representation to Spheres.
+        """
+        #print('Spheres Representation')
+        # Sphere representation of the atoms, the difference between the ball
+        # representation is that sphere uses the covalent radius and ball the
+        # atomic radius.
+        for frame in Vobject.frames:
+            if self.gl_sphere_list == None or self.MODIFIED:
+                self.gl_sphere_list = []
+                for i in range(len(self.data)):
+                    self.frame_i = i
+                    self.load_mol()
+                    gl_sp_li = glGenLists(1)
+                    glNewList(gl_sp_li, GL_COMPILE)
+                    for atom in self.sphere_list:
+                        rep.draw_sphere(atom)
+                    glEndList()
+                    self.gl_sphere_list.append(gl_sp_li)
+            return True    
+    
+    def draw_ball_and_stick (self, Vobject = None , selection = None):
+        """ Draws all the elements for Ball-Stick representation.
+        """
 
+        for frame in Vobject.frames:
+            glEnable(GL_LIGHT0)
+            glEnable(GL_LIGHTING)
+            glEnable(GL_COLOR_MATERIAL)
+            glEnable(GL_DEPTH_TEST)
+           
+            gl_bs_li = glGenLists(2)
+            glNewList(gl_bs_li, GL_COMPILE)
+            
+            for bond in Vobject.index_bonds:
+                
+                atom1    = Vobject.atoms[bond[0]]
+                atom2    = Vobject.atoms[bond[1]]
+
+                coord1   = frame[bond[0]]
+                coord2   = frame[bond[1]]
+
+                midcoord = [
+                           (coord1[0] + coord2[0])/2,	   
+                           (coord1[1] + coord2[1])/2,
+                           (coord1[2] + coord2[2])/2,
+                           ]
+
+
+
+                #self.PointSize =20
+                #-------------------------------------------------------
+                #                        B A L L 
+                #-------------------------------------------------------
+                glPushMatrix()                
+                glPushName(atom1.index)
+                glTranslate(atom1.pos[0],   atom1.pos[1],   atom1.pos[2])
+                glColor3f(atom1.color[0], atom1.color[1], atom1.color[2])
+                glutSolidSphere(atom1.radius/2.5, 15, 15)
+                glPopMatrix()
+                glPopName()
+
+                glPushMatrix()                
+                glPushName(atom2.index)
+                glTranslate(atom2.pos[0],   atom2.pos  [1],   atom2.pos  [2])
+                glColor3f  (atom2.color[0], atom2.color[1],   atom2.color[2])
+                glutSolidSphere(atom2.radius/2.5, 15, 15)                           
+                glPopName()
+                glPopMatrix()
+                #-------------------------------------------------------
+
+
+                #-------------------------------------------------------
+                #                        S T I C K S
+                #-------------------------------------------------------
+                #rep.draw_stick_bond(atom1 = atom1, atom2 = atom2, radius = 2)
+                
+                v = Vector()
+                #base of cylinder is at the origin, the top is in the positive z axis
+                radius = 0.05
+                a = coord1
+                b = coord2
+                
+                axis_start = [0, 0, .1]
+                axis_end = v.subtract(a, b)
+
+                #find angle between the starting and ending axis
+                angle = v.angle(axis_start, axis_end)
+                
+                # determina the axis of rotation of the angle
+                axis_rotation = v.crossproduct (axis_start, axis_end)
+
+                #calculate the distance from a to b
+                length = v.mag(axis_end)
+                glColor3f(0.9, 0.9, 0.9)
+
+                # set the bottom  and the top radius to be the same thing
+                radius_bottom = radius
+                radius_top    = radius
+
+                # draw the bond ( use glTranslate beofre using glRotate)
+                cyl = gluNewQuadric()
+                glPushMatrix()
+                glTranslate(b[0], b[1], b[2])
+                glRotate(angle, axis_rotation[0], axis_rotation[1], axis_rotation[2])
+                gluCylinder(cyl, radius_bottom, radius_top, length, 15, 15)
+                glPopMatrix()
+                #-------------------------------------------------------
+
+
+
+
+
+            
+            glEndList()
+            Vobject.list_ball_and_stick.append(gl_bs_li)  
+            return True
 
 
     def change_background(self, color):

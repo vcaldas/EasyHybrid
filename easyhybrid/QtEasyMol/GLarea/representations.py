@@ -27,6 +27,8 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
 from GLarea.atom_types import get_color
+from GLarea.vector_math import Vector
+
 
 gl_settings = {'sphere_scale':0.15, 'sphere_res':15, 'pretty_res':20, 'selection_radius':1.0, 'ribbon_res':0.4}
 
@@ -77,6 +79,43 @@ def init_gl(fog_start, fog_end, fovy, width, height, z_near, z_far):
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
     gluLookAt(0, 0, 10, 0, 0, 0, 0, 1, 0)
+
+
+def draw_stick_bond (self, atom1, atom2, radius = 2):
+    v = Vector()
+    #base of cylinder is at the origin, the top is in the positive z axis
+    
+    a = atom1.pos
+    b = atom2.pos
+    
+    axis_start = [0, 0, .1]
+    #
+    axis_end = v.subtract(a, b)
+
+    #find angle between the starting and ending axis
+    angle = v.angle(axis_start, axis_end)
+    
+    # determina the axis of rotation of the angle
+    axis_rotation = v.crossproduct (axis_start, axis_end)
+
+    #calculate the distance from a to b
+
+    length = v.mag(axis_end)
+    glColor3f(0.9, 0.9, 0.9)
+
+    # set the bottom  and the top radius to be the same thing
+    radius_bottom = radius
+    radius_top    =  radius
+
+    # draw the bond ( use glTranslate beofre using glRotate)
+    cyl = gluNewQuadric()
+    glPushMatrix()
+
+    glTranslate(b[0], b[1], b[2])
+    #glPushName(0)
+    glRotate(angle, axis_rotation[0], axis_rotation[1], axis_rotation[2])
+    gluCylinder(cyl, radius_bottom, radius_top, length, 15, 15)
+    glPopMatrix()
 
 def draw_bond_line(atom, pos_end):
     """ Draw the bonds.

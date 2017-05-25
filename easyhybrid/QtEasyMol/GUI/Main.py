@@ -22,11 +22,118 @@ from GLarea.GLWidget   import GLWidget
 
 
 
+class ShowHideObjects:
+    """ Class doc """
+    
+    def __init__ (self):
+        """ Class initialiser """
+        pass
+    
+    
+    """   L I N E S   """
+
+    def show_lines      (self, Vobject_index = None):
+        """ show """
+        
+        if Vobject_index == None:
+            Vobject_index = self.current_row
+        
+        self.EasyMol.show (_type = 'lines', Vobject_index = Vobject_index)  
+    
+    def hide_lines      (self, Vobject_index = None):
+        """ hide """
+        
+        if Vobject_index == None:
+            Vobject_index = self.current_row
+        
+        self.EasyMol.hide (_type = 'lines', Vobject_index = Vobject_index)  
+
+    
+    
+    
+    """   R I B B O N S   """
+
+    def show_ribbons (self, Vobject_index = None):
+        """ show """
+        
+        if Vobject_index == None:
+            Vobject_index = self.current_row
+        
+        self.EasyMol.show (_type = 'ribbons', Vobject_index = Vobject_index)  
+
+    
+    def hide_ribbons (self, Vobject_index = None):
+        """ hide """
+        
+        if Vobject_index == None:
+            Vobject_index = self.current_row
+        
+        self.EasyMol.hide (_type = 'ribbons', Vobject_index = Vobject_index)  
 
 
 
 
-class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
+    def show_ball_and_stick (self, Vobject_index = None):
+        """ show """
+        if Vobject_index == None:
+            Vobject_index = self.current_row
+        
+        self.EasyMol.show (_type = 'ball_and_stick', Vobject_index = Vobject_index)  
+    
+
+    def hide_ball_and_stick (self, Vobject_index = None):
+        """ hide """
+        
+        if Vobject_index == None:
+            Vobject_index = self.current_row
+        
+        self.EasyMol.hide (_type = 'ball_and_stick', Vobject_index = Vobject_index)  
+        
+        
+        
+        
+        
+        
+        
+        
+    def show_spheres        (self):
+        """ Function doc """
+
+    def show_sticks         (self):
+        """ Function doc """
+
+
+    def show_surface        (self):
+        """ Function doc """
+
+   
+
+
+
+
+
+
+
+
+
+
+    def hide_ball_and_stick (self):
+        """ Function doc """
+
+    def hide_spheres        (self):
+        """ Function doc """
+
+    def hide_sticks         (self):
+        """ Function doc """
+
+    def hide_surface        (self):
+        """ Function doc """
+
+
+
+
+
+class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
     def __init__(self):
         super(MainWindow, self).__init__()
         
@@ -39,38 +146,102 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("clicked(QModelIndex)"),          self.on_clicked_QModelIndex)
         #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("itemClicked(QtreeWidgetItem*)"), self.on_treeView_item_clicked)
         QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("itemClicked(QTreeWidgetItem*,int)"), self.itemClicked)
+        self.generate_actions ()
         
-        self.actionOpen.triggered.connect(self.showDialog)
         glmenu = [self.actionOpen]
         self.current_row = None     # selected row from the treeview menu
-
-
-        self.Action_delete = QtGui.QAction('Delete', self)
-        self.Action_delete.setStatusTip('Delete Object')
-        self.Action_delete.triggered.connect(self.delete_obj)
-
-        self.Action1 = QtGui.QAction('Exit', self)
-        self.Action1.setShortcut('Ctrl+Q')
-        self.Action1.setStatusTip('Exit application')
-        self.Action1.triggered.connect(self.close)
-
-
-
-
-
-
-
-
-
-
-
-
 
         self.glwidget = GLWidget(self, glmenu = glmenu)
         self.EasyMol  = EasyMolSession(glwidget =  self.glwidget)
 
         self.setCentralWidget(self.glwidget)
         self.show()
+    
+    
+    
+    def generate_actions (self):
+        """ Function doc """
+        
+        #New_Project = QtGui.QAction(MainWindow)
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap("NewProject.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionNew_Project.setIcon(icon7)
+        #self.actionNew_Project.setObjectName("actionNew_Project")
+        
+        #Open
+        self.actionOpen.triggered.connect(self.showDialog)
+        
+
+        
+        
+        #Delete
+        self.Action_delete = QtGui.QAction('Delete', self)
+        self.Action_delete.setStatusTip('Delete Object')
+        self.Action_delete.triggered.connect(self.delete_obj)
+
+        '''    Lines    '''
+        # show
+        self.Action_show_lines = QtGui.QAction('Lines', self)
+        self.Action_show_lines.setStatusTip('Show lines')
+        self.Action_show_lines.triggered.connect(self.show_lines)
+        # hide
+        self.Action_hide_lines = QtGui.QAction('Lines', self)
+        self.Action_hide_lines.setStatusTip('Show lines')
+        self.Action_hide_lines.triggered.connect(self.hide_lines)
+
+        
+        '''   Ribbons   '''
+        # show
+        self.Action_show_ribbons = QtGui.QAction('Ribbons', self)
+        self.Action_show_ribbons.setStatusTip('Show Ribbons')
+        self.Action_show_ribbons.triggered.connect(self.show_ribbons)
+        # hide
+        self.Action_hide_ribbons = QtGui.QAction('Ribbons', self)
+        self.Action_hide_ribbons.setStatusTip('Hide Ribbons')
+        self.Action_hide_ribbons.triggered.connect(self.hide_ribbons)
+        
+
+        '''   Ball and Stick   '''
+        # show
+        self.Action_show_ball_and_stick = QtGui.QAction('Ball and Stick', self)
+        self.Action_show_ball_and_stick.setStatusTip('Show Ball and Stick')
+        self.Action_show_ball_and_stick.triggered.connect(self.show_ball_and_stick)
+        # hide
+        self.Action_hide_ball_and_stick = QtGui.QAction('Ball and Stick', self)
+        self.Action_hide_ball_and_stick.setStatusTip('Hide Ball and Stick')
+        self.Action_hide_ball_and_stick.triggered.connect(self.hide_ball_and_stick)
+        
+        
+        
+        
+        
+        #Stick
+        self.Action_show_stick = QtGui.QAction('Stick', self)
+        self.Action_show_stick.setStatusTip('Show Stick')
+        self.Action_show_stick.triggered.connect(self.show_sticks)
+        
+        #Spheres
+        self.Action_show_spheres = QtGui.QAction('Spheres', self)
+        self.Action_show_spheres.setStatusTip('Show Spheres')
+        self.Action_show_spheres.triggered.connect(self.show_spheres)
+        
+
+
+
+        #Surface
+        self.Action_show_surface = QtGui.QAction('Surface', self)
+        self.Action_show_surface.setStatusTip('Show Surface')
+        self.Action_show_surface.triggered.connect(self.show_surface)
+
+        
+        #exite
+        self.Action_exite = QtGui.QAction('Exit', self)
+        self.Action_exite.setShortcut('Ctrl+Q')
+        self.Action_exite.setStatusTip('Exit application')
+        self.Action_exite.triggered.connect(self.close)
+
+
+    
     
     def on_clicked_QModelIndex(self, model):
         """ Function doc """
@@ -193,19 +364,26 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
          
         menu = QtGui.QMenu()
         if level == 0:
-            menu.addAction(self.tr("Show"))
-            menu.addAction(self.tr("Hide"))
-            menu.addAction(self.Action_delete)
             
-            menuHelp_2 = menu.addMenu("&Format")
-            menuHelp_2.setObjectName("menuHelp_2")
-            #menuHelp_2.setTitle(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
-            menuHelp_2.addAction(self.tr("Show"))
-            menuHelp_2.addAction(self.tr("Hide"))
-            menuHelp_2.addAction(self.tr("Delete"))
-            
-        menu.exec_(self.treeWidget.viewport().mapToGlobal(position))
+            menu_show = menu.addMenu("&Show")
+            menu_show.addAction(self.Action_show_lines)
+            menu_show.addAction(self.Action_show_ribbons)
+            menu_show.addAction(self.Action_show_ball_and_stick)
 
+            menu_hide= menu.addMenu("&Hide")
+            menu_hide.addAction(self.Action_hide_lines)
+            menu_hide.addAction(self.Action_hide_ribbons)
+            menu_hide.addAction(self.Action_hide_ball_and_stick)
+
+            #menuHelp_2.setTitle(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
+            #menuHelp_2.addAction(self.tr("Show"))
+            #menuHelp_2.addAction(self.tr("Hide"))
+            #menuHelp_2.addAction(self.tr("Delete"))
+            menu.addSeparator()
+            menu.addAction(self.Action_delete)
+
+        menu.exec_(self.treeWidget.viewport().mapToGlobal(position))
+        self.current_row =  None
         #self.menubar = QtGui.QMenuBar(MainWindow)
         #self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 27))
         #self.menubar.setObjectName("menubar")

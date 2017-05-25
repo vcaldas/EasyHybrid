@@ -89,6 +89,19 @@ class EasyMolSession:
         self.Vobjects[Vobject_index].show_lines = True
         self.glwidget.draw_lines(self.Vobjects[Vobject_index])
     
+    
+    def _hide_ball_and_stick (self, Vobject_index ):
+        """ Function doc """
+        self.Vobjects[Vobject_index].show_ball_and_stick = False
+        self.glwidget.draw_ball_and_stick(self.Vobjects[Vobject_index])
+        
+    def _show_ball_and_stick(self, Vobject_index):
+        """ Function doc """
+        self.Vobjects[Vobject_index].show_ball_and_stick = True
+        self.glwidget.draw_ball_and_stick(self.Vobjects[Vobject_index])
+    
+    
+    
     def hide (self, _type = 'lines', Vobject_index =  None):
         """ Function doc """    
         if _type == 'lines':
@@ -97,16 +110,23 @@ class EasyMolSession:
 
         if _type == 'ribbons':
             self._hide_ribbons (Vobject_index )
-        self.glwidget.queue_draw()
+        
+        if _type == 'ball_and_stick':
+            self._hide_ball_and_stick(Vobject_index )
+        self.glwidget.updateGL()
+
 
     def show (self, _type = 'lines', Vobject_index =  None):
         """ Function doc """
         if _type == 'lines':
             self._show_lines (Vobject_index )
-	    #print 'aqui'
+
         if _type == 'ribbons':
             self._show_ribbons (Vobject_index )
-        self.glwidget.queue_draw()
+        
+        if _type == 'ball_and_stick':
+            self._show_ball_and_stick(Vobject_index)
+        self.glwidget.updateGL()
 
     def delete(self, Vobject_index = None):
         """ Function doc """
@@ -140,7 +160,7 @@ class EasyMolSession:
     def set_frame (self, frame = 0):
         """ Function doc """
         self.glwidget.frame = frame
-        self.glwidget.queue_draw()
+        self.glwidget.updateGL()
     
     def get_frame (self):
         """ Function doc """
