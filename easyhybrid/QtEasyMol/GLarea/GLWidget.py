@@ -200,7 +200,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glDisable(GL_LIGHT0)
                 glDisable(GL_LIGHTING)
                 glDisable(GL_COLOR_MATERIAL)
-                glDisable(GL_DEPTH_TEST)
+                glEnable (GL_DEPTH_TEST)
                                 
                 if Vobject.show_dots    :
                     glCallList(Vobject.list_dots[input_frame], GL_COMPILE)
