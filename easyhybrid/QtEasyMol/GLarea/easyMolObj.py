@@ -108,8 +108,10 @@ class EasyMolSession:
             self._show_ribbons (Vobject_index )
         self.glwidget.queue_draw()
 
-    def delete(self, obj = None):
+    def delete(self, Vobject_index = None):
         """ Function doc """
+        self.Vobjects.pop(Vobject_index)
+        self.glwidget.updateGL()
     
     def select (self, obj =  None):
         """ Function doc """
@@ -127,11 +129,13 @@ class EasyMolSession:
         #print type(index)
         self.Vobjects[index].actived = False
         self.glwidget.draw()
+        self.glwidget.updateGL()
         
     def enable (self, index):
         """ Function doc """
         self.Vobjects[index].actived = True
         self.glwidget.draw()
+        self.glwidget.updateGL()
         
     def set_frame (self, frame = 0):
         """ Function doc """
@@ -166,7 +170,7 @@ class EasyMolSession:
         
 
 
-        self.glwidget            = glwidget # a gl area recebe 
+        self.glwidget           = glwidget # a gl area recebe 
         
         self.glwidget.EMSession = self
         

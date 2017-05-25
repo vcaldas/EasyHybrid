@@ -46,6 +46,13 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <widget class="QMenu" name="menuHelp_2">
+     <property name="title">
+      <string>Help</string>
+     </property>
+     <addaction name="actionAqui"/>
+    </widget>
+    <addaction name="menuHelp_2"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -81,7 +88,79 @@
       <number>3</number>
      </property>
      <item>
-      <widget class="QListView" name="listView"/>
+      <widget class="QTreeWidget" name="treeWidget">
+       <property name="autoScrollMargin">
+        <number>0</number>
+       </property>
+       <property name="textElideMode">
+        <enum>Qt::ElideLeft</enum>
+       </property>
+       <property name="autoExpandDelay">
+        <number>-1</number>
+       </property>
+       <property name="indentation">
+        <number>0</number>
+       </property>
+       <property name="uniformRowHeights">
+        <bool>false</bool>
+       </property>
+       <property name="itemsExpandable">
+        <bool>true</bool>
+       </property>
+       <property name="expandsOnDoubleClick">
+        <bool>false</bool>
+       </property>
+       <property name="columnCount">
+        <number>6</number>
+       </property>
+       <attribute name="headerVisible">
+        <bool>true</bool>
+       </attribute>
+       <attribute name="headerCascadingSectionResizes">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="headerDefaultSectionSize">
+        <number>30</number>
+       </attribute>
+       <attribute name="headerMinimumSectionSize">
+        <number>20</number>
+       </attribute>
+       <column>
+        <property name="text">
+         <string> </string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>ID</string>
+        </property>
+        <property name="font">
+         <font>
+          <kerning>true</kerning>
+         </font>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Object</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Atoms</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string notr="true">5</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string notr="true">6</string>
+        </property>
+       </column>
+      </widget>
      </item>
     </layout>
    </widget>
@@ -274,6 +353,11 @@
   <action name="actionTeste">
    <property name="text">
     <string>teste</string>
+   </property>
+  </action>
+  <action name="actionAqui">
+   <property name="text">
+    <string>aqui</string>
    </property>
   </action>
  </widget>

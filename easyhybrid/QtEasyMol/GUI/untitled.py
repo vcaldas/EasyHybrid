@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'untitled.ui'
 #
-# Created: Mon May 22 20:17:37 2017
+# Created: Thu May 25 00:50:57 2017
 #      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,6 +27,8 @@ class Ui_MainWindow(object):
         self.menuView.setObjectName("menuView")
         self.menuHelp = QtGui.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
+        self.menuHelp_2 = QtGui.QMenu(self.menuHelp)
+        self.menuHelp_2.setObjectName("menuHelp_2")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -42,9 +44,23 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setSpacing(3)
         self.horizontalLayout.setContentsMargins(3, 3, 3, 3)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.listView = QtGui.QListView(self.dockWidgetContents)
-        self.listView.setObjectName("listView")
-        self.horizontalLayout.addWidget(self.listView)
+        self.treeWidget = QtGui.QTreeWidget(self.dockWidgetContents)
+        self.treeWidget.setAutoScrollMargin(0)
+        self.treeWidget.setTextElideMode(QtCore.Qt.ElideLeft)
+        self.treeWidget.setAutoExpandDelay(-1)
+        self.treeWidget.setIndentation(0)
+        self.treeWidget.setUniformRowHeights(False)
+        self.treeWidget.setItemsExpandable(True)
+        self.treeWidget.setExpandsOnDoubleClick(False)
+        self.treeWidget.setColumnCount(6)
+        self.treeWidget.setObjectName("treeWidget")
+        self.treeWidget.headerItem().setText(4, "5")
+        self.treeWidget.headerItem().setText(5, "6")
+        self.treeWidget.header().setVisible(True)
+        self.treeWidget.header().setCascadingSectionResizes(False)
+        self.treeWidget.header().setDefaultSectionSize(30)
+        self.treeWidget.header().setMinimumSectionSize(20)
+        self.horizontalLayout.addWidget(self.treeWidget)
         self.dockWidget.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
         self.dockWidget_2 = QtGui.QDockWidget(MainWindow)
@@ -149,10 +165,14 @@ class Ui_MainWindow(object):
         self.actionSave_As.setObjectName("actionSave_As")
         self.actionTeste = QtGui.QAction(MainWindow)
         self.actionTeste.setObjectName("actionTeste")
+        self.actionAqui = QtGui.QAction(MainWindow)
+        self.actionAqui.setObjectName("actionAqui")
         self.menuFile.addAction(self.actionNew_Project)
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.actionSave)
         self.menuFile.addAction(self.actionSave_As)
+        self.menuHelp_2.addAction(self.actionAqui)
+        self.menuHelp.addAction(self.menuHelp_2.menuAction())
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuEdit.menuAction())
         self.menubar.addAction(self.menuView.menuAction())
@@ -172,7 +192,12 @@ class Ui_MainWindow(object):
         self.menuEdit.setTitle(QtGui.QApplication.translate("MainWindow", "Edit", None, QtGui.QApplication.UnicodeUTF8))
         self.menuView.setTitle(QtGui.QApplication.translate("MainWindow", "View", None, QtGui.QApplication.UnicodeUTF8))
         self.menuHelp.setTitle(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuHelp_2.setTitle(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
         self.toolBar.setWindowTitle(QtGui.QApplication.translate("MainWindow", "toolBar", None, QtGui.QApplication.UnicodeUTF8))
+        self.treeWidget.headerItem().setText(0, QtGui.QApplication.translate("MainWindow", " ", None, QtGui.QApplication.UnicodeUTF8))
+        self.treeWidget.headerItem().setText(1, QtGui.QApplication.translate("MainWindow", "ID", None, QtGui.QApplication.UnicodeUTF8))
+        self.treeWidget.headerItem().setText(2, QtGui.QApplication.translate("MainWindow", "Object", None, QtGui.QApplication.UnicodeUTF8))
+        self.treeWidget.headerItem().setText(3, QtGui.QApplication.translate("MainWindow", "Atoms", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("MainWindow", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
         self.pushButton_2.setText(QtGui.QApplication.translate("MainWindow", "PushButton", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("MainWindow", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
@@ -188,6 +213,7 @@ class Ui_MainWindow(object):
         self.actionSave.setText(QtGui.QApplication.translate("MainWindow", "Save", None, QtGui.QApplication.UnicodeUTF8))
         self.actionSave_As.setText(QtGui.QApplication.translate("MainWindow", "Save As", None, QtGui.QApplication.UnicodeUTF8))
         self.actionTeste.setText(QtGui.QApplication.translate("MainWindow", "teste", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionAqui.setText(QtGui.QApplication.translate("MainWindow", "aqui", None, QtGui.QApplication.UnicodeUTF8))
 
 
 if __name__ == "__main__":
