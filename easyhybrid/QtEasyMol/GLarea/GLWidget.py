@@ -56,16 +56,16 @@ class GLWidget(QtOpenGL.QGLWidget):
         
         self.mouse_x = 0
         self.mouse_y = 0
-        self.x_press = None
-        self.y_press = None
+        #self.x_press = None
+        #self.y_press = None
 
-        self.dist_cam_zpr = frame_i = 0
+        self.dist_cam_zrp = frame_i = 0
         self.scroll = 0.5
         self.pick_radius = [10, 10]
         self.pos_mouse = [None, None]
         self.gl_backgrd = [0.0, 0.0, 0.0, 0.0]
         
-        #self.zrp          = np.array([0, 0, 0])
+        self.zrp          = np.array([0, 0, 0])
         self.target_point = np.array([0, 0, 0])
         
         self.mouse_rotate = False
@@ -73,7 +73,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.mouse_zoom   = False
         self.dragging     = False
 
-        self.zero_reference_point = np.array([0, 0, 0])
+        #self.zero_reference_point = np.array([0, 0, 0])
 
         
         
@@ -93,8 +93,8 @@ class GLWidget(QtOpenGL.QGLWidget):
         #GL.glEnable(GL.GL_DEPTH_TEST)
         #GL.glEnable(GL.GL_CULL_FACE)
         """ Inside the realize function, you should put all you OpenGL
-        	initialization code, e.g. set the projection matrix,
-        	the modelview matrix, position of the camera.
+            initialization code, e.g. set the projection matrix,
+            the modelview matrix, position of the camera.
         """
         glutInit()
         # All OpenGL initialization code goes here
@@ -139,31 +139,18 @@ class GLWidget(QtOpenGL.QGLWidget):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         gluLookAt(0, 0, 10, 0, 0, 0, 0, 1, 0)
-        #self.object = self.makeObject()
-
-    
-        #glutInit()
-        self.create_gl_lists()
-        #self.load_mol()
-        self.gl_initialize()
         return True
-
     
-    def gl_initialize(self):
-        """ Initializes all the parameters for the OpenGL context. Is in 
-            another module to keep OpenGL commands separated from the gtk
-            commands.
-        """
-        rep.init_gl(self.fog_start, self.fog_end, self.fovy, self.width, self.height, self.z_near, self.z_far)
-        return True
-
-    def create_gl_lists(self):
-        """
-        """
-        #self.gl_ball_stick_list = self.gl_point_list = self.gl_lines_list = self.gl_pretty_vdw_list = self.gl_ribbon_list =  self.gl_sphere_list = self.gl_vdw_list = self.gl_wires_list = None
-        
-
-
+    def resizeGL(self, width, height):
+        glViewport(0, 0, width, height)
+        self.left = -float(width)/float(height)
+        self.right = -self.left
+        self.width = width
+        self.height = height
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
+        glMatrixMode(GL_MODELVIEW)
 
 
     def paintGL(self):
@@ -242,62 +229,40 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glScalef(0.006, 0.006, 0.006)
                 glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, ord(str(i+1)))
                 glPopMatrix()
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def resizeGL(self, width, height):
-        glViewport(0, 0, width, height)
-        self.left = -float(width)/float(height)
-        self.right = -self.left
-        self.width = width
-        self.height = height
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
-        glMatrixMode(GL_MODELVIEW)
-
+    
     def mousePressEvent(self, event):
-        self.x_press = event.x()
-        self.y_press = event.y()
+        #self.x_press = event.x()
+        #self.y_press = event.y()
         
         self.mouse_x = event.x()
         self.mouse_y = event.y()
         if (event.button() == QtCore.Qt.LeftButton):
-            #print("Left click")
             self.mouse_rotate = True
             self.pos_mouse[0] = float(event.x())
             self.pos_mouse[1] = float(event.y())
-            
-            '''
-            nearest, hits = self.pick( x, self.get_allocation().height-1-y, self.pick_radius[0], self.pick_radius[1], event)
-            selected = self.select(event, nearest, hits)
-            if selected is not None:
-                self.center_on_atom(selected.pos)
-                self.zero_reference_point = selected.pos
-                self.target_point = selected.pos
-            '''
-            
         if (event.button() == QtCore.Qt.RightButton):
-            #print("Right click")
             self.mouse_zoom = True
         if (event.button() == QtCore.Qt.MidButton):
-            #print("Mid click")
-            self.dist_cam_zpr = op.get_euclidean(self.zero_reference_point, self.get_cam_pos())
+            #self.dist_cam_zrp = op.get_euclidean(self.zero_reference_point, self.get_cam_pos())
+            self.dist_cam_zrp = op.get_euclidean(self.zrp, self.get_cam_pos())
             self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(event.x(), event.y())
             self.mouse_pan = True
-
+    
+    def mouseDoubleClickEvent(self, event):
+        """
+           
+        """
+        if (event.button() == QtCore.Qt.LeftButton):
+            nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
+            selected = self.select(nearest, hits)
+            if selected is not None:
+                self.center_on_atom(selected.pos)
+                self.zrp = selected.pos
+                self.target_point = selected.pos
+    
     def mouseMoveEvent(self, event):
         """
+            
         """
         dx = float(event.x()) - self.mouse_x
         dy = float(event.y()) - self.mouse_y
@@ -307,6 +272,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.mouse_y = float(event.y())
         changed = False
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        self.dragging = True
         
         if (self.mouse_rotate):
             ax, ay, az = dy, dx, 0.0
@@ -316,11 +282,14 @@ class GLWidget(QtOpenGL.QGLWidget):
             bx = (inv[0,0]*ax + inv[1,0]*ay)
             by = (inv[0,1]*ax + inv[1,1]*ay)
             bz = (inv[0,2]*ax + inv[1,2]*ay)
-            self.apply_trans(glRotatef, angle, bx, by, bz)
+            #self.apply_trans(glRotatef, angle, bx, by, bz)
+            #changed = True
+            glTranslate(self.zrp[0],self.zrp[1],self.zrp[2])
+            glRotatef(angle,bx,by,bz)
+            glTranslate(-self.zrp[0],-self.zrp[1],-self.zrp[2])
             changed = True
-
+            
         elif (self.mouse_zoom):
-
             glMatrixMode(GL_MODELVIEW)
             modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
             # Delta is a modifier for the zoom effect, otherwise the zoom movement
@@ -330,12 +299,13 @@ class GLWidget(QtOpenGL.QGLWidget):
             # We only need to move along the Z axis, that is why only use the
             # glTranslatef function with a bz value
             bz = dy*delta
-            glTranslatef(-self.zero_reference_point[0], -self.zero_reference_point[1], -self.zero_reference_point[2])
+            #glTranslatef(-self.zero_reference_point[0], -self.zero_reference_point[1], -self.zero_reference_point[2])
+            glTranslatef(-self.zrp[0], -self.zrp[1], -self.zrp[2])
             glTranslatef(0, 0, bz)
-            glTranslatef(self.zero_reference_point[0], self.zero_reference_point[1], self.zero_reference_point[2])
+            #glTranslatef(self.zero_reference_point[0], self.zero_reference_point[1], self.zero_reference_point[2])
+            glTranslatef(self.zrp[0], self.zrp[1], self.zrp[2])
             glMultMatrixd(modelview)
-            self.dist_cam_zpr += bz
-            
+            self.dist_cam_zrp += bz
             # Now we make the new projection view
             glMatrixMode(GL_PROJECTION)
             glLoadIdentity()
@@ -357,87 +327,24 @@ class GLWidget(QtOpenGL.QGLWidget):
             glMatrixMode(GL_MODELVIEW)
             changed = True
             
-            '''
-            #x, y, width, height = self.get_allocation()
-            #ax, ay, az = 0, 0, dy
-            #modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-            ##self.line_width_refresh()
-            #delta = ((self.z_far-self.z_near)/2)+ self.z_near
-            #delta = delta/200
-            #glLoadIdentity()
-            
-            #inv = np.matrix(glGetDoublev(GL_MODELVIEW_MATRIX)).I
-            #bx = (inv[0,0]*ax + inv[1,0]*ay + inv[2,0]*az)/(1/(delta))
-            #by = (inv[0,1]*ax + inv[1,1]*ay + inv[2,1]*az)/(1/(delta))
-            #bz = (inv[0,2]*ax + inv[1,2]*ay + inv[2,2]*az)/(1/(delta))
-            #self.apply_trans(glTranslatef, bx, by, bz)
-            #glMultMatrixd(modelview)
-            
-            
-            glMatrixMode(GL_MODELVIEW)
-            modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-            # Delta is a modifier for the zoom effect, otherwise the zoom movement
-            # would be too abrupt.
-            delta = ((self.z_far-self.z_near)/2.0 + self.z_near)/200.0
-            glLoadIdentity()
-            
-            # We only need to move along the Z axis, that is why only use the
-            # glTranslatef function with a bz value
-            bz = dy*delta
-            glTranslatef(-self.zero_reference_point[0], -self.zero_reference_point[1], -self.zero_reference_point[2])
-            glTranslatef(0, 0, bz)
-            glTranslatef(self.zero_reference_point[0], self.zero_reference_point[1], self.zero_reference_point[2])
-            glMultMatrixd(modelview)
-            self.dist_cam_zpr += bz
-            
-            
-            
-            
-            
-            glMatrixMode(GL_PROJECTION)
-            glLoadIdentity()
-            self.z_near += -bz
-            self.z_far += -bz
-            self.fog_start += -bz
-            self.fog_end += -bz
-            if self.z_near >= 0.1:
-                gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
-            else: 
-                gluPerspective(self.fovy, float(width)/float(height), 0.1, self.z_far)
-            
-            glFogf(GL_FOG_START, self.fog_start)
-            glFogf(GL_FOG_END, self.fog_end)
-            glMatrixMode(GL_MODELVIEW)
-            changed = True
-            '''
-
         elif (self.mouse_pan):
             # The mouse pan function needs to be corrected to have
             # better behavior when the screen is far and near
             glMatrixMode(GL_MODELVIEW)
             px, py, pz = self.pos(event.x(), event.y())
-            
             modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-            
             glLoadIdentity()
-            '''
             glTranslatef((px-self.drag_pos_x)*(self.z_far)/10, 
                          (py-self.drag_pos_y)*(self.z_far)/10, 
-                         #(pz-self.drag_pos_z)*(self.z_far)/10)
                           modelview[2,3])
-            '''              
+            '''
+            # Here in the Z axis you don't need to calculate anything, since 
+            # the movement is on the X and Y axis
             glTranslatef((px-self.drag_pos_x)*(self.z_far)/10, 
                          (py-self.drag_pos_y)*(self.z_far)/10, 
                          (pz-self.drag_pos_z)*(self.z_far)/10)
-                              
-                          
-                          
+            '''
             glMultMatrixd(modelview)
-            
-            x = self.zero_reference_point[0]
-            y = self.zero_reference_point[1]
-            z = self.zero_reference_point[2]
-            
             self.drag_pos_x = px
             self.drag_pos_y = py
             self.drag_pos_z = pz
@@ -455,15 +362,16 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.mouse_zoom = False
         self.mouse_pan = False
         
-        
         self.lastPos = QtCore.QPoint(event.pos())
         
-        dx = event.x() - self.x_press
-        dy = event.y() - self.y_press
+        #dx = event.x() - self.x_press
+        #dy = event.y() - self.y_press
+        dx = event.x() - self.mouse_x
+        dy = event.y() - self.mouse_y
         
         if dx == 0 and dy == 0:
             button = event.button()
-            if button == QtCore.Qt.MouseButton.RightButton:
+            if button == QtCore.Qt.MouseButton.RightButton and not self.dragging:
                 print('RightButton')
                 menu = QtGui.QMenu(self)
                 
@@ -474,8 +382,25 @@ class GLWidget(QtOpenGL.QGLWidget):
             if button == QtCore.Qt.MouseButton.LeftButton:
                 print('LeftButton')
                 
-            else:
-                print (button)
+            if button == QtCore.Qt.MouseButton.MidButton:
+                if self.dragging:
+                    glMatrixMode(GL_MODELVIEW)
+                    modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+                    dir_vec = modelview[:3, 2]
+                    cam_pos = self.get_cam_pos()
+                    dir_vec *= -self.dist_cam_zrp
+                    new_zrp = cam_pos + dir_vec
+                    self.zrp = np.array([new_zrp[0], new_zrp[1], new_zrp[2]])
+                else:
+                    nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
+                    selected = self.select(nearest, hits)
+                    if selected is not None:
+                        self.center_on_atom(selected.pos)
+                        self.zrp = selected.pos
+                        self.target_point = selected.pos
+            #else:
+                #print (button)
+        self.dragging = False
     
     def wheelEvent(self, event):
         """
@@ -504,8 +429,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         glFogf(GL_FOG_END, self.fog_end)
         glMatrixMode(GL_MODELVIEW)
         self.updateGL()
-
-
+    
     def center_on_atom(self, atom_pos):
         """ Only change the center of viewpoint of the camera.
         It does not change (yet) the position of the camera.
@@ -612,12 +536,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         """
         picked = None
         if nearest != []:
-            for chain in list(self.data[self.frame_i].chains.values()):
-                for residue in list(chain.residues.values()):
-                    for atom in list(residue.atoms.values()):
-                        if atom.index == nearest[0]:
-                            picked = atom
-                            break
+            picked = self.EMSession.atom_dic_id[nearest[0]]
         return picked
     
     def get_cam_pos(self):
@@ -757,13 +676,6 @@ class GLWidget(QtOpenGL.QGLWidget):
     
     
     
-    def apply_trans(self, func, *args):
-        """
-        """
-        glTranslatef(*self.zero_reference_point)
-        func(*args)
-        glTranslatef(*map(lambda x:-x, self.zero_reference_point))
-
     def draw_dots(self, Vobject):
         """ Change the representation to Dots.
         """
