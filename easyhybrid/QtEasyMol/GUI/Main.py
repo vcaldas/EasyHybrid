@@ -75,19 +75,20 @@ class ShowHideObjects:
 
     def show_ball_and_stick (self, Vobject_index = None):
         """ show """
+        #print ('here  show_ball_and_stick - gui')
+
         if Vobject_index == None:
             Vobject_index = self.current_row
         
         self.EasyMol.show (_type = 'ball_and_stick', Vobject_index = Vobject_index)  
     
-
-    def hide_ball_and_stick (self, Vobject_index = None):
+    def hide_ball_and_stick2 (self, Vobject_index = None):
         """ hide """
-        
+        print ('here  hide_ball_and_stick - gui')
         if Vobject_index == None:
             Vobject_index = self.current_row
-        
         self.EasyMol.hide (_type = 'ball_and_stick', Vobject_index = Vobject_index)  
+        
         
         
         
@@ -217,12 +218,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
         # hide
         self.Action_hide_ball_and_stick = QtGui.QAction('Ball and Stick', self)
         self.Action_hide_ball_and_stick.setStatusTip('Hide Ball and Stick')
-        self.Action_hide_ball_and_stick.triggered.connect(self.hide_ball_and_stick)
+        self.Action_hide_ball_and_stick.triggered.connect(self.hide_ball_and_stick2)
         
         
         
         
-        
+        '''
         #Stick
         self.Action_show_stick = QtGui.QAction('Stick', self)
         self.Action_show_stick.setStatusTip('Show Stick')
@@ -241,7 +242,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
         self.Action_show_surface.setStatusTip('Show Surface')
         self.Action_show_surface.triggered.connect(self.show_surface)
 
-        
+        '''
         #exite
         self.Action_exite = QtGui.QAction('Exit', self)
         self.Action_exite.setShortcut('Ctrl+Q')
@@ -379,7 +380,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
             menu_show.addAction(self.Action_show_ribbons)
             menu_show.addAction(self.Action_show_ball_and_stick)
 
-            menu_hide= menu.addMenu("&Hide")
+            menu_hide = menu.addMenu("&Hide")
             menu_hide.addAction(self.Action_hide_lines)
             menu_hide.addAction(self.Action_hide_ribbons)
             menu_hide.addAction(self.Action_hide_ball_and_stick)

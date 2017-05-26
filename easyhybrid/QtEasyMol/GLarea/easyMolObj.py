@@ -92,6 +92,7 @@ class EasyMolSession:
     
     def _hide_ball_and_stick (self, Vobject_index ):
         """ Function doc """
+        #print ('here  _hide_ball_and_stick')
         self.Vobjects[Vobject_index].show_ball_and_stick = False
         self.glwidget.draw_ball_and_stick(self.Vobjects[Vobject_index])
         
@@ -106,13 +107,13 @@ class EasyMolSession:
         """ Function doc """    
         if _type == 'lines':
             self._hide_lines (Vobject_index )
-	    #print 'aqui'
 
         if _type == 'ribbons':
             self._hide_ribbons (Vobject_index )
         
         if _type == 'ball_and_stick':
             self._hide_ball_and_stick(Vobject_index )
+            #print ('here  hide')
         self.glwidget.updateGL()
 
 
