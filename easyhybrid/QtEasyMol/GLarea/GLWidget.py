@@ -911,7 +911,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 #                        B A L L 
                 #-------------------------------------------------------
                 glPushMatrix()                
-                glPushName(atom1.index)
+                glPushName(atom1.atom_id)
                 glTranslate(atom1.pos[0],   atom1.pos[1],   atom1.pos[2])
                 glColor3f(atom1.color[0], atom1.color[1], atom1.color[2])
                 glutSolidSphere(atom1.radius, 15, 15)
@@ -919,7 +919,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glPopName()
 
                 glPushMatrix()                
-                glPushName(atom2.index)
+                glPushName(atom2.atom_id)
                 glTranslate(atom2.pos[0],   atom2.pos  [1],   atom2.pos  [2])
                 glColor3f  (atom2.color[0], atom2.color[1],   atom2.color[2])
                 glutSolidSphere(atom2.radius, 15, 15)                           

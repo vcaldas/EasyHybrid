@@ -172,13 +172,21 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
         self.actionOpen.triggered.connect(self.showDialog)
         
 
+        '''    Center    '''
+        #Delete
+        self.Action_center = QtGui.QAction('Center', self)
+        self.Action_center.setStatusTip('Center on Object')
+        self.Action_center.triggered.connect(self.center_obj)
         
         
+        
+        '''    Delete    '''
         #Delete
         self.Action_delete = QtGui.QAction('Delete', self)
         self.Action_delete.setStatusTip('Delete Object')
         self.Action_delete.triggered.connect(self.delete_obj)
 
+        
         '''    Lines    '''
         # show
         self.Action_show_lines = QtGui.QAction('Lines', self)
@@ -364,6 +372,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
          
         menu = QtGui.QMenu()
         if level == 0:
+            menu.addAction(self.Action_center)
             
             menu_show = menu.addMenu("&Show")
             menu_show.addAction(self.Action_show_lines)
@@ -375,10 +384,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
             menu_hide.addAction(self.Action_hide_ribbons)
             menu_hide.addAction(self.Action_hide_ball_and_stick)
 
-            #menuHelp_2.setTitle(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
-            #menuHelp_2.addAction(self.tr("Show"))
-            #menuHelp_2.addAction(self.tr("Hide"))
-            #menuHelp_2.addAction(self.tr("Delete"))
             menu.addSeparator()
             menu.addAction(self.Action_delete)
 
@@ -403,6 +408,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
         """ Function doc """
         self.EasyMol.delete(self.current_row)
         self.update_list_view()
+    
+    def center_obj (self, index = 0):
+        """ Function doc """
+        self.EasyMol.center(self.current_row)
+        #self.update_list_view()
+    
         
 '''
 if __name__ == '__main__':
