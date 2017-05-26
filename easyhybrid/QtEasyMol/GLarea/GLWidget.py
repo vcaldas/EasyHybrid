@@ -842,12 +842,9 @@ class GLWidget(QtOpenGL.QGLWidget):
                         glPushMatrix()
                         glColor3f(ATOM1.color[0],ATOM1.color[1], ATOM1.color[1])
                         glBegin(GL_LINES)
-                        
                         glVertex3f(coord1[0],coord1[1],coord1[2])
                         glVertex3f(coord2[0],coord2[1],coord2[2])
-                        
                         glEnd()
-                        glPopName()
                         glPopMatrix()
 
             glEndList()
@@ -880,7 +877,7 @@ class GLWidget(QtOpenGL.QGLWidget):
     def draw_ball_and_stick (self, Vobject = None , selection = None):
         """ Draws all the elements for Ball-Stick representation.
         """
-
+        sphere_quality = 15
         for frame in Vobject.frames:
             glEnable(GL_LIGHT0)
             glEnable(GL_LIGHTING)
@@ -914,7 +911,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glPushName(atom1.atom_id)
                 glTranslate(atom1.pos[0],   atom1.pos[1],   atom1.pos[2])
                 glColor3f(atom1.color[0], atom1.color[1], atom1.color[2])
-                glutSolidSphere(atom1.radius, 15, 15)
+                glutSolidSphere(atom1.radius, sphere_quality, sphere_quality)
                 glPopMatrix()
                 glPopName()
 
@@ -922,7 +919,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glPushName(atom2.atom_id)
                 glTranslate(atom2.pos[0],   atom2.pos  [1],   atom2.pos  [2])
                 glColor3f  (atom2.color[0], atom2.color[1],   atom2.color[2])
-                glutSolidSphere(atom2.radius, 15, 15)                           
+                glutSolidSphere(atom2.radius, sphere_quality, sphere_quality)                           
                 glPopName()
                 glPopMatrix()
                 #-------------------------------------------------------
