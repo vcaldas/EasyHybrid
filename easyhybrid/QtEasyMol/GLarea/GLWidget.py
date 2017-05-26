@@ -257,8 +257,8 @@ class GLWidget(QtOpenGL.QGLWidget):
             selected = self.select(nearest, hits)
             if selected is not None:
                 self.center_on_atom(selected.pos)
-                self.zrp = selected.pos
-                self.target_point = selected.pos
+                #self.zrp = selected.pos
+                #self.target_point = selected.pos
     
     def mouseMoveEvent(self, event):
         """
@@ -284,9 +284,9 @@ class GLWidget(QtOpenGL.QGLWidget):
             bz = (inv[0,2]*ax + inv[1,2]*ay)
             #self.apply_trans(glRotatef, angle, bx, by, bz)
             #changed = True
-            glTranslate(self.zrp[0],self.zrp[1],self.zrp[2])
-            glRotatef(angle,bx,by,bz)
-            glTranslate(-self.zrp[0],-self.zrp[1],-self.zrp[2])
+            glTranslate(self.zrp[0], self.zrp[1], self.zrp[2])
+            glRotatef(angle, bx, by, bz)
+            glTranslate(-self.zrp[0], -self.zrp[1], -self.zrp[2])
             changed = True
             
         elif (self.mouse_zoom):
@@ -372,7 +372,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         if dx == 0 and dy == 0:
             button = event.button()
             if button == QtCore.Qt.MouseButton.RightButton and not self.dragging:
-                print('RightButton')
+                #print('RightButton')
                 menu = QtGui.QMenu(self)
                 
                 for item in self.glmenu:                
@@ -380,7 +380,8 @@ class GLWidget(QtOpenGL.QGLWidget):
                 menu.exec_(event.globalPos())
             
             if button == QtCore.Qt.MouseButton.LeftButton:
-                print('LeftButton')
+                #print('LeftButton')
+                pass
                 
             if button == QtCore.Qt.MouseButton.MidButton:
                 if self.dragging:
@@ -396,8 +397,8 @@ class GLWidget(QtOpenGL.QGLWidget):
                     selected = self.select(nearest, hits)
                     if selected is not None:
                         self.center_on_atom(selected.pos)
-                        self.zrp = selected.pos
-                        self.target_point = selected.pos
+                        #self.zrp = selected.pos
+                        #self.target_point = selected.pos
             #else:
                 #print (button)
         self.dragging = False
@@ -485,6 +486,8 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glMatrixMode(GL_MODELVIEW)
                 glLoadIdentity()
                 gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], atom_pos[0], atom_pos[1], atom_pos[2], up[0], up[1], up[2])
+            self.zrp = atom_pos
+            self.target_point = atom_pos
             self.updateGL()
     
     def pos(self, x, y):
