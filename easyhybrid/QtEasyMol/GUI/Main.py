@@ -71,6 +71,7 @@ class ShowHideObjects:
         self.EasyMol.hide (_type = 'ribbons', Vobject_index = Vobject_index)  
 
 
+    """   B A L L  A N D  S T I C K   """
 
 
     def show_ball_and_stick (self, Vobject_index = None):
@@ -89,16 +90,40 @@ class ShowHideObjects:
             Vobject_index = self.current_row
         self.EasyMol.hide (_type = 'ball_and_stick', Vobject_index = Vobject_index)  
         
+
+    """   S P H E R E S   """
+
         
+    def show_spheres (self, Vobject_index = None):
+        """ show """
+        #print ('here  show_ball_and_stick - gui')
+
+        if Vobject_index == None:
+            Vobject_index = self.current_row
         
+        self.EasyMol.show (_type = 'spheres', Vobject_index = Vobject_index)
+
+    
+    #def hide_spheres (self, Vobject_index = None):
+    #    """ hide """
+    #    print ('here  spheres - gui')
+    #    
+    #    if Vobject_index == None:
+    #        Vobject_index = self.current_row
+    #    self.EasyMol.hide (_type = 'spheres', Vobject_index = Vobject_index)  
+
+    def hide_spheres2 (self, Vobject_index = None):
+        """ hide """
+        print ('here  spheres - gui')
         
-        
-        
-        
-        
-        
-    def show_spheres        (self):
-        """ Function doc """
+        if Vobject_index == None:
+            Vobject_index = self.current_row
+        self.EasyMol.hide (_type = 'spheres', Vobject_index = Vobject_index)
+
+
+
+
+
 
     def show_sticks         (self):
         """ Function doc """
@@ -220,7 +245,15 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
         self.Action_hide_ball_and_stick.setStatusTip('Hide Ball and Stick')
         self.Action_hide_ball_and_stick.triggered.connect(self.hide_ball_and_stick2)
         
-        
+        '''   Spheres   '''
+        # show
+        self.Action_show_spheres = QtGui.QAction('Spheres', self)
+        self.Action_show_spheres.setStatusTip('Show Spheres')
+        self.Action_show_spheres.triggered.connect(self.show_spheres)
+        # hide          
+        self.Action_hide_spheres = QtGui.QAction('Spheres', self)
+        self.Action_hide_spheres.setStatusTip('Hide Spheres')
+        self.Action_hide_spheres.triggered.connect(self.hide_spheres2)
         
         
         '''
@@ -379,11 +412,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
             menu_show.addAction(self.Action_show_lines)
             menu_show.addAction(self.Action_show_ribbons)
             menu_show.addAction(self.Action_show_ball_and_stick)
+            menu_show.addAction(self.Action_show_spheres)
 
             menu_hide = menu.addMenu("&Hide")
             menu_hide.addAction(self.Action_hide_lines)
             menu_hide.addAction(self.Action_hide_ribbons)
             menu_hide.addAction(self.Action_hide_ball_and_stick)
+            menu_hide.addAction(self.Action_hide_spheres)
 
             menu.addSeparator()
             menu.addAction(self.Action_delete)

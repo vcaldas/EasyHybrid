@@ -103,6 +103,21 @@ class EasyMolSession:
     
     
     
+    def _hide_spheres (self, Vobject_index ):
+        """ Function doc """
+        #print ('here  _hide_ball_and_stick')
+        self.Vobjects[Vobject_index].show_spheres = False
+        self.glwidget.draw_spheres(self.Vobjects[Vobject_index])
+        
+    def _show_spheres (self, Vobject_index):
+        """ Function doc """
+        self.Vobjects[Vobject_index].show_spheres = True
+        self.glwidget.draw_spheres(self.Vobjects[Vobject_index])
+    
+    
+    
+    
+    
     def hide (self, _type = 'lines', Vobject_index =  None):
         """ Function doc """    
         if _type == 'lines':
@@ -113,8 +128,14 @@ class EasyMolSession:
         
         if _type == 'ball_and_stick':
             self._hide_ball_and_stick(Vobject_index )
-            #print ('here  hide')
+        
+        if _type == 'spheres':
+            self._hide_spheres(Vobject_index )            
+        
         self.glwidget.updateGL()
+
+
+
 
 
     def show (self, _type = 'lines', Vobject_index =  None):
@@ -127,6 +148,10 @@ class EasyMolSession:
         
         if _type == 'ball_and_stick':
             self._show_ball_and_stick(Vobject_index)
+        
+        if _type == 'spheres':
+            self._show_spheres(Vobject_index ) 
+    
         self.glwidget.updateGL()
 
     def delete(self, Vobject_index = None):

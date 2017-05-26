@@ -234,18 +234,18 @@ def get_vdw_rad(name):
     """
     """
     try:
-        vdw = ATOM_TYPES[name][5]
+        vdw = ATOM_TYPES[name][6]
     except KeyError:
         if name[0] == 'H' or name in hydrogen:
-            vdw = ATOM_TYPES['H'][5]
-        elif name[0] == 'C':
-            vdw = ATOM_TYPES['C'][5]
-        elif name[0] == 'O':
-            vdw = ATOM_TYPES['O'][5]
-        elif name[0] == 'N':
-            vdw = ATOM_TYPES['N'][5]
-        elif name[0] == 'S':
-            vdw = ATOM_TYPES['S'][5]
+            vdw = ATOM_TYPES['H'][6]
+        elif name[0] == 'C':      
+            vdw = ATOM_TYPES['C'][6]
+        elif name[0] == 'O':      
+            vdw = ATOM_TYPES['O'][6]
+        elif name[0] == 'N':      
+            vdw = ATOM_TYPES['N'][6]
+        elif name[0] == 'S':      
+            vdw = ATOM_TYPES['S'][6]
         else:
             vdw = 0.40
     return vdw

@@ -972,6 +972,39 @@ class GLWidget(QtOpenGL.QGLWidget):
             return True
 
 
+    def draw_spheres (self, Vobject = None , selection = None):
+        """ Draws all the elements for Ball-Stick representation.
+        """
+        sphere_quality = 15
+        for frame in Vobject.frames:
+            glEnable(GL_LIGHT0)
+            glEnable(GL_LIGHTING)
+            glEnable(GL_COLOR_MATERIAL)
+            glEnable(GL_DEPTH_TEST)
+           
+            gl_bs_li = glGenLists(2)
+            glNewList(gl_bs_li, GL_COMPILE)
+            for chain in  Vobject.chains:
+                for res in Vobject.chains[chain].residues:
+                    for atom in Vobject.chains[chain].residues[res].atoms:
+                        #-------------------------------------------------------
+                        #                        S P H E R E S
+                        #-------------------------------------------------------
+                        glPushMatrix()                
+                        glPushName(atom.atom_id)
+                        glTranslate(atom.pos[0],   atom.pos[1],   atom.pos[2])
+                        glColor3f(atom.color[0],   atom.color[1], atom.color[2])
+                        glutSolidSphere(atom.vdw_rad, sphere_quality, sphere_quality)
+                        glPopMatrix()
+                        glPopName()
+
+           
+            glEndList()
+            Vobject.list_spheres.append(gl_bs_li)  
+            return True
+
+
+
     def change_background(self, color):
         """ Changes the color of the background.
             The color variable is an array of four elements 
