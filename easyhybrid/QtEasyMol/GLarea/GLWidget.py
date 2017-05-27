@@ -1072,17 +1072,29 @@ class GLWidget(QtOpenGL.QGLWidget):
             draw method for selected objects.
         """
         if mode == "atom":
-            self.sel_atom = True
-            self.sel_resid, self.sel_chain, self.sel_mol = False
+            self.sel_atom  = True
+            self.sel_resid = False
+            self.sel_chain = False
+            self.sel_mol   = False
+        
         elif mode == "resid":
             self.sel_resid = True
-            self.sel_atom, self.sel_chain, self.sel_mol = False
+            self.sel_atom  = False
+            self.sel_chain = False
+            self.sel_mol   = False
+        
         elif mode == "chain":
             self.sel_chain = True
-            self.sel_atom, self.sel_resid, self.sel_mol = False
+            self.sel_atom  = False
+            self.sel_resid = False
+            self.sel_mol   = False
+        
         elif mode == "mol":
-            self.sel_mol = True
-            self.sel_atom, self.sel_resid, self.sel_chain = False
+            self.sel_mol   = True
+            self.sel_atom  = False
+            self.sel_resid = False
+            self.sel_chain = False
+        
         else:
             self.sel_atom, self.sel_resid, self.sel_chain, self.sel_mol = False
         return True

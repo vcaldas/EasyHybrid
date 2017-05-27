@@ -208,7 +208,19 @@ class EasyMolSession:
     def selection_mode(self, selmode = 'atom'):
         """ Function doc """
         self._selection_mode = selmode
-        print(self._selection_mode)
+        #print(self._selection_mode)
+        #self.glwidget.selection_mode(mode = 'resid')
+        if self._selection_mode == 'atom':
+            self.glwidget.selection_mode(mode = 'atom')
+        
+        if self._selection_mode == 'residue':
+            self.glwidget.selection_mode(mode = 'resid')
+        
+        if self._selection_mode == 'chain':
+            self.glwidget.selection_mode(mode = 'chain')
+        
+        if self._selection_mode == 'molecule':
+            self.glwidget.selection_mode(mode = 'molecule')
         
     
     def __init__ (self, glwidget):
