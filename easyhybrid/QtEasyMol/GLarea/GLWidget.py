@@ -66,7 +66,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.gl_backgrd = [0.0, 0.0, 0.0, 0.0]
         
         self.zrp          = np.array([0, 0, 0])
-        self.target_point = np.array([0, 0, 0])
+        #self.target_point = np.array([0, 0, 0])
         
         self.mouse_rotate = False
         self.mouse_pan    = False
@@ -224,16 +224,17 @@ class GLWidget(QtOpenGL.QGLWidget):
         
         for i,atom in enumerate(self.selected_atoms):
             if atom is not None:
-
+                rep.draw_selected(atom)
+                rep.draw_numbers(atom, i+1)
                 #glLineWidth(2)
-                glColor3f(0, 1, 1)
-                glPointSize(20)
-                
-                glPushMatrix()
-                glBegin(GL_POINTS)
-                glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
-                glEnd()
-                glPopMatrix()
+                #glColor3f(0, 1, 1)
+                #glPointSize(20)
+                #
+                #glPushMatrix()
+                #glBegin(GL_POINTS)
+                #glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+                #glEnd()
+                #glPopMatrix()
 
                 #glColor3f(0, 0, 0)
                 #glPointSize(14)
@@ -260,6 +261,43 @@ class GLWidget(QtOpenGL.QGLWidget):
                 #glRotate(0, 0, 1, 0)
                 #glScalef(0.006, 0.006, 0.006)
                 #glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, ord(str(i+1)))
+    
+    def draw_to_pick(self, frame = -1):
+        """ Defines wich type of representations will be displayed
+        """
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+        glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
+        frame = self.frame
+        for Vobject in self.EMSession.Vobjects:    
+            if Vobject.actived:   
+                #-------------------------------------------------------
+                # Necessary, once trajectories have different sizes
+                #-------------------------------------------------------
+                input_frame = frame
+                if input_frame >= (len(Vobject.frames)-1):
+                    input_frame = len(Vobject.frames) -1
+                glDisable(GL_LIGHT0)
+                glDisable(GL_LIGHTING)
+                glDisable(GL_COLOR_MATERIAL)
+                glEnable (GL_DEPTH_TEST)
+                if Vobject.show_dots    :
+                    glCallList(Vobject.list_dots[input_frame], GL_COMPILE)
+                if Vobject.show_lines   :
+                    glCallList(Vobject.list_lines[input_frame], GL_COMPILE)
+                if Vobject.show_ribbons :
+                    glCallList(Vobject.list_ribbons[input_frame], GL_COMPILE)
+                glEnable(GL_LIGHT0)
+                glEnable(GL_LIGHTING)
+                glEnable(GL_COLOR_MATERIAL)
+                glEnable(GL_DEPTH_TEST)
+                if Vobject.show_sticks  :
+                    glCallList(Vobject.list_sticks        [input_frame], GL_COMPILE)
+                if Vobject.show_ball_and_stick :
+                    glCallList(Vobject.list_ball_and_stick[input_frame], GL_COMPILE)
+                if Vobject.show_spheres :
+                    glCallList(Vobject.list_spheres[input_frame], GL_COMPILE)
+                if Vobject.show_surface :
+                    glCallList(Vobject.list_surface[input_frame], GL_COMPILE)
     
     def mousePressEvent(self, event):
         #self.x_press = event.x()
@@ -409,7 +447,29 @@ class GLWidget(QtOpenGL.QGLWidget):
                 for item in self.glmenu:                
                     menu.addAction(item)
                 menu.exec_(event.globalPos())
-            
+            if button == QtCore.Qt.MouseButton.LeftButton and not self.dragging:
+                #print('LeftButton')
+                pass
+                if dx <= self.pick_radius[0] and dy <= self.pick_radius[1]:
+                    nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
+                    selected = self.select(nearest, hits)
+                    if selected is None:
+                        self.selected_atoms = [None]*len(self.selected_atoms)
+                    else:
+                        if selected not in self.selected_atoms:
+                            for i in range(len(self.selected_atoms)):
+                                if self.selected_atoms[i] == None:
+                                    self.selected_atoms[i] = selected
+                                    selected = None
+                                    break
+                            if selected is not None:
+                                self.selected_atoms[len(self.selected_atoms)-1] = selected
+                        else:
+                            for i in range(len(self.selected_atoms)):
+                                if self.selected_atoms[i] == selected:
+                                    self.selected_atoms[i] = None
+                    self.updateGL()
+            """
             if button == QtCore.Qt.MouseButton.LeftButton:
                 #print('LeftButton')
                 nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
@@ -442,7 +502,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                             else:
                                 self.selected_atoms.append(atom)
                         self.updateGL()
-                        
+            """
                         
             if button == QtCore.Qt.MouseButton.MidButton:
                 if self.dragging:
@@ -498,7 +558,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         atom_pos is a vector containing the XYZ coordinates
         of the selected atom.
         """
-        if op.get_euclidean(self.target_point, atom_pos) != 0:
+        if op.get_euclidean(self.zrp, atom_pos) != 0:
             cam_pos = self.get_cam_pos()
             glMatrixMode(GL_MODELVIEW)
             modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
@@ -548,7 +608,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glLoadIdentity()
                 gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], atom_pos[0], atom_pos[1], atom_pos[2], up[0], up[1], up[2])
             self.zrp = atom_pos
-            self.target_point = atom_pos
+            #self.target_point = atom_pos
             self.updateGL()
     
     def pos(self, x, y):
@@ -581,7 +641,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         glMultMatrixd(projection)
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
-        self.paintGL()
+        self.draw_to_pick()
         glPopMatrix()
         hits = glRenderMode(GL_RENDER)
         nearest = []

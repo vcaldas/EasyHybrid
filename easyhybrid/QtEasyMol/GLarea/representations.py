@@ -82,6 +82,7 @@ def init_gl(fog_start, fog_end, fovy, width, height, z_near, z_far):
 
 
 def draw_stick_bond (self, atom1, atom2, radius = 2):
+    glMatrixMode(GL_MODELVIEW)
     v = Vector()
     #base of cylinder is at the origin, the top is in the positive z axis
     
@@ -120,6 +121,7 @@ def draw_stick_bond (self, atom1, atom2, radius = 2):
 def draw_bond_line(atom, pos_end):
     """ Draw the bonds.
     """
+    glMatrixMode(GL_MODELVIEW)
     glDisable(GL_LIGHT0)
     glDisable(GL_LIGHT1)
     glDisable(GL_LIGHT2)
@@ -144,6 +146,7 @@ def draw_bond_line(atom, pos_end):
 def draw_dot(atom, point):
     """
     """
+    glMatrixMode(GL_MODELVIEW)
     glDisable(GL_LIGHT0)
     glDisable(GL_LIGHT1)
     glDisable(GL_LIGHT2)
@@ -167,6 +170,7 @@ def draw_dot(atom, point):
 def draw_point(atom):
     """
     """
+    glMatrixMode(GL_MODELVIEW)
     glDisable(GL_LIGHT0)
     glDisable(GL_LIGHT1)
     glDisable(GL_LIGHT2)
@@ -190,6 +194,7 @@ def draw_point(atom):
 def draw_wire_sphere(atom):
     """ Graphs a wired sphere for the given coordinates.
     """
+    glMatrixMode(GL_MODELVIEW)
     # Enables the GL_LIGHT0 variable
     glEnable(GL_LIGHT0)
     # Enables lightin three dimensions, i guess
@@ -214,6 +219,7 @@ def draw_wire_sphere(atom):
 def draw_ball(atom):
     """ Graphs a sphere for the given coordinates.
     """
+    glMatrixMode(GL_MODELVIEW)
     glEnable(GL_LIGHT0)
     glEnable(GL_LIGHTING)
     glEnable(GL_COLOR_MATERIAL)
@@ -234,6 +240,7 @@ def draw_ball(atom):
 def draw_sphere(atom):
     """ Graphs a sphere for the given coordinates.
     """
+    glMatrixMode(GL_MODELVIEW)
     glEnable(GL_LIGHT0)
     glEnable(GL_LIGHTING)
     glEnable(GL_COLOR_MATERIAL)
@@ -254,6 +261,7 @@ def draw_sphere(atom):
 def draw_pretty_vdw(atom):
     """ Graphs a sphere for the given coordinates.
     """
+    glMatrixMode(GL_MODELVIEW)
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     #glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA)
@@ -279,6 +287,7 @@ def draw_pretty_vdw(atom):
 def draw_vdw(atom):
     """ Graphs a sphere for the given coordinates.
     """
+    glMatrixMode(GL_MODELVIEW)
     glEnable(GL_LIGHT0)
     glEnable(GL_LIGHTING)
     glEnable(GL_COLOR_MATERIAL)
@@ -299,6 +308,7 @@ def draw_vdw(atom):
 def draw_bond_wired_stick(atom, length, angle, vec_o):
     """ Draw the bonds.
     """
+    glMatrixMode(GL_MODELVIEW)
     glEnable(GL_LIGHT0)
     glEnable(GL_LIGHTING)
     glEnable(GL_COLOR_MATERIAL)
@@ -320,6 +330,7 @@ def draw_ribbon(atom, length, angle, vec_o):
     """ Draw the bonds.
     """
     # The matrix is by default looking at (0,0,1)
+    glMatrixMode(GL_MODELVIEW)
     glEnable(GL_LIGHT0)
     glEnable(GL_LIGHTING)
     glEnable(GL_COLOR_MATERIAL)
@@ -342,6 +353,7 @@ def draw_bond_stick(atom, length, angle, vec_o):
     """ Draw the bonds.
     """
     # The matrix is by default looking at (0,0,1)
+    glMatrixMode(GL_MODELVIEW)
     glEnable(GL_LIGHT0)
     glEnable(GL_LIGHTING)
     glEnable(GL_COLOR_MATERIAL)
@@ -359,38 +371,60 @@ def draw_bond_stick(atom, length, angle, vec_o):
     glDisable(GL_COLOR_MATERIAL)
     glDisable(GL_DEPTH_TEST)
 
-def draw_selected(atom, slices):
+def draw_selected(atom, slices=4):
     """ Draw a selection marker to an atom.
     """
-    #glEnable(GL_LIGHT0)
-    #glEnable(GL_LIGHTING)
-    #glEnable(GL_COLOR_MATERIAL)
-    #glEnable(GL_DEPTH_TEST)
-    #glPushMatrix()
-    #glTranslate(atom.pos[0], atom.pos[1], atom.pos[2])
-    #glPushName(atom.index)
-    #glColor3f(0.745098, 0.745098, 0.745098)
-    #glutWireSphere(gl_settings['selection_radius'], slices+2, slices)
-    #glPopName()
-    #glPopMatrix()
-    #glFlush()
-    
+    glMatrixMode(GL_MODELVIEW)
     glEnable(GL_BLEND)
+    glDisable(GL_LIGHT0)
+    glDisable(GL_LIGHTING)
+    glDisable(GL_COLOR_MATERIAL)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
-    glEnable(GL_LIGHT0)
-    #glEnable(GL_LIGHTING)
-    #glEnable(GL_COLOR_MATERIAL)
-    #glEnable(GL_DEPTH_TEST)
+    #glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
     glPushMatrix()
-    glTranslate(atom.pos[0], atom.pos[1], atom.pos[2])
+    #glTranslate(atom.pos[0], atom.pos[1], atom.pos[2])
     glPushName(atom.index)
     glColor4ub(39, 255, 0, 60)
-    glutSolidSphere(0.5, gl_settings['sphere_res'], gl_settings['sphere_res'])
+    #glutSolidSphere(0.5, gl_settings['sphere_res'], gl_settings['sphere_res'])
+    #glColor3f(atom.color[0], atom.color[1], atom.color[2])
+    glPointSize(40)
+    glBegin(GL_POINTS)
+    glVertex3f(atom.pos[0], atom.pos[1], atom.pos[2])
+    glEnd()
     glPopName()
     glPopMatrix()
     glFlush()
+    glEnable(GL_LIGHT0)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_COLOR_MATERIAL)
     glDisable(GL_BLEND)
+
+def draw_numbers(atom, number):
+    """ Draw the number of the selected atom.
+    """
+    glMatrixMode(GL_MODELVIEW)
+    glPushMatrix()
+    glDisable(GL_LIGHT0)
+    glDisable(GL_LIGHTING)
+    glDisable(GL_COLOR_MATERIAL)
+    glDisable(GL_DEPTH_TEST)
+    glEnable(GL_LINE_SMOOTH)
+    glColor3f(1, 0, 0)
+    glLineWidth(2)
+    glPointSize(2)
+    #glTranslate(float(atom.pos[0]), float(atom.pos[1]), float(atom.pos[2]))
+    #glScalef(0.006, 0.006, 0.006)
+    #glRotate(0, 0, 1, 0)
+    #glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, ord(str(number)))
+    #glRasterPos2f(float(atom.pos[0]), float( atom.pos[1]))
+    glRasterPos3f(float(atom.pos[0]), float( atom.pos[1]), float(atom.pos[2]))
+    glutBitmapCharacter( GLUT_BITMAP_HELVETICA_18, ord(str(number)))
+    
+    glEnable(GL_LIGHT0)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_COLOR_MATERIAL)
+    glEnable(GL_DEPTH_TEST)
+    glPopMatrix()
 
 def change_light_properties(gl_ambient=None, gl_diffuse=None, gl_specular=None, gl_position=None):
     """ Function doc
@@ -427,7 +461,7 @@ def change_light_properties(gl_ambient=None, gl_diffuse=None, gl_specular=None, 
 def draw_text(text="hola", x=0, y=0):
     """ Function doc
     """
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
+    #glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
     #glMatrixMode(GL_PROJECTION)
     #glLoadIdentity()
     #gluPerspective(60, 640/480, 0.1, 50)
