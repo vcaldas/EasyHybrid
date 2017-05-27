@@ -196,6 +196,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         if self.sel_atom:
             for i,atom in enumerate(self.selected_atoms):
                 if atom is not None:
+                    #rep.draw_picked(atom)
                     rep.draw_selected(atom)
                     rep.draw_numbers(atom, i+1)
         elif self.sel_resid:

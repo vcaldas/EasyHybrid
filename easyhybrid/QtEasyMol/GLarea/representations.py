@@ -373,7 +373,7 @@ def draw_bond_stick(atom, length, angle, vec_o):
     glDisable(GL_COLOR_MATERIAL)
     glDisable(GL_DEPTH_TEST)
 
-def draw_selected(atom, slices=4):
+def draw_picked(atom, slices=4):
     """ Draw a selection marker to an atom.
     """
     glMatrixMode(GL_MODELVIEW)
@@ -401,6 +401,39 @@ def draw_selected(atom, slices=4):
     glEnable(GL_LIGHTING)
     glEnable(GL_COLOR_MATERIAL)
     glDisable(GL_BLEND)
+
+def draw_selected(atom):
+    """ Draw a selection marker to an atom.
+    """
+    glMatrixMode(GL_MODELVIEW)
+    glDisable(GL_LIGHT0)
+    glDisable(GL_LIGHTING)
+    glDisable(GL_COLOR_MATERIAL)
+    glDisable(GL_DEPTH_TEST)
+    glPushMatrix()
+    glPushName(atom.index)
+    glPointSize(20)
+    glColor3ub(82, 61, 0)
+    glBegin(GL_POINTS)
+    glVertex3f(atom.pos[0], atom.pos[1], atom.pos[2])
+    glEnd()
+    glPointSize(15)
+    glColor3ub(0, 222, 164)
+    glBegin(GL_POINTS)
+    glVertex3f(atom.pos[0], atom.pos[1], atom.pos[2])
+    glEnd()
+    glPointSize(10)
+    glColor3ub(212, 23, 235)
+    glBegin(GL_POINTS)
+    glVertex3f(atom.pos[0], atom.pos[1], atom.pos[2])
+    glEnd()
+    glPopName()
+    glPopMatrix()
+    glFlush()
+    glEnable(GL_LIGHT0)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_COLOR_MATERIAL)
+    glEnable(GL_DEPTH_TEST)
 
 def draw_numbers(atom, number):
     """ Draw the number of the selected atom.
