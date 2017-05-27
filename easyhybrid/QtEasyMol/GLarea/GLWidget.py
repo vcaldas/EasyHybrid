@@ -976,7 +976,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             Vobject.list_ribbons.append(gl_rb_li)
 
     
-    
+    '''
     def draw_spheres(self):
         """ Change the representation to Spheres.
         """
@@ -997,7 +997,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                     glEndList()
                     self.gl_sphere_list.append(gl_sp_li)
             return True    
-    
+    #'''
     def draw_ball_and_stick (self, Vobject = None , selection = None):
         """ Draws all the elements for Ball-Stick representation.
         """
@@ -1095,7 +1095,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             Vobject.list_ball_and_stick.append(gl_bs_li)  
             return True
 
-
+    #'''
     def draw_spheres (self, Vobject = None , selection = None):
         """ Draws all the elements for Ball-Stick representation.
         """
@@ -1127,7 +1127,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             Vobject.list_spheres.append(gl_bs_li)  
             return True
 
-
+    #'''
 
     def change_background(self, color):
         """ Changes the color of the background.
