@@ -67,17 +67,17 @@ class Vobject:
         
         self.chains       = {}
         
-	self.bonds        = []
+        self.bonds        = []
         self.index_bonds  = []
-	
-	self.mass_center  = np.array([0.0, 0.0, 0.0])
+        
+        self.mass_center  = np.array([0.0, 0.0, 0.0])
         
         self.frames       = []
         self.atoms        = []
         self.residues     = []
         
-	self.coords       = []
-	pass  
+        self.coords       = []
+        pass
 
 
     def generete_atom_list (self):
@@ -168,9 +168,9 @@ class Atom:
         self.resi    = resi 
         self.chain   = chain
         
-	self.Vobject_id = Vobject_id
-	self.atom_id = atom_id
-	
+        self.Vobject_id = Vobject_id
+        self.atom_id = atom_id
+        
         self.color       = at.get_color(name)
         self.col_rgb     = at.get_color_rgb(name)
         self.radius      = at.get_radius(name)

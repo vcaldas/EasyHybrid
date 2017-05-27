@@ -28,23 +28,53 @@ from GLarea.vector_math import Vector
 class GLWidget(QtOpenGL.QGLWidget):
     
     def __init__(self, parent=None, glmenu = None):
+        """ GLWidget is a QtWidget with OpenGL capabilities.
+            Attributes:
+            
+            + self.fovy --> Specifies the field of view angle, in degrees, in the y direction.
+            + self.aspect --> Specifies the aspect ratio that determines the field of view in the x direction. The aspect ratio is the ratio of x (width) to y (height).
+            + self.z_near --> Specifies the distance from the viewer to the near clipping plane (always positive).
+            + self.z_far --> Specifies the distance from the viewer to the far clipping plane (always positive).
+            + self.fog_start --> Specifies the start for the near distance used in the linear fog equation. The initial near distance is 0.
+            + self.fog_end --> Specifies the end for the near distance used in the linear fog equation. The initial near distance is 1.
+            + self.width --> Specifies the width of the window, only the drawing area, not the interface.
+            + self.height --> Specifies the height of the window, only the drawing area, not the interface.
+            + self.top --> Specifies the top value for the viewport. A positive value used to map the mouse coordinates into 3D world coordinates.
+            + self.bottom --> Specifies the bottom value for the viewport. A negative value used to map the mouse coordinates into 3D world coordinates.
+            + self.left --> Specifies the ratio between width and height. A negative value used to map the mouse coordinates into 3D world coordinates.
+            + self.right --> Specifies the ratio between width and height. A positive value used to map the mouse coordinates into 3D world coordinates.
+            + self.selected_atoms --> An array containing Atom types. The array contains the atoms selected with the mouse.
+            + self.mouse_x --> Specifies the X position of the mouse in the window. It's used for the rotation function of the mouse.
+            + self.mouse_y --> Specifies the Y position of the mouse in the window. It's used for the rotation function of the mouse.
+            + self.dist_cam_zrp --> Specifies the distance from the camera (eye) to the zero reference point (zrp) of the 3D world. Used in zoom and pan functions.
+            + self.scroll --> Specifies the amount of distance that the mouse wheel moves the clipping planes.
+            + self.pick_radius --> An array containing the X and Y radius for selection. Specifies how much far the object to the mouse can be to be selected when clicked.
+            + self.gl_backgrd --> An array containing a RGBA color in 0.0 to 1.0 scale. Specifies the color for the background.
+            + self.zrp --> An array containing X, Y and Z coordinates in 3D world. Specifies the Zero Reference Point of the 3D world. This parameter determines the center of rotation.
+            + self.mouse_rotate --> Flag for the rotation function. Specifies if the mouse is in rotation mode or not.
+            + self.mouse_pan --> Flag for the pan function. Specifies if the mouse is in pan mode or not.
+            + self.mouse_zoom --> Flag for the zoom function. Specifies if the mouse is in zoom mode or not.
+            + self.dragging --> Flag for dragging the mouse. Specifies if the mouse is being dragged or not. Used to diferentiate between selection or movement.
+            + self.drag_pos_x --> Specifies the X coordinate the mouse is being dragged.
+            + self.drag_pos_y --> Specifies the Y coordinate the mouse is being dragged.
+            + self.drag_pos_z --> Specifies the Z coordinate the mouse is being dragged.
+            + self.frame --> Specifies the frame in the trajectory file.
+            
+        """
         QtOpenGL.QGLWidget.__init__(self, parent)
         
         self.glmenu          = glmenu
         self.trolltechGreen  = QtGui.QColor.fromCmykF(0.40, 0.0, 1.0, 0.0)
         self.trolltechPurple = QtGui.QColor.fromCmykF(0.39, 0.39, 0.0, 0.0)
-
-
-        self.data   = None
+        
+        #self.data   = None
         self.fovy   = 30.0
         self.aspect = 0.0
         self.z_near = 1.0
         self.z_far  = 10.0
         
-        
         self.fog_start = self.z_far - 1.5
         self.fog_end = self.z_far
-        
         
         self.width  = 640
         self.height = 420
@@ -53,29 +83,23 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.left   = -10.0
         self.right  = 10
         self.selected_atoms = [None]*4
+        self.selected_residues = []
         
         self.mouse_x = 0
         self.mouse_y = 0
-        #self.x_press = None
-        #self.y_press = None
-
+        
         self.dist_cam_zrp = frame_i = 0
         self.scroll = 0.5
         self.pick_radius = [10, 10]
-        self.pos_mouse = [None, None]
+        #self.pos_mouse = [None, None]
         self.gl_backgrd = [0.0, 0.0, 0.0, 0.0]
         
         self.zrp          = np.array([0, 0, 0])
-        #self.target_point = np.array([0, 0, 0])
         
         self.mouse_rotate = False
         self.mouse_pan    = False
         self.mouse_zoom   = False
         self.dragging     = False
-
-        #self.zero_reference_point = np.array([0, 0, 0])
-
-        
         
         self.drag_pos_x = 0.0
         self.drag_pos_y = 0.0
@@ -84,64 +108,23 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.LINES = self.DOTS = self.BALL_STICK = self.VDW = self.PRETTY_VDW = self.RIBBON = self.SPHERES = self.WIRES = self.SELECTION = self.MODIFIED = False
         self.gl_ball_stick_list = self.gl_point_list = self.gl_lines_list = self.gl_pretty_vdw_list = self.gl_ribbon_list =  self.gl_sphere_list = self.gl_vdw_list = self.gl_wires_list = None  
         
+        self.sel_atom = True
+        self.sel_resid = self.sel_chain = self.sel_mol = False
+        
         self.EMSession = None
     
-    
     def initializeGL(self):
-        #self.qglClearColor(self.trolltechPurple.darker())
-        #GL.glShadeModel(GL.GL_FLAT)
-        #GL.glEnable(GL.GL_DEPTH_TEST)
-        #GL.glEnable(GL.GL_CULL_FACE)
         """ Inside the realize function, you should put all you OpenGL
             initialization code, e.g. set the projection matrix,
             the modelview matrix, position of the camera.
         """
         glutInit()
-        # All OpenGL initialization code goes here
-        glMaterialfv(GL_FRONT,GL_AMBIENT, (.7,.7,.7,1.))
-        glMaterialfv(GL_FRONT,GL_DIFFUSE, (.8,.8,.8,1.))
-        glMaterialfv(GL_FRONT,GL_SPECULAR,(1.,1.,1.,1.))
-        glMaterialfv(GL_FRONT,GL_SHININESS,100.0)
-        glDepthFunc(GL_LESS)
-        glEnable(GL_NORMALIZE)
-        glEnable(GL_COLOR_MATERIAL)
-        # FOG
-        glEnable(GL_FOG)
-        glFogi(GL_FOG_MODE, GL_LINEAR)
-        glFogf(GL_FOG_START, self.fog_start)
-        glFogf(GL_FOG_END, self.fog_end)
-        glFogfv(GL_FOG_COLOR, [0,0,0])
-        glFogfv(GL_FOG_DENSITY, 1)
-        glEnable(GL_POINT_SMOOTH)
-        # light
-        light_0_position = [ 1.0,  1.0, 1.0, 0.0]
-        light_1_position = [ 1.0, -1.0, 1.0, 0.0]
-        light_2_position = [-1.0, -1.0, 1.0, 0.0]
-        glClearColor(0.0, 0.0, 0.0, 0.0)
-        glShadeModel(GL_SMOOTH)
-        glLightfv(GL_LIGHT0, GL_POSITION, light_0_position)
-        glLightfv(GL_LIGHT1, GL_POSITION, light_1_position)
-        glLightfv(GL_LIGHT2, GL_POSITION, light_2_position)
-        glEnable(GL_LIGHT0)
-        glEnable(GL_LIGHT1)
-        glEnable(GL_LIGHT2)
-        glEnable(GL_LIGHTING)
-        glEnable(GL_DEPTH_TEST)
-        #  Antialiased lines
-        glEnable(GL_LINE_SMOOTH)
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
-        # Initialize view
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        gluPerspective(self.fovy, float(self.width)/float(self.height), self.z_near, self.z_far)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        gluLookAt(0, 0, 10, 0, 0, 0, 0, 1, 0)
+        rep.init_gl(self.fog_start, self.fog_end, self.fovy, self.width, self.height, self.z_near, self.z_far, self.gl_backgrd)
         return True
     
     def resizeGL(self, width, height):
+        """ 
+        """
         glViewport(0, 0, width, height)
         self.left = -float(width)/float(height)
         self.right = -self.left
@@ -151,20 +134,12 @@ class GLWidget(QtOpenGL.QGLWidget):
         glLoadIdentity()
         gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
         glMatrixMode(GL_MODELVIEW)
-
-
+    
     def paintGL(self):
-        #GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-        
-        ##GL.glLoadIdentity()
-        ##GL.glTranslated(0.0, 0.0, -10 )
-        ##GL.glRotated(self.xRot / 16.0, 1.0, 0.0, 0.0)
-        ##GL.glRotated(self.yRot / 16.0, 0.0, 1.0, 0.0)
-        ##GL.glRotated(self.zRot / 16.0, 0.0, 0.0, 1.0)
-        #GL.glCallList(self.object)
+        """ 
+        """
         self.draw()
-
-
+    
     def draw(self, frame = -1):
         """ Defines wich type of representations will be displayed
         """
@@ -181,24 +156,20 @@ class GLWidget(QtOpenGL.QGLWidget):
 
                 if input_frame >= (len(Vobject.frames)-1):
                     input_frame = len(Vobject.frames) -1
-
-
-
+                
                 glDisable(GL_LIGHT0)
                 glDisable(GL_LIGHTING)
                 glDisable(GL_COLOR_MATERIAL)
                 glEnable (GL_DEPTH_TEST)
-                                
+                
                 if Vobject.show_dots    :
                     glCallList(Vobject.list_dots[input_frame], GL_COMPILE)
-
+                
                 if Vobject.show_lines   :
                     glCallList(Vobject.list_lines[input_frame], GL_COMPILE)
-
+                
                 if Vobject.show_ribbons :
                     glCallList(Vobject.list_ribbons[input_frame], GL_COMPILE)
-
-                
                 
                 glEnable(GL_LIGHT0)
                 glEnable(GL_LIGHTING)
@@ -207,63 +178,40 @@ class GLWidget(QtOpenGL.QGLWidget):
                 
                 if Vobject.show_sticks  :
                     glCallList(Vobject.list_sticks        [input_frame], GL_COMPILE)
-
+                
                 if Vobject.show_ball_and_stick :
                     glCallList(Vobject.list_ball_and_stick[input_frame], GL_COMPILE)
                 
                 if Vobject.show_spheres :
                     glCallList(Vobject.list_spheres[input_frame], GL_COMPILE)
-
+                
                 if Vobject.show_surface :
                     glCallList(Vobject.list_surface[input_frame], GL_COMPILE)
-        
+                
         glDisable(GL_LIGHT0)
         glDisable(GL_LIGHTING)
         glDisable(GL_COLOR_MATERIAL)
         glDisable(GL_DEPTH_TEST)
         
-        for i,atom in enumerate(self.selected_atoms):
-            if atom is not None:
-                rep.draw_selected(atom)
-                rep.draw_numbers(atom, i+1)
-                #glLineWidth(2)
-                #glColor3f(0, 1, 1)
-                #glPointSize(20)
-                #
-                #glPushMatrix()
-                #glBegin(GL_POINTS)
-                #glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
-                #glEnd()
-                #glPopMatrix()
-
-                #glColor3f(0, 0, 0)
-                #glPointSize(14)
-                #glPushMatrix()
-                #glBegin(GL_POINTS)
-                #glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
-                #glEnd()
-                #glPopMatrix()
-                #
-                #glColor3f(1, 1, 1)
-                #glPointSize(9)
-                #glPushMatrix()
-                #glBegin(GL_POINTS)
-                #glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
-                #glEnd()
-                #glPopMatrix()
-
-                #glBegin(GL_POINTS)
-                #glColor3f(1, 1, 1)
-                #glPointSize(6)
-                #glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
-                #glEnd()
-                #glTranslate(float(atom.pos[0]), float( atom.pos[1]), float( atom.pos[2]))
-                #glRotate(0, 0, 1, 0)
-                #glScalef(0.006, 0.006, 0.006)
-                #glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, ord(str(i+1)))
+        if self.sel_atom:
+            for i,atom in enumerate(self.selected_atoms):
+                if atom is not None:
+                    rep.draw_selected(atom)
+                    rep.draw_numbers(atom, i+1)
+        elif self.sel_resid:
+            pass
+            for residue in self.selected_residues:
+                for atom in residue.atoms:
+                    print(atom.name)
+        elif self.sel_chain:
+            pass
+        elif self.sel_mol:
+            pass
     
     def draw_to_pick(self, frame = -1):
-        """ Defines wich type of representations will be displayed
+        """ Defines wich type of representations will be displayed for the pick
+            function to work. The only difference with the draw method should be
+            that in this function there is no drawing for the selected items.
         """
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
@@ -300,38 +248,32 @@ class GLWidget(QtOpenGL.QGLWidget):
                     glCallList(Vobject.list_surface[input_frame], GL_COMPILE)
     
     def mousePressEvent(self, event):
-        #self.x_press = event.x()
-        #self.y_press = event.y()
-        
+        """ 
+        """
         self.mouse_x = event.x()
         self.mouse_y = event.y()
         if (event.button() == QtCore.Qt.LeftButton):
             self.mouse_rotate = True
-            self.pos_mouse[0] = float(event.x())
-            self.pos_mouse[1] = float(event.y())
+            #self.pos_mouse[0] = float(event.x())
+            #self.pos_mouse[1] = float(event.y())
         if (event.button() == QtCore.Qt.RightButton):
             self.mouse_zoom = True
         if (event.button() == QtCore.Qt.MidButton):
-            #self.dist_cam_zrp = op.get_euclidean(self.zero_reference_point, self.get_cam_pos())
             self.dist_cam_zrp = op.get_euclidean(self.zrp, self.get_cam_pos())
             self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(event.x(), event.y())
             self.mouse_pan = True
     
     def mouseDoubleClickEvent(self, event):
-        """
-           
+        """ 
         """
         if (event.button() == QtCore.Qt.LeftButton):
             nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
             selected = self.select(nearest, hits)
             if selected is not None:
                 self.center_on_atom(selected.pos)
-                #self.zrp = selected.pos
-                #self.target_point = selected.pos
     
     def mouseMoveEvent(self, event):
-        """
-            
+        """ 
         """
         dx = float(event.x()) - self.mouse_x
         dy = float(event.y()) - self.mouse_y
@@ -344,15 +286,13 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.dragging = True
         
         if (self.mouse_rotate):
-            ax, ay, az = dy, dx, 0.0
+            ax, ay = dy, dx
             viewport = glGetIntegerv(GL_VIEWPORT)
-            angle = math.sqrt(ax**2+ay**2+az**2)/float(viewport[2]+1)*180.0
+            angle = math.sqrt(ax**2+ay**2)/float(viewport[2]+1)*180.0
             inv = np.matrix(glGetDoublev(GL_MODELVIEW_MATRIX)).I
             bx = (inv[0,0]*ax + inv[1,0]*ay)
             by = (inv[0,1]*ax + inv[1,1]*ay)
             bz = (inv[0,2]*ax + inv[1,2]*ay)
-            #self.apply_trans(glRotatef, angle, bx, by, bz)
-            #changed = True
             glTranslate(self.zrp[0], self.zrp[1], self.zrp[2])
             glRotatef(angle, bx, by, bz)
             glTranslate(-self.zrp[0], -self.zrp[1], -self.zrp[2])
@@ -368,10 +308,8 @@ class GLWidget(QtOpenGL.QGLWidget):
             # We only need to move along the Z axis, that is why only use the
             # glTranslatef function with a bz value
             bz = dy*delta
-            #glTranslatef(-self.zero_reference_point[0], -self.zero_reference_point[1], -self.zero_reference_point[2])
             glTranslatef(-self.zrp[0], -self.zrp[1], -self.zrp[2])
             glTranslatef(0, 0, bz)
-            #glTranslatef(self.zero_reference_point[0], self.zero_reference_point[1], self.zero_reference_point[2])
             glTranslatef(self.zrp[0], self.zrp[1], self.zrp[2])
             glMultMatrixd(modelview)
             self.dist_cam_zrp += bz
@@ -423,18 +361,12 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.updateGL()
 
     def mouseReleaseEvent(self, event):
-        
-        """
-           
+        """ 
         """
         self.mouse_rotate = False
         self.mouse_zoom = False
         self.mouse_pan = False
-        
         self.lastPos = QtCore.QPoint(event.pos())
-        
-        #dx = event.x() - self.x_press
-        #dy = event.y() - self.y_press
         dx = event.x() - self.mouse_x
         dy = event.y() - self.mouse_y
         
@@ -444,30 +376,38 @@ class GLWidget(QtOpenGL.QGLWidget):
                 #print('RightButton')
                 menu = QtGui.QMenu(self)
                 
-                for item in self.glmenu:                
+                for item in self.glmenu:
                     menu.addAction(item)
                 menu.exec_(event.globalPos())
             if button == QtCore.Qt.MouseButton.LeftButton and not self.dragging:
                 #print('LeftButton')
-                pass
                 if dx <= self.pick_radius[0] and dy <= self.pick_radius[1]:
                     nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
                     selected = self.select(nearest, hits)
                     if selected is None:
                         self.selected_atoms = [None]*len(self.selected_atoms)
+                        self.selected_residues = []
                     else:
-                        if selected not in self.selected_atoms:
-                            for i in range(len(self.selected_atoms)):
-                                if self.selected_atoms[i] == None:
-                                    self.selected_atoms[i] = selected
-                                    selected = None
-                                    break
-                            if selected is not None:
-                                self.selected_atoms[len(self.selected_atoms)-1] = selected
-                        else:
-                            for i in range(len(self.selected_atoms)):
-                                if self.selected_atoms[i] == selected:
-                                    self.selected_atoms[i] = None
+                        if self.sel_atom:
+                            if selected not in self.selected_atoms:
+                                for i in range(len(self.selected_atoms)):
+                                    if self.selected_atoms[i] == None:
+                                        self.selected_atoms[i] = selected
+                                        selected = None
+                                        break
+                                if selected is not None:
+                                    self.selected_atoms[len(self.selected_atoms)-1] = selected
+                            else:
+                                for i in range(len(self.selected_atoms)):
+                                    if self.selected_atoms[i] == selected:
+                                        self.selected_atoms[i] = None
+                        elif self.sel_resid:
+                            pass
+                            if self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi] not in self.selected_residues:
+                                self.selected_residues.append(self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi])
+                            else:
+                                pass
+                            #for atom in self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi]
                     self.updateGL()
             """
             if button == QtCore.Qt.MouseButton.LeftButton:
@@ -503,7 +443,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                                 self.selected_atoms.append(atom)
                         self.updateGL()
             """
-                        
+            
             if button == QtCore.Qt.MouseButton.MidButton:
                 if self.dragging:
                     glMatrixMode(GL_MODELVIEW)
@@ -518,15 +458,10 @@ class GLWidget(QtOpenGL.QGLWidget):
                     selected = self.select(nearest, hits)
                     if selected is not None:
                         self.center_on_atom(selected.pos)
-                        #self.zrp = selected.pos
-                        #self.target_point = selected.pos
-            #else:
-                #print (button)
         self.dragging = False
     
     def wheelEvent(self, event):
-        """
-           
+        """ 
         """
         if (event.delta() < 0):
             self.z_near += self.scroll
@@ -554,9 +489,9 @@ class GLWidget(QtOpenGL.QGLWidget):
     
     def center_on_atom(self, atom_pos):
         """ Only change the center of viewpoint of the camera.
-        It does not change (yet) the position of the camera.
-        atom_pos is a vector containing the XYZ coordinates
-        of the selected atom.
+            It does not change (yet) the position of the camera.
+            atom_pos is a vector containing the XYZ coordinates
+            of the selected atom.
         """
         if op.get_euclidean(self.zrp, atom_pos) != 0:
             cam_pos = self.get_cam_pos()
@@ -580,7 +515,6 @@ class GLWidget(QtOpenGL.QGLWidget):
                 self.fog_start = self.z_far - 1.5
                 self.fog_end = self.z_far
                 dist_z = op.get_euclidean(cam_pos, pto)
-                #x, y, width, height = self.get_allocation()
                 glMatrixMode(GL_PROJECTION)
                 glLoadIdentity()
                 gluPerspective(self.fovy, float(self.width)/float(self.height), self.z_near, self.z_far)
@@ -598,7 +532,6 @@ class GLWidget(QtOpenGL.QGLWidget):
                 self.z_near = dist_z - add_z
                 self.fog_start = self.z_far - 1.5
                 self.fog_end = self.z_far
-                #x, y, width, height = self.get_allocation()
                 glMatrixMode(GL_PROJECTION)
                 glLoadIdentity()
                 gluPerspective(self.fovy, float(self.width)/float(self.height), self.z_near, self.z_far)
@@ -608,14 +541,12 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glLoadIdentity()
                 gluLookAt(cam_pos[0], cam_pos[1], cam_pos[2], atom_pos[0], atom_pos[1], atom_pos[2], up[0], up[1], up[2])
             self.zrp = atom_pos
-            #self.target_point = atom_pos
             self.updateGL()
     
     def pos(self, x, y):
-        """
-        Use the ortho projection and viewport information
-        to map from mouse co-ordinates back into world
-        co-ordinates
+        """ Use the ortho projection and viewport information
+            to map from mouse co-ordinates back into world
+            co-ordinates
         """  
         viewport = glGetIntegerv(GL_VIEWPORT)
         px = float(x-viewport[0])/float(viewport[2])
@@ -626,8 +557,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         return px, py, pz
     
     def pick(self, x, y, dx, dy):
-        """
-           
+        """ 
         """
         buf = glSelectBuffer(256)
         glRenderMode(GL_SELECT)
@@ -656,7 +586,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         return nearest, hits
     
     def select(self, nearest, hits):
-        """
+        """ 
         """
         picked = None
         if nearest != []:
@@ -672,9 +602,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         return crd_xyz.A1
 
     def load_mol(self, data=None):
-        """ 
-            
-            
+        """
             !!!  This fuction is called only to test new GL features  !!!  
             
             Loads the data (if is any) or replace it if new data is given.
@@ -796,7 +724,6 @@ class GLWidget(QtOpenGL.QGLWidget):
             else:
                 pass
             n += 1
-
     
     
     
@@ -943,7 +870,7 @@ class GLWidget(QtOpenGL.QGLWidget):
     def draw_ribbon(self, Vobject = None , selection = None):
         """ Change the representation to Ribbon.
         """
-	
+        
         for frame in Vobject.frames:
             glEnable(GL_COLOR_MATERIAL)
             glEnable(GL_DEPTH_TEST)
@@ -1139,8 +1066,37 @@ class GLWidget(QtOpenGL.QGLWidget):
         glFogfv(GL_FOG_COLOR, color[:3])
         self.draw()
         self.updateGL()
-
-
+    
+    def selection_mode(self, mode):
+        """ Defines the selection mode used. This modifies the behavior of the
+            draw method for selected objects.
+        """
+        if mode == "atom":
+            self.sel_atom = True
+            self.sel_resid, self.sel_chain, self.sel_mol = False
+        elif mode == "resid":
+            self.sel_resid = True
+            self.sel_atom, self.sel_chain, self.sel_mol = False
+        elif mode == "chain":
+            self.sel_chain = True
+            self.sel_atom, self.sel_resid, self.sel_mol = False
+        elif mode == "mol":
+            self.sel_mol = True
+            self.sel_atom, self.sel_resid, self.sel_chain = False
+        else:
+            self.sel_atom, self.sel_resid, self.sel_chain, self.sel_mol = False
+        return True
+    
+    def keyPressEvent(self, event):
+        """ The keyPressEvent function serves, as the names states, to catch
+            events in the keyboard.
+        """
+        if (event.key() == QtCore.Qt.Key_Escape):
+            self.close()
+        if (event.key() == QtCore.Qt.Key_R):
+            self.selection_mode("resid")
+        if (event.key() == QtCore.Qt.Key_A):
+            self.selection_mode("atom")
 
 
 

@@ -31,8 +31,10 @@ from GLarea.vector_math import Vector
 
 
 gl_settings = {'sphere_scale':0.15, 'sphere_res':15, 'pretty_res':20, 'selection_radius':1.0, 'ribbon_res':0.4}
+select_color = [16, 255, 0, 80]
+sel_col_font = [178, 23, 0]
 
-def init_gl(fog_start, fog_end, fovy, width, height, z_near, z_far):
+def init_gl(fog_start, fog_end, fovy, width, height, z_near, z_far, color):
     """ Inside the realize function, you should put all you OpenGL
         initialization code, e.g. set the projection matrix,
         the modelview matrix, position of the camera.
@@ -50,7 +52,7 @@ def init_gl(fog_start, fog_end, fovy, width, height, z_near, z_far):
     glFogi(GL_FOG_MODE, GL_LINEAR)
     glFogf(GL_FOG_START, fog_start)
     glFogf(GL_FOG_END, fog_end)
-    glFogfv(GL_FOG_COLOR, [0,0,0])
+    glFogfv(GL_FOG_COLOR, color)
     glFogfv(GL_FOG_DENSITY, 1)
     glEnable(GL_POINT_SMOOTH)
     # light
@@ -384,7 +386,8 @@ def draw_selected(atom, slices=4):
     glPushMatrix()
     #glTranslate(atom.pos[0], atom.pos[1], atom.pos[2])
     glPushName(atom.index)
-    glColor4ub(39, 255, 0, 60)
+    #glColor4ub(39, 255, 0, 60)
+    glColor4ub(select_color[0], select_color[1], select_color[2], select_color[3])
     #glutSolidSphere(0.5, gl_settings['sphere_res'], gl_settings['sphere_res'])
     #glColor3f(atom.color[0], atom.color[1], atom.color[2])
     glPointSize(40)
@@ -409,7 +412,7 @@ def draw_numbers(atom, number):
     glDisable(GL_COLOR_MATERIAL)
     glDisable(GL_DEPTH_TEST)
     glEnable(GL_LINE_SMOOTH)
-    glColor3f(1, 0, 0)
+    glColor3f(sel_col_font[0], sel_col_font[1], sel_col_font[2])
     glLineWidth(2)
     glPointSize(2)
     #glTranslate(float(atom.pos[0]), float(atom.pos[1]), float(atom.pos[2]))
