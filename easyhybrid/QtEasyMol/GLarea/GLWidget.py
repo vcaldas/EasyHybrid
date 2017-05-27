@@ -216,19 +216,50 @@ class GLWidget(QtOpenGL.QGLWidget):
 
                 if Vobject.show_surface :
                     glCallList(Vobject.list_surface[input_frame], GL_COMPILE)
-
+        
+        glDisable(GL_LIGHT0)
+        glDisable(GL_LIGHTING)
+        glDisable(GL_COLOR_MATERIAL)
+        glDisable(GL_DEPTH_TEST)
+        
         for i,atom in enumerate(self.selected_atoms):
             if atom is not None:
+
+                #glLineWidth(2)
+                glColor3f(0, 1, 1)
+                glPointSize(20)
+                
                 glPushMatrix()
-                glDisable(GL_DEPTH_TEST)
-                glEnable(GL_LINE_SMOOTH)
-                glColor3f(1, 0, 0)
-                glLineWidth(2)
-                glTranslate(float(atom.pos[0]), float( atom.pos[1]), float( atom.pos[2]))
-                glRotate(0, 0, 1, 0)
-                glScalef(0.006, 0.006, 0.006)
-                glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, ord(str(i+1)))
+                glBegin(GL_POINTS)
+                glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+                glEnd()
                 glPopMatrix()
+
+                #glColor3f(0, 0, 0)
+                #glPointSize(14)
+                #glPushMatrix()
+                #glBegin(GL_POINTS)
+                #glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+                #glEnd()
+                #glPopMatrix()
+                #
+                #glColor3f(1, 1, 1)
+                #glPointSize(9)
+                #glPushMatrix()
+                #glBegin(GL_POINTS)
+                #glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+                #glEnd()
+                #glPopMatrix()
+
+                #glBegin(GL_POINTS)
+                #glColor3f(1, 1, 1)
+                #glPointSize(6)
+                #glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+                #glEnd()
+                #glTranslate(float(atom.pos[0]), float( atom.pos[1]), float( atom.pos[2]))
+                #glRotate(0, 0, 1, 0)
+                #glScalef(0.006, 0.006, 0.006)
+                #glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, ord(str(i+1)))
     
     def mousePressEvent(self, event):
         #self.x_press = event.x()
@@ -381,8 +412,38 @@ class GLWidget(QtOpenGL.QGLWidget):
             
             if button == QtCore.Qt.MouseButton.LeftButton:
                 #print('LeftButton')
-                pass
-                
+                nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
+                selected = self.select(nearest, hits)
+                ''' selecao por residuo - ainda nao esta bom - sera arrumado depois '''
+                if selected == None:
+                    #zera a lista
+                    self.selected_atoms = []
+                    self.updateGL()
+                else:    
+                    if selected in self.selected_atoms:
+                        index = self.selected_atoms.index(selected)
+                        self.selected_atoms.pop(index)
+
+                        for atom in self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi].atoms:
+                            print (atom.atom_id, atom.index, atom.name, atom.resi, atom.chain, atom.Vobject_id)                        
+                            
+                            index = self.selected_atoms.index(atom)
+                            self.selected_atoms.pop(index)
+                        self.updateGL()
+                    
+                    else:
+                        print(selected.atom_id, selected.index, selected.name, selected.resi, selected.chain, selected.Vobject_id)
+                        
+                        for atom in self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi].atoms:
+                            print (atom.atom_id, atom.index, atom.name, atom.resi, atom.chain, atom.Vobject_id)                        
+                            
+                            if atom in self.selected_atoms:
+                                pass
+                            else:
+                                self.selected_atoms.append(atom)
+                        self.updateGL()
+                        
+                        
             if button == QtCore.Qt.MouseButton.MidButton:
                 if self.dragging:
                     glMatrixMode(GL_MODELVIEW)
