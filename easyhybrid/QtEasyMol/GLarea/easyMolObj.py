@@ -205,6 +205,12 @@ class EasyMolSession:
 	
         return Vobjects_dic
 	
+    def selection_mode(self, selmode = 'atom'):
+        """ Function doc """
+        self._selection_mode = selmode
+        print(self._selection_mode)
+        
+    
     def __init__ (self, glwidget):
         """ Class initialiser """
         self.Vobjects         = []
@@ -226,7 +232,8 @@ class EasyMolSession:
                                  'antialias'    : False  ,
                                  'bg_color'     : 'black',
                                  }
-
+        
+        self._selection_mode = 'residue'
 
 
        

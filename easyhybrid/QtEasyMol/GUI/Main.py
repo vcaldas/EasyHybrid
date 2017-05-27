@@ -22,14 +22,26 @@ from GLarea.GLWidget   import GLWidget
 
 
 
-class ShowHideObjects:
+class EasyMolFunctions:
     """ Class doc """
     
     def __init__ (self):
         """ Class initialiser """
         pass
     
+
     
+    def delete_obj (self, index = 0):
+        """ Function doc """
+        self.EasyMol.delete(self.current_row)
+        self.update_list_view()
+    
+    
+    def center_obj (self, index = 0):
+        """ Function doc """
+        self.EasyMol.center(self.current_row)
+        #self.update_list_view()
+
     """   L I N E S   """
 
     def show_lines      (self, Vobject_index = None):
@@ -132,22 +144,6 @@ class ShowHideObjects:
     def show_surface        (self):
         """ Function doc """
 
-   
-
-
-
-
-
-
-
-
-
-
-    def hide_ball_and_stick (self):
-        """ Function doc """
-
-    def hide_spheres        (self):
-        """ Function doc """
 
     def hide_sticks         (self):
         """ Function doc """
@@ -159,7 +155,8 @@ class ShowHideObjects:
 
 
 
-class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
+class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
+    
     def __init__(self):
         super(MainWindow, self).__init__()
         
@@ -168,23 +165,43 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
         self.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.treeWidget.customContextMenuRequested.connect(self.open_list_view_menu)
         #self.treeWidget.clicked.connect(self.on_treeView_clicked)
-        #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("itemClicked(QtreeWidgetItem*)"), self.on_treeView_item_clicked)
-        #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("clicked(QModelIndex)"),          self.on_clicked_QModelIndex)
-        #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("itemClicked(QtreeWidgetItem*)"), self.on_treeView_item_clicked)
-        QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("itemClicked(QTreeWidgetItem*,int)"), self.itemClicked)
+        #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("on_treeview_item_clicked(QtreeWidgetItem*)"), self.on_treeView_item_clicked)
+        #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("clicked(QModelIndex)"),          self.on_treeview_clicked_QModelIndex)
+        #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("on_treeview_item_clicked(QtreeWidgetItem*)"), self.on_treeView_item_clicked)
+        QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("on_treeview_item_clicked(QTreeWidgetItem*,int)"), self.on_treeview_item_clicked)
         self.generate_actions ()
+        
+
+        self.toolBar_2.addSeparator()
+        self.label2 = QtGui.QLabel()
+        self.toolBar_2.addWidget(self.label2)
+        self.label2.setObjectName("  Selecting:  ")
+        self.label2.setText(QtGui.QApplication.translate("MainWindow", "Selecting", None, QtGui.QApplication.UnicodeUTF8))
+        
+        self.toolBar_2.addSeparator()
+        self.selection_mode_combo=QtGui.QComboBox()
+        self.toolBar_2.addWidget(self.selection_mode_combo)
+        self.selection_mode_combo.insertItems(1,["atom","residue","chain","molecule"])
+        QtCore.QObject.connect(self.selection_mode_combo, QtCore.SIGNAL("activated(QString)"), self.change_selection_mode)
+
+
+
         
         glmenu = [self.actionOpen]
         self.current_row = None     # selected row from the treeview menu
 
         self.glwidget = GLWidget(self, glmenu = glmenu)
+
+        
+        QtCore.QObject.connect(self.toolBar_2, QtCore.SIGNAL("toggled(bool)"), self.change_viewing_and_picking_mode)
+        #self.toolBar_2.addAction(self.actionViewing)
+
         self.EasyMol  = EasyMolSession(glwidget =  self.glwidget)
 
         self.setCentralWidget(self.glwidget)
         self.show()
     
-    
-    
+
     def generate_actions (self):
         """ Function doc """
         
@@ -197,7 +214,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
         #Open
         self.actionOpen.triggered.connect(self.showDialog)
         
+        '''    Change - viewing and picking mode    '''
+        self.actionViewing.triggered.connect(self.change_viewing_and_picking_mode)
 
+        
         '''    Center    '''
         #Delete
         self.Action_center = QtGui.QAction('Center', self)
@@ -283,25 +303,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
         self.Action_exite.triggered.connect(self.close)
 
 
-    
-    
-    def on_clicked_QModelIndex(self, model):
+    def on_treeview_clicked_QModelIndex(self, model):
         """ Function doc """
         print (model)
    
-    def on_treeView_item_clicked (self,  item):
-        """ Function doc """
-        print (item)
-        print (item.checkState())
-        state = item.checkState()
-        
-        if state == QtCore.Qt.CheckState.Unchecked:
-            item.setCheckState(QtCore.Qt.CheckState.Checked)
-        
-        if state == QtCore.Qt.CheckState.Checked:
-            item.setCheckState(QtCore.Qt.CheckState.Unchecked)
 
-    def itemClicked (self, item, Int):
+    def on_treeview_item_clicked (self, item, Int):
         #print (item, Int)
         #print (item.text(0),item.text(1))
         
@@ -318,10 +325,25 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
         if state == QtCore.Qt.CheckState.Checked:
             item.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
             self.EasyMol.disable(int(object_id))
-            #print (self.EasyMol.Vobjects[object_id].actived)
+        
+    
+    def change_viewing_and_picking_mode (self):
+        """ Function doc """
+        if self.actionViewing.isChecked() :
+            self.glwidget.setCursor(QtCore.Qt.CrossCursor)
+            self.selection_mode_combo.setEnabled(False)
+            self.actionViewing.setText("Picking")
+        else:
+            self.glwidget.setCursor(QtCore.Qt.ArrowCursor)
+            self.selection_mode_combo.setEnabled(True)
+            self.actionViewing.setText("Viewing")
 
-        
-        
+    
+    def change_selection_mode(self, selection_mode):
+        """ Function doc """
+        #print (selection_mode)
+        self.EasyMol.selection_mode(selection_mode)
+
         
     def setup_icons (self):
         """ Function doc """
@@ -372,8 +394,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
             item.setText(4, QtGui.QApplication.translate("MainWindow", "123"             , None, QtGui.QApplication.UnicodeUTF8))
             item.setText(5, QtGui.QApplication.translate("MainWindow", "no"              , None, QtGui.QApplication.UnicodeUTF8))            
 
-    
-    
+        
     def open_list_view_menu(self, position):
         #print ('menu')
         
@@ -425,32 +446,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, ShowHideObjects):
 
         menu.exec_(self.treeWidget.viewport().mapToGlobal(position))
         self.current_row =  None
-        #self.menubar = QtGui.QMenuBar(MainWindow)
-        #self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 27))
-        #self.menubar.setObjectName("menubar")
-        #self.menuFile = QtGui.QMenu(self.menubar)
-        #self.menuFile.setObjectName("menuFile")
-        #self.menuEdit = QtGui.QMenu(self.menubar)
-        #self.menuEdit.setObjectName("menuEdit")
-        #self.menuView = QtGui.QMenu(self.menubar)
-        #self.menuView.setObjectName("menuView")
-        #
-        #self.menuHelp = QtGui.QMenu(self.menubar)
-        #self.menuHelp.setObjectName("menuHelp")
-        #self.menuHelp_2 = QtGui.QMenu(self.menuHelp)
-        #self.menuHelp_2.setObjectName("menuHelp_2")
-    
-    def delete_obj (self, index = 0):
-        """ Function doc """
-        self.EasyMol.delete(self.current_row)
-        self.update_list_view()
-    
-    def center_obj (self, index = 0):
-        """ Function doc """
-        self.EasyMol.center(self.current_row)
-        #self.update_list_view()
-    
-        
+
+
 '''
 if __name__ == '__main__':
     app = QApplication(sys.argv)
