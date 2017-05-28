@@ -163,7 +163,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
         self.setupUi(self)
         
         self.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.treeWidget.customContextMenuRequested.connect(self.open_list_view_menu)
+        self.treeWidget.customContextMenuRequested.connect(self.open_treeview_menu)
         #self.treeWidget.clicked.connect(self.on_treeView_clicked)
         #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("on_treeview_item_clicked(QtreeWidgetItem*)"), self.on_treeView_item_clicked)
         #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("clicked(QModelIndex)"),          self.on_treeview_clicked_QModelIndex)
@@ -333,11 +333,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
             self.glwidget.setCursor(QtCore.Qt.CrossCursor)
             self.selection_mode_combo.setEnabled(False)
             self.actionViewing.setText("Picking")
+            self.EasyMol._picking_selection_mode = True 
         else:
             self.glwidget.setCursor(QtCore.Qt.ArrowCursor)
             self.selection_mode_combo.setEnabled(True)
             self.actionViewing.setText("Viewing")
-
+            self.EasyMol._picking_selection_mode = False 
+        self.glwidget.updateGL()
     
     def change_selection_mode(self, selection_mode):
         """ Function doc """
@@ -395,7 +397,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
             item.setText(5, QtGui.QApplication.translate("MainWindow", "no"              , None, QtGui.QApplication.UnicodeUTF8))            
 
         
-    def open_list_view_menu(self, position):
+    def open_treeview_menu(self, position):
         #print ('menu')
         
         

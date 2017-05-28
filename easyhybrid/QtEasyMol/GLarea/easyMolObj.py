@@ -222,6 +222,57 @@ class EasyMolSession:
         if self._selection_mode == 'molecule':
             self.glwidget.selection_mode(mode = 'molecule')
         
+    def selection_function (self, selected):
+        """ Function doc """
+
+        #"""     P I C K I N G     S E L E C T I O N S     """
+        if self._picking_selection_mode:
+            if selected is None:
+                self.picking_selections = [None]*len(self.picking_selections)
+                #self.selected_residues = []
+            else:
+                if selected not in self.picking_selections:
+                    for i in range(len(self.picking_selections)):
+                        if self.picking_selections[i] == None:
+                            self.picking_selections[i] = selected
+                            selected = None
+                            break
+                    if selected is not None:
+                        self.picking_selections[len(self.picking_selections)-1] = selected
+                else:
+                    for i in range(len(self.picking_selections)):
+                        if self.picking_selections[i] == selected:
+                            self.picking_selections[i] = None
+
+        #"""     V I E W I N G     S E L E C T I O N S     """
+        else:
+            if selected is None:
+                self.viewing_selections = [None]*len(self.viewing_selections)
+                self.selected_residues = []
+            else:
+                if self._selection_mode == 'atom':
+                    if selected not in self.viewing_selections:
+                        for i in range(len(self.viewing_selections)):
+                            if self.viewing_selections[i] == None:
+                                self.viewing_selections[i] = selected
+                                selected = None
+                                break
+                        if selected is not None:
+                            self.viewing_selections[len(self.viewing_selections)-1] = selected
+                    else:
+                        for i in range(len(self.viewing_selections)):
+                            if self.viewing_selections[i] == selected:
+                                self.viewing_selections[i] = None
+                
+                elif self._selection_mode == 'residue':
+                    pass
+                    if self.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi] not in self.selected_residues:
+                        self.selected_residues.append(self.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi])
+                    else:
+                        pass
+                    #for atom in self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi]
+
+    
     
     def __init__ (self, glwidget):
         """ Class initialiser """
@@ -245,7 +296,10 @@ class EasyMolSession:
                                  'bg_color'     : 'black',
                                  }
         
-        self._selection_mode = 'residue'
-
+        self._picking_selection_mode = False # True/False  - interchange between viewing  and picking mode
+        self._selection_mode   = 'residue'
+        self.viewing_selections = []
+        self.picking_selections = [None]*4
+        self.selected_residues  = []
 
        

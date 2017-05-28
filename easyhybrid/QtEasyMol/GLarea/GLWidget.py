@@ -82,8 +82,8 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.bottom = -1.0
         self.left   = -10.0
         self.right  = 10
-        self.selected_atoms = [None]*4
-        self.selected_residues = []
+        #self.selected_atoms = [None]*4
+        #self.selected_residues = []
         
         self.mouse_x = 0
         self.mouse_y = 0
@@ -193,21 +193,30 @@ class GLWidget(QtOpenGL.QGLWidget):
         glDisable(GL_COLOR_MATERIAL)
         glDisable(GL_DEPTH_TEST)
         
-        if self.sel_atom:
-            for i,atom in enumerate(self.selected_atoms):
+        if self.EMSession._picking_selection_mode:
+            for i,atom in enumerate(self.EMSession.picking_selections):
                 if atom is not None:
                     #rep.draw_picked(atom)
                     rep.draw_selected(atom)
                     rep.draw_numbers(atom, i+1)
-        elif self.sel_resid:
-            pass
-            for residue in self.selected_residues:
-                for atom in residue.atoms:
-                    print(atom.name)
-        elif self.sel_chain:
-            pass
-        elif self.sel_mol:
-            pass
+        else:
+            
+        
+            if self.EMSession._selection_mode == 'atom':
+                for i,atom in enumerate(self.selected_atoms):
+                    if atom is not None:
+                        #rep.draw_picked(atom)
+                        rep.draw_selected(atom)
+                        rep.draw_numbers(atom, i+1)
+            elif self.EMSession._selection_mode == 'residue':
+                pass
+                for residue in self.EMSession.selected_residues:
+                    for atom in residue.atoms:
+                        print(atom.name)
+            elif self.EMSession._selection_mode == 'chain':
+                pass
+            elif self.EMSession._selection_mode == 'molecule':
+                pass
     
     def draw_to_pick(self, frame = -1):
         """ Defines wich type of representations will be displayed for the pick
@@ -385,30 +394,37 @@ class GLWidget(QtOpenGL.QGLWidget):
                 if dx <= self.pick_radius[0] and dy <= self.pick_radius[1]:
                     nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
                     selected = self.select(nearest, hits)
-                    if selected is None:
-                        self.selected_atoms = [None]*len(self.selected_atoms)
-                        self.selected_residues = []
-                    else:
-                        if self.sel_atom:
-                            if selected not in self.selected_atoms:
-                                for i in range(len(self.selected_atoms)):
-                                    if self.selected_atoms[i] == None:
-                                        self.selected_atoms[i] = selected
-                                        selected = None
-                                        break
-                                if selected is not None:
-                                    self.selected_atoms[len(self.selected_atoms)-1] = selected
-                            else:
-                                for i in range(len(self.selected_atoms)):
-                                    if self.selected_atoms[i] == selected:
-                                        self.selected_atoms[i] = None
-                        elif self.sel_resid:
-                            pass
-                            if self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi] not in self.selected_residues:
-                                self.selected_residues.append(self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi])
-                            else:
-                                pass
-                            #for atom in self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi]
+                    
+                    self.EMSession.selection_function(selected)
+                    
+                    
+                    #if selected is None:
+                    #    self.selected_atoms = [None]*len(self.selected_atoms)
+                    #    self.selected_residues = []
+                    #else:
+                    #    if self.sel_atom:
+                    #        if selected not in self.selected_atoms:
+                    #            for i in range(len(self.selected_atoms)):
+                    #                if self.selected_atoms[i] == None:
+                    #                    self.selected_atoms[i] = selected
+                    #                    selected = None
+                    #                    break
+                    #            if selected is not None:
+                    #                self.selected_atoms[len(self.selected_atoms)-1] = selected
+                    #        else:
+                    #            for i in range(len(self.selected_atoms)):
+                    #                if self.selected_atoms[i] == selected:
+                    #                    self.selected_atoms[i] = None
+                    #    elif self.sel_resid:
+                    #        pass
+                    #        if self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi] not in self.selected_residues:
+                    #            self.selected_residues.append(self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi])
+                    #        else:
+                    #            pass
+                    #        #for atom in self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi]
+                    
+                    
+                    
                     self.updateGL()
             """
             if button == QtCore.Qt.MouseButton.LeftButton:
