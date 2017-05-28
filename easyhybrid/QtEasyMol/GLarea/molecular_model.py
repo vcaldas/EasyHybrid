@@ -79,7 +79,7 @@ class Vobject:
         self.atoms        = []
         self.residues     = []
 
-        self.coords       = []
+        #self.coords       = []
         pass  
 
 

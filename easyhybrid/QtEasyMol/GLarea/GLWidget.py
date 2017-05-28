@@ -73,8 +73,9 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.z_near = 1.0
         self.z_far  = 10.0
         
-        self.fog_start = self.z_far - 1.5
-        self.fog_end = self.z_far
+        self.fog_start  = self.z_far - 1.5
+        self.fog_end    = self.z_far
+        self.scale_zoom = self.fog_start # increse /decrese the dot size and line width
         
         self.width  = 640
         self.height = 420
@@ -111,8 +112,10 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.sel_atom = True
         self.sel_resid = self.sel_chain = self.sel_mol = False
         
+        self.gl_lists_counter = 1
         self.EMSession = None
     
+        
     def initializeGL(self):
         """ Inside the realize function, you should put all you OpenGL
             initialization code, e.g. set the projection matrix,
@@ -146,7 +149,8 @@ class GLWidget(QtOpenGL.QGLWidget):
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
         frame = self.frame
-        
+        #glPointSize(self.scale_zoom)# *self.scale_zoom
+
         for Vobject in self.EMSession.Vobjects:    
             if Vobject.actived:   
                 #-------------------------------------------------------
@@ -193,30 +197,27 @@ class GLWidget(QtOpenGL.QGLWidget):
         glDisable(GL_COLOR_MATERIAL)
         glDisable(GL_DEPTH_TEST)
         
+        # S E L E C T E D    A T O M S     P I C K I N G    
         if self.EMSession._picking_selection_mode:
             for i,atom in enumerate(self.EMSession.picking_selections):
                 if atom is not None:
+                    #print (atom, atom.index, frame, atom.Vobject_id, self.EMSession.Vobjects[atom.Vobject_id].frames, self.EMSession.Vobjects[atom.Vobject_id].coords  )
                     #rep.draw_picked(atom)
-                    rep.draw_selected(atom)
-                    rep.draw_numbers(atom, i+1)
-        else:
-            
+                    coord = self.EMSession.Vobjects[atom.Vobject_id].frames[frame][atom.index-1]
+                    #glVertex3f(coord1[0], coord1[1], coord1[2])
+                    rep.draw_selected(atom, coord)
+                    rep.draw_numbers(atom, i+1, coord)
+
         
-            if self.EMSession._selection_mode == 'atom':
-                for i,atom in enumerate(self.selected_atoms):
-                    if atom is not None:
-                        #rep.draw_picked(atom)
-                        rep.draw_selected(atom)
-                        rep.draw_numbers(atom, i+1)
-            elif self.EMSession._selection_mode == 'residue':
-                pass
-                for residue in self.EMSession.selected_residues:
-                    for atom in residue.atoms:
-                        print(atom.name)
-            elif self.EMSession._selection_mode == 'chain':
-                pass
-            elif self.EMSession._selection_mode == 'molecule':
-                pass
+        # S E L E C T E D    A T O M S     V I E W I N G
+        else:
+            for i,atom in enumerate(self.EMSession.viewing_selections):
+                #print (atom, atom.index, frame, atom.Vobject_id, self.EMSession.Vobjects[atom.Vobject_id].frames, self.EMSession.Vobjects[atom.Vobject_id].coords  )
+                #rep.draw_picked(atom)
+                coord = self.EMSession.Vobjects[atom.Vobject_id].frames[frame][atom.index-1]
+                #glVertex3f(coord1[0], coord1[1], coord1[2])
+                rep.draw_selected(atom, coord)
+
     
     def draw_to_pick(self, frame = -1):
         """ Defines wich type of representations will be displayed for the pick
@@ -309,6 +310,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             changed = True
             
         elif (self.mouse_zoom):
+
             glMatrixMode(GL_MODELVIEW)
             modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
             # Delta is a modifier for the zoom effect, otherwise the zoom movement
@@ -330,6 +332,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.z_far -= bz
             self.fog_start -= bz
             self.fog_end -= bz
+            self.scale_zoom -= bz
             # Depending how near we are from the z_near clipping plane, we need
             # to put some boundaries to avoid unexpected behaviors. Same with
             # the z_far clipping plane
@@ -343,7 +346,8 @@ class GLWidget(QtOpenGL.QGLWidget):
             glFogf(GL_FOG_END, self.fog_end)
             glMatrixMode(GL_MODELVIEW)
             changed = True
-            
+            #print (self.z_near, self.z_far, self.fovy, self.fog_start, self.fog_end, self.scale_zoom)
+            #glPointSize(self.scale_zoom)
         elif (self.mouse_pan):
             # The mouse pan function needs to be corrected to have
             # better behavior when the screen is far and near
@@ -742,16 +746,14 @@ class GLWidget(QtOpenGL.QGLWidget):
                 pass
             n += 1
     
-    
-    
     def draw_dots(self, Vobject):
         """ Change the representation to Dots.
         """
         #print 'Dots Representation'
         # Center dots representations of the atoms
-       
+        #n = 100
         for frame in Vobject.frames:
-            gl_dt_li = glGenLists(2)
+            gl_dt_li = glGenLists(self.gl_lists_counter)
             glNewList(gl_dt_li, GL_COMPILE)
             for chain in  Vobject.chains:
                 for res in Vobject.chains[chain].residues:
@@ -762,7 +764,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                         glPushMatrix()
                         glPushName(atom.atom_id)
                         glColor3f(atom.color[0], atom.color[1], atom.color[2])
-                        glPointSize(self.EMSession.GL_parameters['dot_size']*atom.vdw_rad)
+                        glPointSize(self.EMSession.GL_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
                         glBegin(GL_POINTS)
                         coord1   = frame[atom.index-1]
                         glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
@@ -770,31 +772,11 @@ class GLWidget(QtOpenGL.QGLWidget):
                         glPopName()
                         glPopMatrix()
 
-           
             glEndList()
-            Vobject.list_dots.append(gl_dt_li)  
-            return True
+            Vobject.list_dots.append(gl_dt_li) 
+            self.gl_lists_counter += 1
+        return True
         
-        
-        
-        #if Vobject.actived:
-        #    for chain in  Vobject.chains:
-        #        for res in Vobject.chains[chain].residues:
-        #            for atom in Vobject.chains[chain].residues[res].atoms:
-        #                glPushMatrix()
-        #                glPushName(atom.index)
-        #                glColor3f(atom.color[0], atom.color[1], atom.color[2])
-        #                glPointSize(self.PointSize*atom.vdw_rad)
-        #                glBegin(GL_POINTS)
-        #                glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
-        #                glEnd()
-        #                glPopName()
-        #                glPopMatrix()
-        #                #print atom.name, atom.pos
-        #
-        #glEndList()
-        #Vobject.list_dots.append(gl_pt_li)
-    
     def draw_lines(self, Vobject = None , selection = None):
         """ Change the representation to lines.
             It is the default representation.
@@ -805,11 +787,11 @@ class GLWidget(QtOpenGL.QGLWidget):
         glDisable(GL_LIGHTING)
         glEnable(GL_COLOR_MATERIAL)
         glEnable(GL_DEPTH_TEST)
-        n = 1
+        #n = 1
         for frame in Vobject.frames:
-            gl_ln_li = glGenLists(n)
+            gl_ln_li = glGenLists(self.gl_lists_counter)
             
-            glNewList(gl_ln_li, GL_COMPILE)
+            glNewList(gl_ln_li,GL_COMPILE) #GL_COMPILE_AND_EXECUTE) #GL_COMPILE)
             glLineWidth(self.EMSession.GL_parameters['line_width'])
 
             for bond in Vobject.index_bonds:
@@ -853,60 +835,12 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glEnd()
                 glPopName()
                 glPopMatrix()
-
-            '''
-            for bond in Vobject.bonds:
-            
-            glDisable(GL_LIGHT0)
-            glDisable(GL_LIGHT1)
-            glDisable(GL_LIGHT2)
-            glDisable(GL_LIGHTING)
-            glEnable(GL_COLOR_MATERIAL)
-            glEnable(GL_DEPTH_TEST)
-            glPushMatrix()
-            glPushName(bond[0].atom_id) # old glPushName(bond[0].index)
-            glColor3f(bond[0].color[0], bond[0].color[1], bond[0].color[2])
-            glLineWidth(3)
-            glBegin(GL_LINES)
-            glVertex3f(bond[0].pos[0], bond[0].pos[1], bond[0].pos[2])
-            glVertex3f(bond[4][0], bond[4][1], bond[4][2])
-            glEnd()
-            glPopName()
-            glPopMatrix()
-            '''
             glEndList()
             Vobject.list_lines.append(gl_ln_li)
             
-        n += 1
+            self.gl_lists_counter += 1
         return True
-        
-        '''
-        def draw_pretty_vdw(self):
-        """ Change the representation to Pretty VDW.
-        """
-        #print 'Pretty Van-Der-Waals Representation'
-        # Ball representation.
-        if self.gl_pretty_vdw_list == None or self.MODIFIED:
-            self.gl_pretty_vdw_list = []
-            for i in range(len(self.data)):
-            self.frame_i = i
-            self.load_mol()
-            gl_p_vdw_li = glGenLists(1)
-            glNewList(gl_p_vdw_li, GL_COMPILE)
-            for atom in self.ball_list:
-                rep.draw_ball(atom)
-                # Makes the bonds representations in sticks format
-            for bond in self.data[self.frame_i].bonds:
-                rep.draw_bond_stick(bond[0], bond[1], bond[2], bond[3])
-                # Makes the pretty van-der-walls representation of the atoms. The
-                # difference between vdw is that this representation is transparent.
-            for atom in self.pretty_vdw_list:
-                rep.draw_pretty_vdw(atom)
-            glEndList()
-            self.gl_pretty_vdw_list.append(gl_p_vdw_li)
-        return True
-        '''
-    
+
     def draw_ribbon(self, Vobject = None , selection = None):
         """ Change the representation to Ribbon.
         """
@@ -915,7 +849,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             glEnable(GL_COLOR_MATERIAL)
             glEnable(GL_DEPTH_TEST)
             
-            gl_rb_li = glGenLists(1)
+            gl_rb_li = glGenLists(self.gl_lists_counter)
             glNewList(gl_rb_li, GL_COMPILE)
             #print 'aqui'
             glLineWidth(7)
@@ -941,7 +875,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             glEndList()
             #'''
             Vobject.list_ribbons.append(gl_rb_li)
-
+            self.gl_lists_counter += 1
     
     '''
     def draw_spheres(self):
@@ -975,7 +909,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             glEnable(GL_COLOR_MATERIAL)
             glEnable(GL_DEPTH_TEST)
            
-            gl_bs_li = glGenLists(2)
+            gl_bs_li = glGenLists(self.gl_lists_counter)
             glNewList(gl_bs_li, GL_COMPILE)
             
             for bond in Vobject.index_bonds:
@@ -1000,7 +934,9 @@ class GLWidget(QtOpenGL.QGLWidget):
                 #-------------------------------------------------------
                 glPushMatrix()                
                 glPushName(atom1.atom_id)
-                glTranslate(atom1.pos[0],   atom1.pos[1],   atom1.pos[2])
+                
+                coord1   = frame[atom1.index-1]
+                glTranslate(coord1[0],   coord1[1],   coord1[2])
                 glColor3f(atom1.color[0], atom1.color[1], atom1.color[2])
                 glutSolidSphere(atom1.radius, sphere_quality, sphere_quality)
                 glPopMatrix()
@@ -1008,7 +944,8 @@ class GLWidget(QtOpenGL.QGLWidget):
 
                 glPushMatrix()                
                 glPushName(atom2.atom_id)
-                glTranslate(atom2.pos[0],   atom2.pos  [1],   atom2.pos  [2])
+                coord2   = frame[atom2.index-1]
+                glTranslate(coord2[0]     ,   coord2[1]   ,   coord2[2])
                 glColor3f  (atom2.color[0], atom2.color[1],   atom2.color[2])
                 glutSolidSphere(atom2.radius, sphere_quality, sphere_quality)                           
                 glPopName()
@@ -1053,14 +990,10 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glPopMatrix()
                 #-------------------------------------------------------
 
-
-
-
-
-            
             glEndList()
-            Vobject.list_ball_and_stick.append(gl_bs_li)  
-            return True
+            Vobject.list_ball_and_stick.append(gl_bs_li)
+            self.gl_lists_counter += 1 
+        return True
 
     #'''
     def draw_spheres (self, Vobject = None , selection = None):
@@ -1073,7 +1006,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             glEnable(GL_COLOR_MATERIAL)
             glEnable(GL_DEPTH_TEST)
            
-            gl_bs_li = glGenLists(2)
+            gl_bs_li = glGenLists(self.gl_lists_counter)
             glNewList(gl_bs_li, GL_COMPILE)
             for chain in  Vobject.chains:
                 for res in Vobject.chains[chain].residues:
@@ -1092,8 +1025,9 @@ class GLWidget(QtOpenGL.QGLWidget):
 
            
             glEndList()
-            Vobject.list_spheres.append(gl_bs_li)  
-            return True
+            Vobject.list_spheres.append(gl_bs_li)
+            self.gl_lists_counter += 1  
+        return True
 
     #'''
 

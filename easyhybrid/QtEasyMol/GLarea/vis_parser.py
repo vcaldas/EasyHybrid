@@ -42,7 +42,7 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         model_size      = xyz_model_size+2   # include first and secound lines in a xyzfile
         
         models     = []
-        for i in range(0, total_size/model_size): 
+        for i in range(0, int(total_size/model_size)): 
             #print (i*model_size) , (i+1)*model_size
             model = xyz_lines[(i*model_size) : (i+1)*model_size]
             models.append(model)
@@ -88,13 +88,13 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         
             coords = []
             
-            if chains_m.has_key(at_ch):
+            if at_ch in chains_m.keys():
                 ch = chains_m[at_ch]
             else:
                 ch = mm.Chain(name=at_ch, label = 'UNK')
                 chains_m[at_ch] = ch
 
-            if ch.residues.has_key(at_res_i):
+            if at_res_i in ch.residues.keys():
                 res = ch.residues[at_res_i]
                 ch.residues[at_res_i].atoms.append(atm)
                 Vobject.atoms.append(atm)

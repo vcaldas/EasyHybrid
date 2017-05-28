@@ -265,29 +265,88 @@ class EasyMolSession:
         #"""     V I E W I N G     S E L E C T I O N S     """
         else:
             if selected is None:
-                self.viewing_selections = [None]*len(self.viewing_selections)
-                self.selected_residues = []
+                self.viewing_selections = []
+                self.selected_residues  = []
             else:
                 if self._selection_mode == 'atom':
                     if selected not in self.viewing_selections:
-                        for i in range(len(self.viewing_selections)):
-                            if self.viewing_selections[i] == None:
-                                self.viewing_selections[i] = selected
-                                selected = None
-                                break
-                        if selected is not None:
-                            self.viewing_selections[len(self.viewing_selections)-1] = selected
+                        self.viewing_selections.append(selected)
+                        
                     else:
-                        for i in range(len(self.viewing_selections)):
-                            if self.viewing_selections[i] == selected:
-                                self.viewing_selections[i] = None
+                        index = self.viewing_selections.index(selected)
+                        self.viewing_selections.pop(index)
                 
                 elif self._selection_mode == 'residue':
-                    pass
-                    if self.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi] not in self.selected_residues:
-                        self.selected_residues.append(self.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi])
+                    # if the selected atoms is not on the selected list
+                    if selected not in self.viewing_selections:
+                        print ('residue',selected.Vobject_id, selected.resi)
+                        print (self.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi])
+                        # So, add all atoms  - selected residue <- selected.resi
+                        for atom in self.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi].atoms:
+                            
+                            # the atom is not on the list -  add atom by atom
+                            if atom not in self.viewing_selections:
+                                self.viewing_selections.append(atom)
+                            
+                            # the atom IS on the list - do nothing 
+                            else:
+                                pass
+                
+                    # if the selected atoms IS on the selected list
                     else:
-                        pass
+                        # So, add all atoms  - selected residue <- selected.resi
+                        for atom in self.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi].atoms:
+                            
+                            # the atom is not on the list -  add atom by atom
+                            if atom in self.viewing_selections:
+                                index = self.viewing_selections.index(atom)
+                                self.viewing_selections.pop(index)                            
+                            # the atom IS on the list - do nothing 
+                            else:
+                                pass                    
+                    
+                    
+                elif self._selection_mode == 'chain':
+                    # if the selected atoms is not on the selected list
+                    if selected not in self.viewing_selections:
+                        # So, add all atoms  - selected residue <- selected.resi
+                        for residue in self.Vobjects[selected.Vobject_id].chains[selected.chain].residues:
+                            #for residue in chain.residues:
+                            for atom in residue.atoms:
+                                # the atom is not on the list -  add atom by atom
+                                if atom not in self.viewing_selections:
+                                    self.viewing_selections.append(atom)
+                                
+                                # the atom IS on the list - do nothing 
+                                else:
+                                    pass
+                
+                    # if the selected atoms IS on the selected list
+                    else:
+                        for residue in self.Vobjects[selected.Vobject_id].chains[selected.chain].residues:
+                            #for residue in chain.residues:
+                            for atom in residue.atoms:
+                                # the atom is not on the list -  add atom by atom
+                                if atom in self.viewing_selections:
+                                    index = self.viewing_selections.index(atom)
+                                    self.viewing_selections.pop(index)                            
+                                # the atom IS on the list - do nothing 
+                                else:
+                                    pass          
+                
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    print ('selected atoms: ',len(self.viewing_selections))
+                    
                     #for atom in self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi]
 
     
