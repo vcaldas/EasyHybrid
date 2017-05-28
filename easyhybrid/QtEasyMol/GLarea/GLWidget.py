@@ -197,6 +197,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         glDisable(GL_COLOR_MATERIAL)
         glDisable(GL_DEPTH_TEST)
         
+        # S E L E C T E D    A T O M S     P I C K I N G    
         if self.EMSession._picking_selection_mode:
             for i,atom in enumerate(self.EMSession.picking_selections):
                 if atom is not None:
@@ -206,24 +207,17 @@ class GLWidget(QtOpenGL.QGLWidget):
                     #glVertex3f(coord1[0], coord1[1], coord1[2])
                     rep.draw_selected(atom, coord)
                     rep.draw_numbers(atom, i+1, coord)
-        else:
-            
+
         
-            if self.EMSession._selection_mode == 'atom':
-                for i,atom in enumerate(self.selected_atoms):
-                    if atom is not None:
-                        #rep.draw_picked(atom)
-                        rep.draw_selected(atom, frame)
-                        rep.draw_numbers(atom, i+1, frame)
-            elif self.EMSession._selection_mode == 'residue':
-                pass
-                for residue in self.EMSession.selected_residues:
-                    for atom in residue.atoms:
-                        print(atom.name)
-            elif self.EMSession._selection_mode == 'chain':
-                pass
-            elif self.EMSession._selection_mode == 'molecule':
-                pass
+        # S E L E C T E D    A T O M S     V I E W I N G
+        else:
+            for i,atom in enumerate(self.EMSession.viewing_selections):
+                #print (atom, atom.index, frame, atom.Vobject_id, self.EMSession.Vobjects[atom.Vobject_id].frames, self.EMSession.Vobjects[atom.Vobject_id].coords  )
+                #rep.draw_picked(atom)
+                coord = self.EMSession.Vobjects[atom.Vobject_id].frames[frame][atom.index-1]
+                #glVertex3f(coord1[0], coord1[1], coord1[2])
+                rep.draw_selected(atom, coord)
+
     
     def draw_to_pick(self, frame = -1):
         """ Defines wich type of representations will be displayed for the pick
