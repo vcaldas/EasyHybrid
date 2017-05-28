@@ -63,10 +63,22 @@ class EasyMolSession:
         
         pprint(self.Vobjects)
         self.glwidget.draw_lines(self.Vobjects[-1])
-        
+        self.glwidget.draw_dots(self.Vobjects[-1])
+
         return True
         
-    
+
+    def _hide_dots (self, Vobject_index ):
+        """ Function doc """
+        self.Vobjects[Vobject_index].show_dots = False
+        self.glwidget.draw_dots(self.Vobjects[Vobject_index])
+
+    def _show_dots (self, Vobject_index ):
+        """ Function doc """
+        self.Vobjects[Vobject_index].show_dots = True
+        self.glwidget.draw_dots(self.Vobjects[Vobject_index])
+
+
     def _hide_ribbons (self, Vobject_index ):
         """ Function doc """
         self.Vobjects[Vobject_index].show_ribbons = False
@@ -120,6 +132,9 @@ class EasyMolSession:
     
     def hide (self, _type = 'lines', Vobject_index =  None):
         """ Function doc """    
+        if _type == 'dots':
+            self._hide_dots (Vobject_index )
+
         if _type == 'lines':
             self._hide_lines (Vobject_index )
 
@@ -140,6 +155,9 @@ class EasyMolSession:
 
     def show (self, _type = 'lines', Vobject_index =  None):
         """ Function doc """
+        if _type == 'dots':
+            self._show_dots (Vobject_index )
+
         if _type == 'lines':
             self._show_lines (Vobject_index )
 
@@ -289,8 +307,10 @@ class EasyMolSession:
         
         self.glwidget.EMSession = self
         
-        self.glwidget_parameters = {
-                                 'line_width'   : 1      ,
+        self.GL_parameters =     {
+                                 
+                                 'dot_size'      : 5      ,
+                                 'line_width'   : 3      ,
                                  'sphere_scale' : 1      ,
                                  'antialias'    : False  ,
                                  'bg_color'     : 'black',

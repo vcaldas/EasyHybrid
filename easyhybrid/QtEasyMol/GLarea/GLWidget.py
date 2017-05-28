@@ -749,28 +749,51 @@ class GLWidget(QtOpenGL.QGLWidget):
         """
         #print 'Dots Representation'
         # Center dots representations of the atoms
-        
-        gl_pt_li = glGenLists(1)
-        glNewList(gl_pt_li, GL_COMPILE)
-        
-        
-        if Vobject.actived:
+       
+        for frame in Vobject.frames:
+            gl_dt_li = glGenLists(2)
+            glNewList(gl_dt_li, GL_COMPILE)
             for chain in  Vobject.chains:
                 for res in Vobject.chains[chain].residues:
                     for atom in Vobject.chains[chain].residues[res].atoms:
+                        #-------------------------------------------------------
+                        #                        D O T S
+                        #-------------------------------------------------------
                         glPushMatrix()
-                        glPushName(atom.index)
+                        glPushName(atom.atom_id)
                         glColor3f(atom.color[0], atom.color[1], atom.color[2])
-                        glPointSize(self.PointSize*atom.vdw_rad)
+                        glPointSize(self.EMSession.GL_parameters['dot_size']*atom.vdw_rad)
                         glBegin(GL_POINTS)
-                        glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+                        coord1   = frame[atom.index-1]
+                        glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
                         glEnd()
                         glPopName()
                         glPopMatrix()
-                        #print atom.name, atom.pos
+
+           
+            glEndList()
+            Vobject.list_dots.append(gl_dt_li)  
+            return True
         
-        glEndList()
-        Vobject.list_dots.append(gl_pt_li)
+        
+        
+        #if Vobject.actived:
+        #    for chain in  Vobject.chains:
+        #        for res in Vobject.chains[chain].residues:
+        #            for atom in Vobject.chains[chain].residues[res].atoms:
+        #                glPushMatrix()
+        #                glPushName(atom.index)
+        #                glColor3f(atom.color[0], atom.color[1], atom.color[2])
+        #                glPointSize(self.PointSize*atom.vdw_rad)
+        #                glBegin(GL_POINTS)
+        #                glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
+        #                glEnd()
+        #                glPopName()
+        #                glPopMatrix()
+        #                #print atom.name, atom.pos
+        #
+        #glEndList()
+        #Vobject.list_dots.append(gl_pt_li)
     
     def draw_lines(self, Vobject = None , selection = None):
         """ Change the representation to lines.
@@ -787,7 +810,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             gl_ln_li = glGenLists(n)
             
             glNewList(gl_ln_li, GL_COMPILE)
-            glLineWidth(3)
+            glLineWidth(self.EMSession.GL_parameters['line_width'])
 
             for bond in Vobject.index_bonds:
                 

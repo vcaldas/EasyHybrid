@@ -42,6 +42,29 @@ class EasyMolFunctions:
         self.EasyMol.center(self.current_row)
         #self.update_list_view()
 
+    
+    
+    """   D O T S   """
+
+    def show_dots      (self, Vobject_index = None):
+        """ show """
+        
+        if Vobject_index == None:
+            Vobject_index = self.current_row
+        
+        self.EasyMol.show (_type = 'dots', Vobject_index = Vobject_index)  
+    
+    def hide_dots      (self, Vobject_index = None):
+        """ hide """
+        
+        if Vobject_index == None:
+            Vobject_index = self.current_row
+        
+        self.EasyMol.hide (_type = 'dots', Vobject_index = Vobject_index)  
+
+    
+
+
     """   L I N E S   """
 
     def show_lines      (self, Vobject_index = None):
@@ -168,7 +191,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
         #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("on_treeview_item_clicked(QtreeWidgetItem*)"), self.on_treeView_item_clicked)
         #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("clicked(QModelIndex)"),          self.on_treeview_clicked_QModelIndex)
         #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("on_treeview_item_clicked(QtreeWidgetItem*)"), self.on_treeView_item_clicked)
-        QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("on_treeview_item_clicked(QTreeWidgetItem*,int)"), self.on_treeview_item_clicked)
+        QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("itemClicked(QTreeWidgetItem*,int)"), self.on_treeview_item_clicked)
         self.generate_actions ()
         
 
@@ -231,6 +254,19 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
         self.Action_delete = QtGui.QAction('Delete', self)
         self.Action_delete.setStatusTip('Delete Object')
         self.Action_delete.triggered.connect(self.delete_obj)
+
+        
+        
+        '''    dots    '''
+        # show
+        self.Action_show_dots = QtGui.QAction('dots', self)
+        self.Action_show_dots.setStatusTip('Show dots')
+        self.Action_show_dots.triggered.connect(self.show_dots)
+        # hide
+        self.Action_hide_dots = QtGui.QAction('dots', self)
+        self.Action_hide_dots.setStatusTip('Show dots')
+        self.Action_hide_dots.triggered.connect(self.hide_dots)
+
 
         
         '''    Lines    '''
@@ -432,12 +468,14 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
             menu.addAction(self.Action_center)
             
             menu_show = menu.addMenu("&Show")
+            menu_show.addAction(self.Action_show_dots)
             menu_show.addAction(self.Action_show_lines)
             menu_show.addAction(self.Action_show_ribbons)
             menu_show.addAction(self.Action_show_ball_and_stick)
             menu_show.addAction(self.Action_show_spheres)
 
             menu_hide = menu.addMenu("&Hide")
+            menu_hide.addAction(self.Action_hide_dots)
             menu_hide.addAction(self.Action_hide_lines)
             menu_hide.addAction(self.Action_hide_ribbons)
             menu_hide.addAction(self.Action_hide_ball_and_stick)

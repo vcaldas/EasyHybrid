@@ -43,7 +43,7 @@ class Vobject:
         
         self.actived      = True       
         
-        self.show_dots    = False
+        self.show_dots    = True
         self.list_dots    = []
         
         self.show_lines   = True
