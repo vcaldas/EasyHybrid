@@ -208,7 +208,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
         QtCore.QObject.connect(self.selection_mode_combo, QtCore.SIGNAL("activated(QString)"), self.change_selection_mode)
 
 
-
+        QtCore.QObject.connect(self.horizontalSlider, QtCore.SIGNAL("sliderMoved(int)"), self.horizontal_slider_change)
         
         glmenu = [self.actionOpen]
         self.current_row = None     # selected row from the treeview menu
@@ -486,9 +486,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
 
         menu.exec_(self.treeWidget.viewport().mapToGlobal(position))
         self.current_row =  None
-
-
-'''
+    
+    def horizontal_slider_change (self, data):
+        """ Function doc """
+        #print (data)
+        self.glwidget.frame = data 
+        self.glwidget.updateGL()
+'''     
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     mainWin = MainWindow()

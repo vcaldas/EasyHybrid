@@ -33,6 +33,7 @@ from GLarea.vector_math import Vector
 gl_settings = {'sphere_scale':0.15, 'sphere_res':15, 'pretty_res':20, 'selection_radius':1.0, 'ribbon_res':0.4}
 select_color = [16, 255, 0, 80]
 sel_col_font = [178, 23, 0]
+sel_col_font = [178, 0 , 0]
 
 def init_gl(fog_start, fog_end, fovy, width, height, z_near, z_far, color):
     """ Inside the realize function, you should put all you OpenGL
@@ -402,7 +403,7 @@ def draw_picked(atom, slices=4):
     glEnable(GL_COLOR_MATERIAL)
     glDisable(GL_BLEND)
 
-def draw_selected(atom):
+def draw_selected(atom, coord):
     """ Draw a selection marker to an atom.
     """
     glMatrixMode(GL_MODELVIEW)
@@ -411,22 +412,23 @@ def draw_selected(atom):
     glDisable(GL_COLOR_MATERIAL)
     glDisable(GL_DEPTH_TEST)
     glPushMatrix()
-    glPushName(atom.index)
+    glPushName(atom.atom_id)
     glPointSize(20)
-    glColor3ub(82, 61, 0)
+    glColor3f(0, 1,1)
+    #glColor3ub(0, 100,100)
     glBegin(GL_POINTS)
-    glVertex3f(atom.pos[0], atom.pos[1], atom.pos[2])
+    glVertex3f(coord[0], coord[1], coord[2])
     glEnd()
-    glPointSize(15)
-    glColor3ub(0, 222, 164)
-    glBegin(GL_POINTS)
-    glVertex3f(atom.pos[0], atom.pos[1], atom.pos[2])
-    glEnd()
-    glPointSize(10)
-    glColor3ub(212, 23, 235)
-    glBegin(GL_POINTS)
-    glVertex3f(atom.pos[0], atom.pos[1], atom.pos[2])
-    glEnd()
+    #glPointSize(15)
+    #glColor3ub(0, 222, 164)
+    #glBegin(GL_POINTS)
+    #glVertex3f(atom.pos[0], atom.pos[1], atom.pos[2])
+    #glEnd()
+    #glPointSize(10)
+    #glColor3ub(212, 23, 235)
+    #glBegin(GL_POINTS)
+    #glVertex3f(atom.pos[0], atom.pos[1], atom.pos[2])
+    #glEnd()
     glPopName()
     glPopMatrix()
     glFlush()
@@ -435,7 +437,7 @@ def draw_selected(atom):
     glEnable(GL_COLOR_MATERIAL)
     glEnable(GL_DEPTH_TEST)
 
-def draw_numbers(atom, number):
+def draw_numbers(atom, number, coord):
     """ Draw the number of the selected atom.
     """
     glMatrixMode(GL_MODELVIEW)
@@ -453,7 +455,7 @@ def draw_numbers(atom, number):
     #glRotate(0, 0, 1, 0)
     #glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, ord(str(number)))
     #glRasterPos2f(float(atom.pos[0]), float( atom.pos[1]))
-    glRasterPos3f(float(atom.pos[0]), float( atom.pos[1]), float(atom.pos[2]))
+    glRasterPos3f(float(coord[0]), float(coord[1]), float( coord[2]))
     glutBitmapCharacter( GLUT_BITMAP_HELVETICA_18, ord(str(number)))
     
     glEnable(GL_LIGHT0)
