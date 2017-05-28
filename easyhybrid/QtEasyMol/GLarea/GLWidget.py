@@ -1083,7 +1083,8 @@ class GLWidget(QtOpenGL.QGLWidget):
                         #-------------------------------------------------------
                         glPushMatrix()                
                         glPushName(atom.atom_id)
-                        glTranslate(atom.pos[0],   atom.pos[1],   atom.pos[2])
+                        coord1 = frame[atom.index-1]
+                        glTranslate(float(coord1[0]),float( coord1[1]),float( coord1[2]))
                         glColor3f(atom.color[0],   atom.color[1], atom.color[2])
                         glutSolidSphere(atom.vdw_rad, sphere_quality, sphere_quality)
                         glPopMatrix()
