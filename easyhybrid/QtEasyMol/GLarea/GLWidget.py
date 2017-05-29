@@ -73,7 +73,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.z_near = 1.0
         self.z_far  = 10.0
         
-        self.fog_start  = self.z_far - 1.5
+        self.fog_start  = self.z_far - 4.5
         self.fog_end    = self.z_far
         self.scale_zoom = self.fog_start # increse /decrese the dot size and line width
         
@@ -387,83 +387,47 @@ class GLWidget(QtOpenGL.QGLWidget):
         if dx == 0 and dy == 0:
             button = event.button()
             if button == QtCore.Qt.MouseButton.RightButton and not self.dragging:
-                #print('RightButton')
+
+                nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
+                selected = self.select(nearest, hits)                    
                 menu = QtGui.QMenu(self)
+            
+                if selected is None:
+                    for item in self.glmenu['background']:
+                        menu.addAction(item)
+                    
+
                 
-                for item in self.glmenu:
-                    menu.addAction(item)
+                else:
+                    if self.EMSession._picking_selection_mode:
+                        pass
+                    
+                    else:
+                        if selected not in self.EMSession.viewing_selections:
+                            #               obj             /      chain      /       residue                  resi           /         atom                  index
+                            label = selected.Vobject_name+' / '+selected.chain+' / '+str(selected.resn)+ ' ' +str(selected.resi)+' / '+str(selected.name)+' ' +str(selected.index)                    
+                            #str(selected.index) + ' ' + str(selected.name) + ' ' + str(selected.resi)+ ' ' + str(selected.resn)
+                            Action_label = QtGui.QAction(label, self)
+                            #Action_delete.triggered.connect(self.delete_obj)                    
+                            menu.addAction(Action_label)
+                            menu.addSeparator()
+                        else:
+                            label = 'Selection'
+                            Action_label = QtGui.QAction(label, self)
+                            #Action_delete.triggered.connect(self.delete_obj)                    
+                            menu.addAction(Action_label)
+                            menu.addSeparator()
+                
                 menu.exec_(event.globalPos())
+            
             if button == QtCore.Qt.MouseButton.LeftButton and not self.dragging:
                 #print('LeftButton')
                 if dx <= self.pick_radius[0] and dy <= self.pick_radius[1]:
                     nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
-                    selected = self.select(nearest, hits)
-                    
+                    selected = self.select(nearest, hits)                    
                     self.EMSession.selection_function(selected)
-                    
-                    
-                    #if selected is None:
-                    #    self.selected_atoms = [None]*len(self.selected_atoms)
-                    #    self.selected_residues = []
-                    #else:
-                    #    if self.sel_atom:
-                    #        if selected not in self.selected_atoms:
-                    #            for i in range(len(self.selected_atoms)):
-                    #                if self.selected_atoms[i] == None:
-                    #                    self.selected_atoms[i] = selected
-                    #                    selected = None
-                    #                    break
-                    #            if selected is not None:
-                    #                self.selected_atoms[len(self.selected_atoms)-1] = selected
-                    #        else:
-                    #            for i in range(len(self.selected_atoms)):
-                    #                if self.selected_atoms[i] == selected:
-                    #                    self.selected_atoms[i] = None
-                    #    elif self.sel_resid:
-                    #        pass
-                    #        if self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi] not in self.selected_residues:
-                    #            self.selected_residues.append(self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi])
-                    #        else:
-                    #            pass
-                    #        #for atom in self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi]
-                    
-                    
-                    
                     self.updateGL()
-            """
-            if button == QtCore.Qt.MouseButton.LeftButton:
-                #print('LeftButton')
-                nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
-                selected = self.select(nearest, hits)
-                ''' selecao por residuo - ainda nao esta bom - sera arrumado depois '''
-                if selected == None:
-                    #zera a lista
-                    self.selected_atoms = []
-                    self.updateGL()
-                else:    
-                    if selected in self.selected_atoms:
-                        index = self.selected_atoms.index(selected)
-                        self.selected_atoms.pop(index)
 
-                        for atom in self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi].atoms:
-                            print (atom.atom_id, atom.index, atom.name, atom.resi, atom.chain, atom.Vobject_id)                        
-                            
-                            index = self.selected_atoms.index(atom)
-                            self.selected_atoms.pop(index)
-                        self.updateGL()
-                    
-                    else:
-                        print(selected.atom_id, selected.index, selected.name, selected.resi, selected.chain, selected.Vobject_id)
-                        
-                        for atom in self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi].atoms:
-                            print (atom.atom_id, atom.index, atom.name, atom.resi, atom.chain, atom.Vobject_id)                        
-                            
-                            if atom in self.selected_atoms:
-                                pass
-                            else:
-                                self.selected_atoms.append(atom)
-                        self.updateGL()
-            """
             
             if button == QtCore.Qt.MouseButton.MidButton:
                 if self.dragging:
@@ -746,9 +710,11 @@ class GLWidget(QtOpenGL.QGLWidget):
                 pass
             n += 1
     
-    def draw_dots(self, Vobject):
+    def draw_dots(self, Vobject, selection = None):
         """ Change the representation to Dots.
         """
+        if selection:
+            pass
         #print 'Dots Representation'
         # Center dots representations of the atoms
         #n = 100
@@ -938,7 +904,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 coord1   = frame[atom1.index-1]
                 glTranslate(coord1[0],   coord1[1],   coord1[2])
                 glColor3f(atom1.color[0], atom1.color[1], atom1.color[2])
-                glutSolidSphere(atom1.radius, sphere_quality, sphere_quality)
+                glutSolidSphere(atom1.radius *self.EMSession.GL_parameters['sphere_scale'], sphere_quality, sphere_quality)
                 glPopMatrix()
                 glPopName()
 
@@ -947,7 +913,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 coord2   = frame[atom2.index-1]
                 glTranslate(coord2[0]     ,   coord2[1]   ,   coord2[2])
                 glColor3f  (atom2.color[0], atom2.color[1],   atom2.color[2])
-                glutSolidSphere(atom2.radius, sphere_quality, sphere_quality)                           
+                glutSolidSphere(atom2.radius *self.EMSession.GL_parameters['sphere_scale'] , sphere_quality, sphere_quality)                           
                 glPopName()
                 glPopMatrix()
                 #-------------------------------------------------------
@@ -960,7 +926,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 
                 v = Vector()
                 #base of cylinder is at the origin, the top is in the positive z axis
-                radius = 0.05
+                radius = 0.07
                 a = coord1
                 b = coord2
                 
@@ -986,7 +952,10 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glPushMatrix()
                 glTranslate(b[0], b[1], b[2])
                 glRotate(angle, axis_rotation[0], axis_rotation[1], axis_rotation[2])
-                gluCylinder(cyl, radius_bottom, radius_top, length, 15, 15)
+                
+                gluCylinder(cyl, radius_bottom *self.EMSession.GL_parameters['stick_scale'], 
+                                 radius_top*self.EMSession.GL_parameters['stick_scale'], 
+                                 length, 15, 15)
                 glPopMatrix()
                 #-------------------------------------------------------
 

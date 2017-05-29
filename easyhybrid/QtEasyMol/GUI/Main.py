@@ -210,7 +210,18 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
 
         QtCore.QObject.connect(self.horizontalSlider, QtCore.SIGNAL("sliderMoved(int)"), self.horizontal_slider_change)
         
-        glmenu = [self.actionOpen]
+        glmenu = {'background':[self.actionOpen],
+                  
+                  'atom'      :[self.Action_center],
+                  
+                  'selection' :[]
+                  
+                  }
+        
+        
+        
+        
+        
         self.current_row = None     # selected row from the treeview menu
 
         self.glwidget = GLWidget(self, glmenu = glmenu)

@@ -64,14 +64,14 @@ class EasyMolSession:
         pprint(self.Vobjects)
         self.glwidget.draw_lines(self.Vobjects[-1])
         self.glwidget.draw_dots(self.Vobjects[-1])
-
+        self.center (Vobject_index =  -1)
         return True
         
 
     def _hide_dots (self, Vobject_index ):
         """ Function doc """
         self.Vobjects[Vobject_index].show_dots = False
-        self.glwidget.draw_dots(self.Vobjects[Vobject_index])
+        #self.glwidget.draw_dots(self.Vobjects[Vobject_index])
 
     def _show_dots (self, Vobject_index ):
         """ Function doc """
@@ -82,8 +82,8 @@ class EasyMolSession:
     def _hide_ribbons (self, Vobject_index ):
         """ Function doc """
         self.Vobjects[Vobject_index].show_ribbons = False
-        self.glwidget.draw_ribbon(self.Vobjects[Vobject_index])
-        self.glwidget.draw()
+        #self.glwidget.draw_ribbon(self.Vobjects[Vobject_index])
+        #self.glwidget.draw()
     
     def _show_ribbons (self, Vobject_index ):
         """ Function doc """
@@ -94,7 +94,7 @@ class EasyMolSession:
     def _hide_lines (self, Vobject_index ):
         """ Function doc """
         self.Vobjects[Vobject_index].show_lines = False
-        self.glwidget.draw_lines(self.Vobjects[Vobject_index])
+        #self.glwidget.draw_lines(self.Vobjects[Vobject_index])
 
     def _show_lines (self, Vobject_index ):
         """ Function doc """
@@ -106,7 +106,7 @@ class EasyMolSession:
         """ Function doc """
         #print ('here  _hide_ball_and_stick')
         self.Vobjects[Vobject_index].show_ball_and_stick = False
-        self.glwidget.draw_ball_and_stick(self.Vobjects[Vobject_index])
+        #self.glwidget.draw_ball_and_stick(self.Vobjects[Vobject_index])
         
     def _show_ball_and_stick(self, Vobject_index):
         """ Function doc """
@@ -119,7 +119,7 @@ class EasyMolSession:
         """ Function doc """
         #print ('here  _hide_ball_and_stick')
         self.Vobjects[Vobject_index].show_spheres = False
-        self.glwidget.draw_spheres(self.Vobjects[Vobject_index])
+        #self.glwidget.draw_spheres(self.Vobjects[Vobject_index])
         
     def _show_spheres (self, Vobject_index):
         """ Function doc """
@@ -367,11 +367,13 @@ class EasyMolSession:
         
         self.GL_parameters =     {
                                  
-                                 'dot_size'      : 5      ,
-                                 'line_width'   : 3      ,
-                                 'sphere_scale' : 1      ,
-                                 'antialias'    : False  ,
-                                 'bg_color'     : 'black',
+                                 'dot_size'      : 3      ,
+                                 'line_width'    : 2      ,
+                                 'sphere_scale'  : 0.7    ,
+                                 'stick_scale'   : 1      ,
+
+                                 'antialias'     : False  ,
+                                 'bg_color'      : 'black',
                                  }
         
         self._picking_selection_mode = False # True/False  - interchange between viewing  and picking mode
