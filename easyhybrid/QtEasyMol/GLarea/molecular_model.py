@@ -41,29 +41,45 @@ class Vobject:
     def __init__ (self, chains=None, bonds=None, mass_center=None):
         """ Class initialiser """
         
-        self.actived      = True       
+        self.actived           = True       
         
-        self.show_dots    = True
-        self.list_dots    = []
+        """   D O T S   """
+        self.show_dots         = False
+        self.GL_list_dots      = []    # GL list -  GPU compiled 
+        self.list_atom_dots    = []    # <-- True/False lista containg all atoms 
         
-        self.show_lines   = True
-        self.list_lines   = []
+        """   L I N E S   """
+        self.show_lines        = True
+        self.list_lines        = []
+        self.list_atom_lines   = []    # <-- True/False lista containg all atoms 
         
-        self.show_ribbons = False
-        self.list_ribbons = []
+        """   R I B B O N S   """
+        self.show_ribbons      = False
+        self.list_ribbons      = []
+        self.list_atom_ribbons = []    # <-- True/False lista containg all atoms 
         
-        self.show_sticks  = False
-        self.list_sticks  = []
+        """   S T I C K S   """
+        self.show_sticks       = False
+        self.list_sticks       = []
+        self.list_atom_sticks  = []   # <-- True/False lista containg all atoms 
+        
+        """   S P H E R E S   """
+        self.show_spheres      = False
+        self.list_spheres      = []
+        self.list_atom_spheres = []   # <-- True/False lista containg all atoms 
+        
+        """   S U R F A C E   """
+        self.show_surface      = False
+        self.list_surface      = []
+        self.list_atom_surface = []
+        
+        """   B A L L  A N D  S T I C K   """   
+        self.show_ball_and_stick      = False
+        self.list_ball_and_stick      = []
+        self.list_atom_ball_and_stick = []
 
-        self.show_spheres = False
-        self.list_spheres = []
-        
-        self.show_ball_and_stick = False
-        self.list_ball_and_stick = []
-        
-        self.show_surface = False
-        self.list_surface = []
-        
+
+
         self.Type  = 'molecule'
         self.label = 'unkown'
 

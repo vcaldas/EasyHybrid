@@ -167,7 +167,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glEnable (GL_DEPTH_TEST)
                 
                 if Vobject.show_dots    :
-                    glCallList(Vobject.list_dots[input_frame], GL_COMPILE)
+                    glCallList(Vobject.GL_list_dots[input_frame], GL_COMPILE)
                 
                 if Vobject.show_lines   :
                     glCallList(Vobject.list_lines[input_frame], GL_COMPILE)
@@ -240,7 +240,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glDisable(GL_COLOR_MATERIAL)
                 glEnable (GL_DEPTH_TEST)
                 if Vobject.show_dots    :
-                    glCallList(Vobject.list_dots[input_frame], GL_COMPILE)
+                    glCallList(Vobject.GL_list_dots[input_frame], GL_COMPILE)
                 if Vobject.show_lines   :
                     glCallList(Vobject.list_lines[input_frame], GL_COMPILE)
                 if Vobject.show_ribbons :
@@ -710,36 +710,73 @@ class GLWidget(QtOpenGL.QGLWidget):
                 pass
             n += 1
     
-    def draw_dots(self, Vobject, selection = None):
+    def draw_dots(self, Vobject = None, selection = True):
         """ Change the representation to Dots.
         """
-        if selection:
-            pass
-        #print 'Dots Representation'
-        # Center dots representations of the atoms
-        #n = 100
+        #if selection:
+        #    _vobjects = [[]]* len(self.EMSession.Vobjects)
+        #    
+        #    print ('len(self.EMSession.Vobjects)',_vobjects )
+        #    print ('len(self.EMSession.viewing_selections)',len(self.EMSession.viewing_selections) )
+        #    
+        #    for atom in self.EMSession.viewing_selections:
+        #        _vobjects[atom.Vobject_id].append(atom)
+        #    
+        #    for _vobject in _vobjects:
+        #        if _vobject == []:
+        #            pass
+        #        
+        #        else:
+        #            vobj_index = _vobjects.index(_vobject)
+        #                              
+        #            gl_dt_li = glGenLists(self.gl_lists_counter)
+        #            glNewList(gl_dt_li, GL_COMPILE)
+        #            
+        #            for frame in self.EMSession.Vobjects[vobj_index].frames:
+        #                for atom in _vobject:
+        #                    #-------------------------------------------------------
+        #                    #                        D O T S
+        #                    #-------------------------------------------------------
+        #                    glPushMatrix()
+        #                    glPushName(atom.atom_id)
+        #                    glColor3f(atom.color[0], atom.color[1], atom.color[2])
+        #                    glPointSize(self.EMSession.GL_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
+        #                    glBegin(GL_POINTS)
+        #                    coord1   = frame[atom.index-1]
+        #                    glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
+        #                    glEnd()
+        #                    glPopName()
+        #                    glPopMatrix()
+        #
+        #            glEndList()            
+        #            self.EMSession.Vobjects[vobj_index].GL_list_dots.append(gl_dt_li) 
+        #else:
         for frame in Vobject.frames:
             gl_dt_li = glGenLists(self.gl_lists_counter)
             glNewList(gl_dt_li, GL_COMPILE)
             for chain in  Vobject.chains:
                 for res in Vobject.chains[chain].residues:
                     for atom in Vobject.chains[chain].residues[res].atoms:
-                        #-------------------------------------------------------
-                        #                        D O T S
-                        #-------------------------------------------------------
-                        glPushMatrix()
-                        glPushName(atom.atom_id)
-                        glColor3f(atom.color[0], atom.color[1], atom.color[2])
-                        glPointSize(self.EMSession.GL_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
-                        glBegin(GL_POINTS)
-                        coord1   = frame[atom.index-1]
-                        glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
-                        glEnd()
-                        glPopName()
-                        glPopMatrix()
-
+                        # checking if the selection is actived
+                        if Vobject.list_atom_dots[atom.index-1]:
+                            #-------------------------------------------------------
+                            #                        D O T S
+                            #-------------------------------------------------------
+                            glPushMatrix()
+                            glPushName(atom.atom_id)
+                            glColor3f(atom.color[0], atom.color[1], atom.color[2])
+                            glPointSize(self.EMSession.GL_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
+                            glBegin(GL_POINTS)
+                            coord1   = frame[atom.index-1]
+                            glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
+                            glEnd()
+                            glPopName()
+                            glPopMatrix()
+                        else:
+                            pass
+                            
             glEndList()
-            Vobject.list_dots.append(gl_dt_li) 
+            Vobject.GL_list_dots.append(gl_dt_li) 
             self.gl_lists_counter += 1
         return True
         
@@ -761,46 +798,49 @@ class GLWidget(QtOpenGL.QGLWidget):
             glLineWidth(self.EMSession.GL_parameters['line_width'])
 
             for bond in Vobject.index_bonds:
-                
+
                 atom1    = Vobject.atoms[bond[0]]
                 atom2    = Vobject.atoms[bond[1]]
-                coord1   = frame[bond[0]]
-                coord2   = frame[bond[1]]
-
-                midcoord = [
-                        (coord1[0] + coord2[0])/2,	   
-                        (coord1[1] + coord2[1])/2,
-                        (coord1[2] + coord2[2])/2,
-                        ]
+                # checking if the selection is actived
+                if Vobject.list_atom_lines[atom1.index-1] and Vobject.list_atom_lines[atom2.index-1]:
                 
-                glPushMatrix()		
-                glPushName(atom1.atom_id) 
-                glColor3f(atom1.color[0], 
-                          atom1.color[1], 
-                      atom1.color[2])
+                    coord1   = frame[bond[0]]
+                    coord2   = frame[bond[1]]
 
-                
-                glBegin(GL_LINES)
-                glVertex3f(coord1[0],coord1[1],coord1[2])
-                glVertex3f(midcoord[0],midcoord[1],midcoord[2])
-                glEnd()
-                glPopName()
-                glPopMatrix()
-                
-                
-                glPushMatrix()		
-                glPushName(atom2.atom_id) 
-                glColor3f (atom2.color[0], 
-                           atom2.color[1], 
-                       atom2.color[2])
+                    midcoord = [
+                            (coord1[0] + coord2[0])/2,	   
+                            (coord1[1] + coord2[1])/2,
+                            (coord1[2] + coord2[2])/2,
+                            ]
+                    
+                    glPushMatrix()		
+                    glPushName(atom1.atom_id) 
+                    glColor3f(atom1.color[0], 
+                              atom1.color[1], 
+                          atom1.color[2])
 
-                glBegin(GL_LINES)
-                glVertex3f(midcoord[0],midcoord[1],midcoord[2])
-                glVertex3f(coord2[0],coord2[1],coord2[2])
+                    
+                    glBegin(GL_LINES)
+                    glVertex3f(coord1[0],coord1[1],coord1[2])
+                    glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+                    glEnd()
+                    glPopName()
+                    glPopMatrix()
+                    
+                    
+                    glPushMatrix()		
+                    glPushName(atom2.atom_id) 
+                    glColor3f (atom2.color[0], 
+                               atom2.color[1], 
+                           atom2.color[2])
 
-                glEnd()
-                glPopName()
-                glPopMatrix()
+                    glBegin(GL_LINES)
+                    glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+                    glVertex3f(coord2[0],coord2[1],coord2[2])
+
+                    glEnd()
+                    glPopName()
+                    glPopMatrix()
             glEndList()
             Vobject.list_lines.append(gl_ln_li)
             

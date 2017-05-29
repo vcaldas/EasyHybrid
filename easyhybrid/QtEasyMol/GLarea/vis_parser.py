@@ -120,6 +120,15 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         Vobject.chains = chains_m
         total = len(Vobject.atoms)
         
+        Vobject.list_atom_lines          = [True] *total
+        Vobject.list_atom_ribbons        = [False]*total
+        Vobject.list_atom_dots           = [False]*total
+        Vobject.list_atom_sticks         = [False]*total
+        Vobject.list_atom_spheres        = [False]*total
+        Vobject.list_atom_surface        = [False]*total
+        Vobject.list_atom_ball_and_stick = [False]*total
+        
+        
         Vobject.mass_center[0] = sum_x / total
         Vobject.mass_center[1] = sum_y / total
         Vobject.mass_center[2] = sum_z / total
@@ -248,6 +257,14 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         Vobject.chains = chains_m
         
         total = len(Vobject.atoms)
+        Vobject.list_atom_lines          = [True] *total
+        Vobject.list_atom_ribbons        = [False]*total
+        Vobject.list_atom_dots           = [False]*total
+        Vobject.list_atom_sticks         = [False]*total
+        Vobject.list_atom_spheres        = [False]*total
+        Vobject.list_atom_surface        = [False]*total
+        Vobject.list_atom_ball_and_stick = [False]*total
+
         
         Vobject.mass_center[0] = sum_x / total
         Vobject.mass_center[1] = sum_y / total

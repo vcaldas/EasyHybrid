@@ -63,7 +63,8 @@ class EasyMolSession:
         
         pprint(self.Vobjects)
         self.glwidget.draw_lines(self.Vobjects[-1])
-        self.glwidget.draw_dots(self.Vobjects[-1])
+        #self.glwidget.draw_dots(self.Vobjects[-1])
+        #Vobject.show_dots = False
         self.center (Vobject_index =  -1)
         return True
         
@@ -73,11 +74,11 @@ class EasyMolSession:
         self.Vobjects[Vobject_index].show_dots = False
         #self.glwidget.draw_dots(self.Vobjects[Vobject_index])
 
-    def _show_dots (self, Vobject_index ):
+    def _show_dots (self, Vobject_index = None, selection = False ):
         """ Function doc """
+        
         self.Vobjects[Vobject_index].show_dots = True
-        self.glwidget.draw_dots(self.Vobjects[Vobject_index])
-
+        self.glwidget.draw_dots(Vobject = self.Vobjects[Vobject_index], selection = True)
 
     def _hide_ribbons (self, Vobject_index ):
         """ Function doc """
@@ -126,10 +127,7 @@ class EasyMolSession:
         self.Vobjects[Vobject_index].show_spheres = True
         self.glwidget.draw_spheres(self.Vobjects[Vobject_index])
     
-    
-    
-    
-    
+
     def hide (self, _type = 'lines', Vobject_index =  None):
         """ Function doc """    
         if _type == 'dots':
@@ -148,10 +146,6 @@ class EasyMolSession:
             self._hide_spheres(Vobject_index )            
         
         self.glwidget.updateGL()
-
-
-
-
 
     def show (self, _type = 'lines', Vobject_index =  None):
         """ Function doc """
@@ -240,6 +234,94 @@ class EasyMolSession:
         if self._selection_mode == 'molecule':
             self.glwidget.selection_mode(mode = 'molecule')
         
+    
+    def selection_change_presentation_mode (self, _type = 'lines', show =  True):
+        """ Function doc """
+        modified_objects = [False] * len(self.Vobjects)
+        
+        for atom in self.viewing_selections:
+            index      = atom.index-1
+            vobj_index = atom.Vobject_id
+            
+            modified_objects[vobj_index] = True
+            if _type == 'lines':
+                if show:
+                    self.Vobjects[vobj_index].list_atom_lines[index] = True
+                else:
+                    self.Vobjects[vobj_index].list_atom_lines[index] = False
+             
+            if _type == 'dots':
+                if show:
+                    self.Vobjects[vobj_index].list_atom_dots[index] = True
+                else:
+                    self.Vobjects[vobj_index].list_atom_dots[index] = False
+                
+            if _type == 'ribbons':
+                if show:
+                    self.Vobjects[vobj_index].list_atom_ribbons[index] = True
+                else:
+                    self.Vobjects[vobj_index].list_atom_ribbons[index] = False
+
+            if _type == 'spheres':
+                if show:
+                    self.Vobjects[vobj_index].list_atom_spheres[index] = True
+                else:
+                    self.Vobjects[vobj_index].list_atom_spheres[index] = False
+
+            if _type == 'ball_and_stick':
+                if show:
+                    self.Vobjects[vobj_index].list_atom_ball_and_stick[index] = True
+                else:
+                    self.Vobjects[vobj_index].list_atom_ball_and_stick[index] = False
+            
+            if _type == 'surface':
+                if show:
+                    self.Vobjects[vobj_index].list_atom_surface[index] = True
+                else:
+                    self.Vobjects[vobj_index].list_atom_surface[index] = False
+        
+        return modified_objects
+        
+        
+        '''
+        if selection:
+            _vobjects = [[]]* len(self.EMSession.Vobjects)
+            
+            print ('len(self.EMSession.Vobjects)',_vobjects )
+            print ('len(self.EMSession.viewing_selections)',len(self.EMSession.viewing_selections) )
+            
+            for atom in self.EMSession.viewing_selections:
+                _vobjects[atom.Vobject_id].append(atom)
+            
+            for _vobject in _vobjects:
+                if _vobject == []:
+                    pass
+                
+                else:
+                    vobj_index = _vobjects.index(_vobject)
+                                        
+                    gl_dt_li = glGenLists(self.gl_lists_counter)
+                    glNewList(gl_dt_li, GL_COMPILE)
+                    
+                    for frame in self.EMSession.Vobjects[vobj_index].frames:
+                        for atom in _vobject:
+                            #-------------------------------------------------------
+                            #                        D O T S
+                            #-------------------------------------------------------
+                            glPushMatrix()
+                            glPushName(atom.atom_id)
+                            glColor3f(atom.color[0], atom.color[1], atom.color[2])
+                            glPointSize(self.EMSession.GL_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
+                            glBegin(GL_POINTS)
+                            coord1   = frame[atom.index-1]
+                            glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
+                            glEnd()
+                            glPopName()
+                            glPopMatrix()
+        
+                    glEndList()            
+                    self.EMSession.Vobjects[vobj_index].GL_list_dots.append(gl_dt_li) 
+        '''
     def selection_function (self, selected):
         """ Function doc """
 
