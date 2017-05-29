@@ -177,8 +177,11 @@ cpdef C_generate_bonds3(atoms):
                     vec_o = 0
                     
                     index_bonds.append([i, j])
-                    
+                    atoms[i].connected.append(j)
+                    atoms[j].connected.append(i)
+
                     bonds.append((atoms[i], distance , angle    , vec_o, midpoint))
+		    
                     bonds.append((atoms[j], distance , angle+180, vec_o, midpoint))
 
                     

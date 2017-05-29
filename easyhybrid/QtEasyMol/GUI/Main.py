@@ -193,7 +193,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
         #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("on_treeview_item_clicked(QtreeWidgetItem*)"), self.on_treeView_item_clicked)
         QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("itemClicked(QTreeWidgetItem*,int)"), self.on_treeview_item_clicked)
         self.generate_actions ()
-        
+        self.generate_menus   ()
 
         self.toolBar_2.addSeparator()
         self.label2 = QtGui.QLabel()
@@ -210,11 +210,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
 
         QtCore.QObject.connect(self.horizontalSlider, QtCore.SIGNAL("sliderMoved(int)"), self.horizontal_slider_change)
         
-        glmenu = {'background':[self.actionOpen],
+        glmenu = {'on_bg'        :[self.actionOpen],
                   
-                  'atom'      :[self.Action_center],
+                  'on_atom'      :[self.Action_center],
                   
-                  'selection' :[]
+                  'on_selection' :[]
                   
                   }
         
@@ -350,6 +350,28 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
         self.Action_exite.triggered.connect(self.close)
 
 
+    def generate_menus (self):
+        """ Function doc """
+        self.treeview_menu = QtGui.QMenu()
+        self.treeview_menu.addAction(self.Action_center)
+        self.menu_show = self.treeview_menu.addMenu("&Show")
+        self.menu_show.addAction(self.Action_show_dots)
+        self.menu_show.addAction(self.Action_show_lines)
+        self.menu_show.addAction(self.Action_show_ribbons)
+        self.menu_show.addAction(self.Action_show_ball_and_stick)
+        self.menu_show.addAction(self.Action_show_spheres)
+        self.menu_hide = self.treeview_menu.addMenu("&Hide")
+        self.menu_hide.addAction(self.Action_hide_dots)
+        self.menu_hide.addAction(self.Action_hide_lines)
+        self.menu_hide.addAction(self.Action_hide_ribbons)
+        self.menu_hide.addAction(self.Action_hide_ball_and_stick)
+        self.menu_hide.addAction(self.Action_hide_spheres)
+        self.treeview_menu.addSeparator()
+        self.treeview_menu.addAction(self.Action_delete)
+        self.current_row =  None
+
+	
+
     def on_treeview_clicked_QModelIndex(self, model):
         """ Function doc """
         print (model)
@@ -473,30 +495,32 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
                  
                  #print (index.checkState())
                  level += 1
-         
-        menu = QtGui.QMenu()
-        if level == 0:
-            menu.addAction(self.Action_center)
-            
-            menu_show = menu.addMenu("&Show")
-            menu_show.addAction(self.Action_show_dots)
-            menu_show.addAction(self.Action_show_lines)
-            menu_show.addAction(self.Action_show_ribbons)
-            menu_show.addAction(self.Action_show_ball_and_stick)
-            menu_show.addAction(self.Action_show_spheres)
+	
+        self.treeview_menu.exec_(self.treeWidget.viewport().mapToGlobal(position))
 
-            menu_hide = menu.addMenu("&Hide")
-            menu_hide.addAction(self.Action_hide_dots)
-            menu_hide.addAction(self.Action_hide_lines)
-            menu_hide.addAction(self.Action_hide_ribbons)
-            menu_hide.addAction(self.Action_hide_ball_and_stick)
-            menu_hide.addAction(self.Action_hide_spheres)
-
-            menu.addSeparator()
-            menu.addAction(self.Action_delete)
-
-        menu.exec_(self.treeWidget.viewport().mapToGlobal(position))
-        self.current_row =  None
+        #menu = QtGui.QMenu()
+        #if level == 0:
+        #    menu.addAction(self.Action_center)
+        #    
+        #    menu_show = menu.addMenu("&Show")
+        #    menu_show.addAction(self.Action_show_dots)
+        #    menu_show.addAction(self.Action_show_lines)
+        #    menu_show.addAction(self.Action_show_ribbons)
+        #    menu_show.addAction(self.Action_show_ball_and_stick)
+        #    menu_show.addAction(self.Action_show_spheres)
+        #
+        #    menu_hide = menu.addMenu("&Hide")
+        #    menu_hide.addAction(self.Action_hide_dots)
+        #    menu_hide.addAction(self.Action_hide_lines)
+        #    menu_hide.addAction(self.Action_hide_ribbons)
+        #    menu_hide.addAction(self.Action_hide_ball_and_stick)
+        #    menu_hide.addAction(self.Action_hide_spheres)
+        #
+        #    menu.addSeparator()
+        #    menu.addAction(self.Action_delete)
+        #
+        #menu.exec_(self.treeWidget.viewport().mapToGlobal(position))
+        #self.current_row =  None
     
     def horizontal_slider_change (self, data):
         """ Function doc """

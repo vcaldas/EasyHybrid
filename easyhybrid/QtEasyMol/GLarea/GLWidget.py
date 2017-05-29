@@ -25,7 +25,121 @@ import GLarea.representations as rep
 from GLarea.vector_math import Vector
 
 
-class GLWidget(QtOpenGL.QGLWidget):
+class GL_menus:
+    """ Class doc """
+    
+    def __init__ (self):
+        """ Class initialiser """
+
+    def open_gl_menu (self, _type = 'on_bg', selected = None, event = None):
+        """ Function doc """
+        menu = QtGui.QMenu()
+        if _type == 'on_bg':
+            for item in self.glmenu['on_bg']:
+                menu.addAction(item)
+        
+        if _type == 'on_atom':
+            if selected not in self.EMSession.viewing_selections:
+                #               obj             /      chain      /       residue                  resi           /         atom                  index
+                label = selected.Vobject_name+' / '+selected.chain+' / '+str(selected.resn)+ ' ' +str(selected.resi)+' / '+str(selected.name)+' ' +str(selected.index)                    
+                #str(selected.index) + ' ' + str(selected.name) + ' ' + str(selected.resi)+ ' ' + str(selected.resn)
+                Action_label = QtGui.QAction(label, self)
+                #Action_delete.triggered.connect(self.delete_obj)                    
+                menu.addAction(Action_label)
+                menu.addSeparator()            
+            
+                menu.addAction(self.Action_center)
+                
+                menu_atom = menu.addMenu("&Atom")
+                menu_atom_show = menu_atom.addMenu("&Show")
+                menu_atom_show.addAction(self.Action_show_dots)
+                menu_atom_show.addAction(self.Action_show_lines)
+                menu_atom_show.addAction(self.Action_show_ribbons)
+                menu_atom_show.addAction(self.Action_show_ball_and_stick)
+                menu_atom_show.addAction(self.Action_show_spheres)
+            
+                menu_atom_hide = menu_atom.addMenu("&Hide")
+                menu_atom_hide.addAction(self.Action_hide_dots)
+                menu_atom_hide.addAction(self.Action_hide_lines)
+                menu_atom_hide.addAction(self.Action_hide_ribbons)
+                menu_atom_hide.addAction(self.Action_hide_ball_and_stick)
+                menu_atom_hide.addAction(self.Action_hide_spheres)
+            
+                menu_residue = menu.addMenu("&Residue")
+                menu_residue_show = menu_residue.addMenu("&Show")
+                menu_residue_show.addAction(self.Action_show_dots)
+                menu_residue_show.addAction(self.Action_show_lines)
+                menu_residue_show.addAction(self.Action_show_ribbons)
+                menu_residue_show.addAction(self.Action_show_ball_and_stick)
+                menu_residue_show.addAction(self.Action_show_spheres)
+                menu_residue_hide = menu_residue.addMenu("&Hide")
+                menu_residue_hide.addAction(self.Action_hide_dots)
+                menu_residue_hide.addAction(self.Action_hide_lines)
+                menu_residue_hide.addAction(self.Action_hide_ribbons)
+                menu_residue_hide.addAction(self.Action_hide_ball_and_stick)
+                menu_residue_hide.addAction(self.Action_hide_spheres)
+                
+                
+                menu_chain = menu.addMenu("&Chain")
+                menu_chain_show = menu_chain.addMenu("&Show")
+                menu_chain_show.addAction(self.Action_show_dots)
+                menu_chain_show.addAction(self.Action_show_lines)
+                menu_chain_show.addAction(self.Action_show_ribbons)
+                menu_chain_show.addAction(self.Action_show_ball_and_stick)
+                menu_chain_show.addAction(self.Action_show_spheres)
+                menu_chain_hide = menu_chain.addMenu("&Hide")
+                menu_chain_hide.addAction(self.Action_hide_dots)
+                menu_chain_hide.addAction(self.Action_hide_lines)
+                menu_chain_hide.addAction(self.Action_hide_ribbons)
+                menu_chain_hide.addAction(self.Action_hide_ball_and_stick)
+                menu_chain_hide.addAction(self.Action_hide_spheres)
+                
+                
+                
+                
+                menu.addSeparator()
+                menu.addAction(self.Action_delete)
+        
+        if _type == 'on_selection':
+            label ='Selection'
+            Action_label = QtGui.QAction(label, self)
+            #Action_delete.triggered.connect(self.delete_obj)                    
+            menu.addAction(Action_label)
+            menu.addSeparator()
+            menu.addAction(self.Action_center)
+
+            menu_show = menu.addMenu("&Show")
+            menu_show.addAction(self.Action_show_dots)
+            menu_show.addAction(self.Action_show_lines)
+            menu_show.addAction(self.Action_show_ribbons)
+            menu_show.addAction(self.Action_show_ball_and_stick)
+            menu_show.addAction(self.Action_show_spheres)
+
+            menu_hide = menu.addMenu("&Hide")
+            menu_hide.addAction(self.Action_hide_dots)
+            menu_hide.addAction(self.Action_hide_lines)
+            menu_hide.addAction(self.Action_hide_ribbons)
+            menu_hide.addAction(self.Action_hide_ball_and_stick)
+            menu_hide.addAction(self.Action_hide_spheres)
+
+            menu.addSeparator()
+            menu.addAction(self.Action_delete)
+
+        menu.exec_(event.globalPos())
+
+
+
+
+
+
+
+
+
+
+
+
+
+class GLWidget(QtOpenGL.QGLWidget, GL_menus):
     
     def __init__(self, parent=None, glmenu = None):
         """ GLWidget is a QtWidget with OpenGL capabilities.
@@ -114,6 +228,73 @@ class GLWidget(QtOpenGL.QGLWidget):
         
         self.gl_lists_counter = 1
         self.EMSession = None
+    
+    def generate_gL_actions (self):
+        """ Function doc """
+        
+        '''    Center    '''
+        #Delete
+        self.Action_center = QtGui.QAction('Center', self)
+        self.Action_center.setStatusTip('Center on Object')
+        #self.Action_center.triggered.connect(self.center_obj)
+
+        '''    Delete    '''
+        #Delete
+        self.Action_delete = QtGui.QAction('Delete', self)
+        self.Action_delete.setStatusTip('Delete Object')
+        #self.Action_delete.triggered.connect(self.delete_obj)
+
+        '''    dots    '''
+        # show
+        self.Action_show_dots = QtGui.QAction('dots', self)
+        self.Action_show_dots.setStatusTip('Show dots')
+        
+        #self.Action_show_dots.triggered.connect(self.show_dots)
+        # hide
+        self.Action_hide_dots = QtGui.QAction('dots', self)
+        self.Action_hide_dots.setStatusTip('Show dots')
+        #self.Action_hide_dots.triggered.connect(self.hide_dots)
+
+        '''    Lines    '''
+        # show
+        self.Action_show_lines = QtGui.QAction('Lines', self)
+        self.Action_show_lines.setStatusTip('Show lines')
+        #self.Action_show_lines.triggered.connect(self.show_lines)
+        # hide
+        self.Action_hide_lines = QtGui.QAction('Lines', self)
+        self.Action_hide_lines.setStatusTip('Show lines')
+        #self.Action_hide_lines.triggered.connect(self.hide_lines)
+
+        '''   Ribbons   '''
+        # show
+        self.Action_show_ribbons = QtGui.QAction('Ribbons', self)
+        self.Action_show_ribbons.setStatusTip('Show Ribbons')
+        #self.Action_show_ribbons.triggered.connect(self.show_ribbons)
+        # hide
+        self.Action_hide_ribbons = QtGui.QAction('Ribbons', self)
+        self.Action_hide_ribbons.setStatusTip('Hide Ribbons')
+        #self.Action_hide_ribbons.triggered.connect(self.hide_ribbons)
+        
+        '''   Ball and Stick   '''
+        # show
+        self.Action_show_ball_and_stick = QtGui.QAction('Ball and Stick', self)
+        self.Action_show_ball_and_stick.setStatusTip('Show Ball and Stick')
+        #self.Action_show_ball_and_stick.triggered.connect(self.show_ball_and_stick)
+        # hide
+        self.Action_hide_ball_and_stick = QtGui.QAction('Ball and Stick', self)
+        self.Action_hide_ball_and_stick.setStatusTip('Hide Ball and Stick')
+        #self.Action_hide_ball_and_stick.triggered.connect(self.hide_ball_and_stick2)
+        
+        '''   Spheres   '''
+        # show
+        self.Action_show_spheres = QtGui.QAction('Spheres', self)
+        self.Action_show_spheres.setStatusTip('Show Spheres')
+        #self.Action_show_spheres.triggered.connect(self.show_spheres)
+        # hide          
+        self.Action_hide_spheres = QtGui.QAction('Spheres', self)
+        self.Action_hide_spheres.setStatusTip('Hide Spheres')
+        #self.Action_hide_spheres.triggered.connect(self.hide_spheres2)
+    
     
         
     def initializeGL(self):
@@ -390,35 +571,37 @@ class GLWidget(QtOpenGL.QGLWidget):
 
                 nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
                 selected = self.select(nearest, hits)                    
-                menu = QtGui.QMenu(self)
+                #menu = QtGui.QMenu(self)
             
                 if selected is None:
-                    for item in self.glmenu['background']:
-                        menu.addAction(item)
-                    
+                    self.open_gl_menu (_type = 'on_bg', selected = selected, event = event)
+                    #for item in self.glmenu['background']:
+                    #    menu.addAction(item)
 
-                
                 else:
                     if self.EMSession._picking_selection_mode:
                         pass
                     
                     else:
                         if selected not in self.EMSession.viewing_selections:
-                            #               obj             /      chain      /       residue                  resi           /         atom                  index
-                            label = selected.Vobject_name+' / '+selected.chain+' / '+str(selected.resn)+ ' ' +str(selected.resi)+' / '+str(selected.name)+' ' +str(selected.index)                    
-                            #str(selected.index) + ' ' + str(selected.name) + ' ' + str(selected.resi)+ ' ' + str(selected.resn)
-                            Action_label = QtGui.QAction(label, self)
-                            #Action_delete.triggered.connect(self.delete_obj)                    
-                            menu.addAction(Action_label)
-                            menu.addSeparator()
+                            self.open_gl_menu (_type = 'on_atom', selected = selected, event = event)
+                            ##               obj             /      chain      /       residue                  resi           /         atom                  index
+                            #label = selected.Vobject_name+' / '+selected.chain+' / '+str(selected.resn)+ ' ' +str(selected.resi)+' / '+str(selected.name)+' ' +str(selected.index)                    
+                            ##str(selected.index) + ' ' + str(selected.name) + ' ' + str(selected.resi)+ ' ' + str(selected.resn)
+                            #Action_label = QtGui.QAction(label, self)
+                            ##Action_delete.triggered.connect(self.delete_obj)                    
+                            #menu.addAction(Action_label)
+                            #menu.addSeparator()
                         else:
-                            label = 'Selection'
-                            Action_label = QtGui.QAction(label, self)
-                            #Action_delete.triggered.connect(self.delete_obj)                    
-                            menu.addAction(Action_label)
-                            menu.addSeparator()
+                            self.open_gl_menu (_type = 'on_selection', selected = selected, event = event)
+
+                            #label = 'Selection'
+                            #Action_label = QtGui.QAction(label, self)
+                            ##Action_delete.triggered.connect(self.delete_obj)                    
+                            #menu.addAction(Action_label)
+                            #menu.addSeparator()
                 
-                menu.exec_(event.globalPos())
+                #menu.exec_(event.globalPos())
             
             if button == QtCore.Qt.MouseButton.LeftButton and not self.dragging:
                 #print('LeftButton')
@@ -740,7 +923,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         #                    glPushMatrix()
         #                    glPushName(atom.atom_id)
         #                    glColor3f(atom.color[0], atom.color[1], atom.color[2])
-        #                    glPointSize(self.EMSession.GL_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
+        #                    glPointSize(self.EMSession.gl_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
         #                    glBegin(GL_POINTS)
         #                    coord1   = frame[atom.index-1]
         #                    glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
@@ -758,14 +941,14 @@ class GLWidget(QtOpenGL.QGLWidget):
                 for res in Vobject.chains[chain].residues:
                     for atom in Vobject.chains[chain].residues[res].atoms:
                         # checking if the selection is actived
-                        if Vobject.list_atom_dots[atom.index-1]:
+                        if atom.dots:
                             #-------------------------------------------------------
                             #                        D O T S
                             #-------------------------------------------------------
                             glPushMatrix()
                             glPushName(atom.atom_id)
                             glColor3f(atom.color[0], atom.color[1], atom.color[2])
-                            glPointSize(self.EMSession.GL_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
+                            glPointSize(self.EMSession.gl_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
                             glBegin(GL_POINTS)
                             coord1   = frame[atom.index-1]
                             glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
@@ -795,14 +978,14 @@ class GLWidget(QtOpenGL.QGLWidget):
             gl_ln_li = glGenLists(self.gl_lists_counter)
             
             glNewList(gl_ln_li,GL_COMPILE) #GL_COMPILE_AND_EXECUTE) #GL_COMPILE)
-            glLineWidth(self.EMSession.GL_parameters['line_width'])
+            glLineWidth(self.EMSession.gl_parameters['line_width'])
 
             for bond in Vobject.index_bonds:
 
                 atom1    = Vobject.atoms[bond[0]]
                 atom2    = Vobject.atoms[bond[1]]
                 # checking if the selection is actived
-                if Vobject.list_atom_lines[atom1.index-1] and Vobject.list_atom_lines[atom2.index-1]:
+                if  atom1.lines and   atom2.lines:
                 
                     coord1   = frame[bond[0]]
                     coord2   = frame[bond[1]]
@@ -944,7 +1127,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 coord1   = frame[atom1.index-1]
                 glTranslate(coord1[0],   coord1[1],   coord1[2])
                 glColor3f(atom1.color[0], atom1.color[1], atom1.color[2])
-                glutSolidSphere(atom1.radius *self.EMSession.GL_parameters['sphere_scale'], sphere_quality, sphere_quality)
+                glutSolidSphere(atom1.radius *self.EMSession.gl_parameters['sphere_scale'], sphere_quality, sphere_quality)
                 glPopMatrix()
                 glPopName()
 
@@ -953,7 +1136,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 coord2   = frame[atom2.index-1]
                 glTranslate(coord2[0]     ,   coord2[1]   ,   coord2[2])
                 glColor3f  (atom2.color[0], atom2.color[1],   atom2.color[2])
-                glutSolidSphere(atom2.radius *self.EMSession.GL_parameters['sphere_scale'] , sphere_quality, sphere_quality)                           
+                glutSolidSphere(atom2.radius *self.EMSession.gl_parameters['sphere_scale'] , sphere_quality, sphere_quality)                           
                 glPopName()
                 glPopMatrix()
                 #-------------------------------------------------------
@@ -993,8 +1176,8 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glTranslate(b[0], b[1], b[2])
                 glRotate(angle, axis_rotation[0], axis_rotation[1], axis_rotation[2])
                 
-                gluCylinder(cyl, radius_bottom *self.EMSession.GL_parameters['stick_scale'], 
-                                 radius_top*self.EMSession.GL_parameters['stick_scale'], 
+                gluCylinder(cyl, radius_bottom *self.EMSession.gl_parameters['stick_scale'], 
+                                 radius_top*self.EMSession.gl_parameters['stick_scale'], 
                                  length, 15, 15)
                 glPopMatrix()
                 #-------------------------------------------------------
