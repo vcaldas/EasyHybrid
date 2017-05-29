@@ -311,7 +311,6 @@ class EasyMolSession:
                     if selected not in self.viewing_selections:
                         # So, add all atoms  - selected residue <- selected.resi
                         for residue in self.Vobjects[selected.Vobject_id].chains[selected.chain].residues:
-                            #for residue in chain.residues:
                             for atom in residue.atoms:
                                 # the atom is not on the list -  add atom by atom
                                 if atom not in self.viewing_selections:
