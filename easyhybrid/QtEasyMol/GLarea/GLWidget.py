@@ -25,213 +25,14 @@ import GLarea.representations as rep
 from GLarea.vector_math import Vector
 
 
-class GL_menus:
+class glMenu:
     """ Class doc """
-    
     def __init__ (self):
         """ Class initialiser """
-
-    def open_gl_menu (self, _type = 'on_bg', selected = None, event = None):
-        """ Function doc """
-        menu = QtGui.QMenu()
-        if _type == 'on_bg':
-            for item in self.glmenu['on_bg']:
-                menu.addAction(item)
-        
-        if _type == 'on_atom':
-            if selected not in self.EMSession.viewing_selections:
-                #               obj             /      chain      /       residue                  resi           /         atom                  index
-                label = selected.Vobject_name+' / '+selected.chain+' / '+str(selected.resn)+ ' ' +str(selected.resi)+' / '+str(selected.name)+' ' +str(selected.index)                    
-                #str(selected.index) + ' ' + str(selected.name) + ' ' + str(selected.resi)+ ' ' + str(selected.resn)
-                Action_label = QtGui.QAction(label, self)
-                #Action_delete.triggered.connect(self.delete_obj)                    
-                menu.addAction(Action_label)
-                menu.addSeparator()            
-            
-                menu.addAction(self.Action_center)
-                
-                menu_atom = menu.addMenu("&Atom")
-                menu_atom_show = menu_atom.addMenu("&Show")
-                menu_atom_show.addAction(self.Action_show_dots)
-                menu_atom_show.addAction(self.Action_show_lines)
-                menu_atom_show.addAction(self.Action_show_ribbons)
-                menu_atom_show.addAction(self.Action_show_ball_and_stick)
-                menu_atom_show.addAction(self.Action_show_spheres)
-            
-                menu_atom_hide = menu_atom.addMenu("&Hide")
-                menu_atom_hide.addAction(self.Action_hide_dots)
-                menu_atom_hide.addAction(self.Action_hide_lines)
-                menu_atom_hide.addAction(self.Action_hide_ribbons)
-                menu_atom_hide.addAction(self.Action_hide_ball_and_stick)
-                menu_atom_hide.addAction(self.Action_hide_spheres)
-            
-                menu_residue = menu.addMenu("&Residue")
-                menu_residue_show = menu_residue.addMenu("&Show")
-                menu_residue_show.addAction(self.Action_show_dots)
-                menu_residue_show.addAction(self.Action_show_lines)
-                menu_residue_show.addAction(self.Action_show_ribbons)
-                menu_residue_show.addAction(self.Action_show_ball_and_stick)
-                menu_residue_show.addAction(self.Action_show_spheres)
-                menu_residue_hide = menu_residue.addMenu("&Hide")
-                menu_residue_hide.addAction(self.Action_hide_dots)
-                menu_residue_hide.addAction(self.Action_hide_lines)
-                menu_residue_hide.addAction(self.Action_hide_ribbons)
-                menu_residue_hide.addAction(self.Action_hide_ball_and_stick)
-                menu_residue_hide.addAction(self.Action_hide_spheres)
-                
-                
-                menu_chain = menu.addMenu("&Chain")
-                menu_chain_show = menu_chain.addMenu("&Show")
-                menu_chain_show.addAction(self.Action_show_dots)
-                menu_chain_show.addAction(self.Action_show_lines)
-                menu_chain_show.addAction(self.Action_show_ribbons)
-                menu_chain_show.addAction(self.Action_show_ball_and_stick)
-                menu_chain_show.addAction(self.Action_show_spheres)
-                menu_chain_hide = menu_chain.addMenu("&Hide")
-                menu_chain_hide.addAction(self.Action_hide_dots)
-                menu_chain_hide.addAction(self.Action_hide_lines)
-                menu_chain_hide.addAction(self.Action_hide_ribbons)
-                menu_chain_hide.addAction(self.Action_hide_ball_and_stick)
-                menu_chain_hide.addAction(self.Action_hide_spheres)
-                
-                
-                
-                
-                menu.addSeparator()
-                menu.addAction(self.Action_delete)
-        
-        if _type == 'on_selection':
-            label ='Selection'
-            Action_label = QtGui.QAction(label, self)
-            #Action_delete.triggered.connect(self.delete_obj)                    
-            menu.addAction(Action_label)
-            menu.addSeparator()
-            menu.addAction(self.Action_center)
-
-            menu_show = menu.addMenu("&Show")
-            menu_show.addAction(self.Action_show_dots)
-            menu_show.addAction(self.Action_show_lines)
-            menu_show.addAction(self.Action_show_ribbons)
-            menu_show.addAction(self.Action_show_ball_and_stick)
-            menu_show.addAction(self.Action_show_spheres)
-
-            menu_hide = menu.addMenu("&Hide")
-            menu_hide.addAction(self.Action_hide_dots)
-            menu_hide.addAction(self.Action_hide_lines)
-            menu_hide.addAction(self.Action_hide_ribbons)
-            menu_hide.addAction(self.Action_hide_ball_and_stick)
-            menu_hide.addAction(self.Action_hide_spheres)
-
-            menu.addSeparator()
-            menu.addAction(self.Action_delete)
-
-        menu.exec_(event.globalPos())
-
-
-
-
-
-
-
-
-
-
-
-
-
-class GLWidget(QtOpenGL.QGLWidget, GL_menus):
+        self.glwidget  = glwidget
+        self.EMSession = EMSession
     
-    def __init__(self, parent=None, glmenu = None):
-        """ GLWidget is a QtWidget with OpenGL capabilities.
-            Attributes:
-            
-            + self.fovy --> Specifies the field of view angle, in degrees, in the y direction.
-            + self.aspect --> Specifies the aspect ratio that determines the field of view in the x direction. The aspect ratio is the ratio of x (width) to y (height).
-            + self.z_near --> Specifies the distance from the viewer to the near clipping plane (always positive).
-            + self.z_far --> Specifies the distance from the viewer to the far clipping plane (always positive).
-            + self.fog_start --> Specifies the start for the near distance used in the linear fog equation. The initial near distance is 0.
-            + self.fog_end --> Specifies the end for the near distance used in the linear fog equation. The initial near distance is 1.
-            + self.width --> Specifies the width of the window, only the drawing area, not the interface.
-            + self.height --> Specifies the height of the window, only the drawing area, not the interface.
-            + self.top --> Specifies the top value for the viewport. A positive value used to map the mouse coordinates into 3D world coordinates.
-            + self.bottom --> Specifies the bottom value for the viewport. A negative value used to map the mouse coordinates into 3D world coordinates.
-            + self.left --> Specifies the ratio between width and height. A negative value used to map the mouse coordinates into 3D world coordinates.
-            + self.right --> Specifies the ratio between width and height. A positive value used to map the mouse coordinates into 3D world coordinates.
-            + self.selected_atoms --> An array containing Atom types. The array contains the atoms selected with the mouse.
-            + self.mouse_x --> Specifies the X position of the mouse in the window. It's used for the rotation function of the mouse.
-            + self.mouse_y --> Specifies the Y position of the mouse in the window. It's used for the rotation function of the mouse.
-            + self.dist_cam_zrp --> Specifies the distance from the camera (eye) to the zero reference point (zrp) of the 3D world. Used in zoom and pan functions.
-            + self.scroll --> Specifies the amount of distance that the mouse wheel moves the clipping planes.
-            + self.pick_radius --> An array containing the X and Y radius for selection. Specifies how much far the object to the mouse can be to be selected when clicked.
-            + self.gl_backgrd --> An array containing a RGBA color in 0.0 to 1.0 scale. Specifies the color for the background.
-            + self.zrp --> An array containing X, Y and Z coordinates in 3D world. Specifies the Zero Reference Point of the 3D world. This parameter determines the center of rotation.
-            + self.mouse_rotate --> Flag for the rotation function. Specifies if the mouse is in rotation mode or not.
-            + self.mouse_pan --> Flag for the pan function. Specifies if the mouse is in pan mode or not.
-            + self.mouse_zoom --> Flag for the zoom function. Specifies if the mouse is in zoom mode or not.
-            + self.dragging --> Flag for dragging the mouse. Specifies if the mouse is being dragged or not. Used to diferentiate between selection or movement.
-            + self.drag_pos_x --> Specifies the X coordinate the mouse is being dragged.
-            + self.drag_pos_y --> Specifies the Y coordinate the mouse is being dragged.
-            + self.drag_pos_z --> Specifies the Z coordinate the mouse is being dragged.
-            + self.frame --> Specifies the frame in the trajectory file.
-            
-        """
-        QtOpenGL.QGLWidget.__init__(self, parent)
-        
-        self.glmenu          = glmenu
-        self.trolltechGreen  = QtGui.QColor.fromCmykF(0.40, 0.0, 1.0, 0.0)
-        self.trolltechPurple = QtGui.QColor.fromCmykF(0.39, 0.39, 0.0, 0.0)
-        
-        #self.data   = None
-        self.fovy   = 30.0
-        self.aspect = 0.0
-        self.z_near = 1.0
-        self.z_far  = 10.0
-        
-        self.fog_start  = self.z_far - 4.5
-        self.fog_end    = self.z_far
-        self.scale_zoom = self.fog_start # increse /decrese the dot size and line width
-        
-        self.width  = 640
-        self.height = 420
-        self.top    = 1.0
-        self.bottom = -1.0
-        self.left   = -10.0
-        self.right  = 10
-        #self.selected_atoms = [None]*4
-        #self.selected_residues = []
-        
-        self.mouse_x = 0
-        self.mouse_y = 0
-        
-        self.dist_cam_zrp = frame_i = 0
-        self.scroll = 0.5
-        self.pick_radius = [10, 10]
-        #self.pos_mouse = [None, None]
-        self.gl_backgrd = [0.0, 0.0, 0.0, 0.0]
-        
-        self.zrp          = np.array([0, 0, 0])
-        
-        self.mouse_rotate = False
-        self.mouse_pan    = False
-        self.mouse_zoom   = False
-        self.dragging     = False
-        
-        self.drag_pos_x = 0.0
-        self.drag_pos_y = 0.0
-        self.drag_pos_z = 0.0
-        self.frame = 0
-        self.LINES = self.DOTS = self.BALL_STICK = self.VDW = self.PRETTY_VDW = self.RIBBON = self.SPHERES = self.WIRES = self.SELECTION = self.MODIFIED = False
-        self.gl_ball_stick_list = self.gl_point_list = self.gl_lines_list = self.gl_pretty_vdw_list = self.gl_ribbon_list =  self.gl_sphere_list = self.gl_vdw_list = self.gl_wires_list = None  
-        
-        self.sel_atom = True
-        self.sel_resid = self.sel_chain = self.sel_mol = False
-        
-        self.gl_lists_counter = 1
-        self.EMSession = None
-    
-    def generate_gL_actions (self):
-        """ Function doc """
-        
+    def  generate_gL_actions(self):       
         '''    Center    '''
         #Delete
         self.Action_center = QtGui.QAction('Center', self)
@@ -248,7 +49,8 @@ class GLWidget(QtOpenGL.QGLWidget, GL_menus):
         # show
         self.Action_show_dots = QtGui.QAction('dots', self)
         self.Action_show_dots.setStatusTip('Show dots')
-        
+        self.Action_show_dots.triggered.connect(self.show_atom_dots)
+
         #self.Action_show_dots.triggered.connect(self.show_dots)
         # hide
         self.Action_hide_dots = QtGui.QAction('dots', self)
@@ -294,7 +96,220 @@ class GLWidget(QtOpenGL.QGLWidget, GL_menus):
         self.Action_hide_spheres = QtGui.QAction('Spheres', self)
         self.Action_hide_spheres.setStatusTip('Hide Spheres')
         #self.Action_hide_spheres.triggered.connect(self.hide_spheres2)
+
+
+
+    def show_atom_dots (self):
+        """ Function doc """
+        print ('show_atom_dots')
     
+    def show_residue_dots (self):
+        """ Function doc """
+        print ('show_residue_dots')
+    def show_chain_dots (self):
+        """ Function doc """
+
+
+
+    def open_gl_menu (self, _type = 'on_bg', selected = None, event = None):
+        """ Function doc """
+        menu = QtGui.QMenu()
+        if _type == 'on_bg':
+            for item in self.glmenu['on_bg']:
+                menu.addAction(item)
+        else:
+            if _type == 'on_atom':
+                if selected not in self.EMSession.viewing_selections:
+                    #               obj             /      chain      /       residue                  resi           /         atom                  index
+                    label = selected.Vobject_name+' / '+selected.chain+' / '+str(selected.resn)+ ' ' +str(selected.resi)+' / '+str(selected.name)+' ' +str(selected.index)                    
+                    #str(selected.index) + ' ' + str(selected.name) + ' ' + str(selected.resi)+ ' ' + str(selected.resn)
+                    Action_label = QtGui.QAction(label, self)
+                    #Action_delete.triggered.connect(self.delete_obj)                    
+                    menu.addAction(Action_label)
+                    menu.addSeparator()            
+                
+                    menu.addAction(self.Action_center)
+                    
+                    menu_atom = menu.addMenu("&Atom")
+                    menu_atom_show = menu_atom.addMenu("&Show")
+                    menu_atom_show.addAction(self.Action_show_dots)
+                    menu_atom_show.addAction(self.Action_show_lines)
+                    menu_atom_show.addAction(self.Action_show_ribbons)
+                    menu_atom_show.addAction(self.Action_show_ball_and_stick)
+                    menu_atom_show.addAction(self.Action_show_spheres)
+                
+                    menu_atom_hide = menu_atom.addMenu("&Hide")
+                    menu_atom_hide.addAction(self.Action_hide_dots)
+                    menu_atom_hide.addAction(self.Action_hide_lines)
+                    menu_atom_hide.addAction(self.Action_hide_ribbons)
+                    menu_atom_hide.addAction(self.Action_hide_ball_and_stick)
+                    menu_atom_hide.addAction(self.Action_hide_spheres)
+                
+                    menu_residue = menu.addMenu("&Residue")
+                    menu_residue_show = menu_residue.addMenu("&Show")
+                    menu_residue_show.addAction(self.Action_show_dots)
+                    menu_residue_show.addAction(self.Action_show_lines)
+                    menu_residue_show.addAction(self.Action_show_ribbons)
+                    menu_residue_show.addAction(self.Action_show_ball_and_stick)
+                    menu_residue_show.addAction(self.Action_show_spheres)
+                    menu_residue_hide = menu_residue.addMenu("&Hide")
+                    menu_residue_hide.addAction(self.Action_hide_dots)
+                    menu_residue_hide.addAction(self.Action_hide_lines)
+                    menu_residue_hide.addAction(self.Action_hide_ribbons)
+                    menu_residue_hide.addAction(self.Action_hide_ball_and_stick)
+                    menu_residue_hide.addAction(self.Action_hide_spheres)
+                    
+                    
+                    menu_chain = menu.addMenu("&Chain")
+                    menu_chain_show = menu_chain.addMenu("&Show")
+                    menu_chain_show.addAction(self.Action_show_dots)
+                    menu_chain_show.addAction(self.Action_show_lines)
+                    menu_chain_show.addAction(self.Action_show_ribbons)
+                    menu_chain_show.addAction(self.Action_show_ball_and_stick)
+                    menu_chain_show.addAction(self.Action_show_spheres)
+                    menu_chain_hide = menu_chain.addMenu("&Hide")
+                    menu_chain_hide.addAction(self.Action_hide_dots)
+                    menu_chain_hide.addAction(self.Action_hide_lines)
+                    menu_chain_hide.addAction(self.Action_hide_ribbons)
+                    menu_chain_hide.addAction(self.Action_hide_ball_and_stick)
+                    menu_chain_hide.addAction(self.Action_hide_spheres)
+                    
+                    
+                    
+                    
+                    menu.addSeparator()
+                    menu.addAction(self.Action_delete)
+            
+            if _type == 'on_selection':
+                label ='Selection'
+                Action_label = QtGui.QAction(label, self)
+                #Action_delete.triggered.connect(self.delete_obj)                    
+                menu.addAction(Action_label)
+                menu.addSeparator()
+                menu.addAction(self.Action_center)
+
+                menu_show = menu.addMenu("&Show")
+                menu_show.addAction(self.Action_show_dots)
+                menu_show.addAction(self.Action_show_lines)
+                menu_show.addAction(self.Action_show_ribbons)
+                menu_show.addAction(self.Action_show_ball_and_stick)
+                menu_show.addAction(self.Action_show_spheres)
+
+                menu_hide = menu.addMenu("&Hide")
+                menu_hide.addAction(self.Action_hide_dots)
+                menu_hide.addAction(self.Action_hide_lines)
+                menu_hide.addAction(self.Action_hide_ribbons)
+                menu_hide.addAction(self.Action_hide_ball_and_stick)
+                menu_hide.addAction(self.Action_hide_spheres)
+
+                menu.addSeparator()
+                menu.addAction(self.Action_delete)
+
+        menu.exec_(event.globalPos())
+
+
+
+
+
+
+
+
+
+
+
+
+
+class GLWidget(QtOpenGL.QGLWidget, glMenu):
+    
+    def __init__(self, parent=None, EMSession = None):
+        """ GLWidget is a QtWidget with OpenGL capabilities.
+            Attributes:
+            
+            + self.fovy --> Specifies the field of view angle, in degrees, in the y direction.
+            + self.aspect --> Specifies the aspect ratio that determines the field of view in the x direction. The aspect ratio is the ratio of x (width) to y (height).
+            + self.z_near --> Specifies the distance from the viewer to the near clipping plane (always positive).
+            + self.z_far --> Specifies the distance from the viewer to the far clipping plane (always positive).
+            + self.fog_start --> Specifies the start for the near distance used in the linear fog equation. The initial near distance is 0.
+            + self.fog_end --> Specifies the end for the near distance used in the linear fog equation. The initial near distance is 1.
+            + self.width --> Specifies the width of the window, only the drawing area, not the interface.
+            + self.height --> Specifies the height of the window, only the drawing area, not the interface.
+            + self.top --> Specifies the top value for the viewport. A positive value used to map the mouse coordinates into 3D world coordinates.
+            + self.bottom --> Specifies the bottom value for the viewport. A negative value used to map the mouse coordinates into 3D world coordinates.
+            + self.left --> Specifies the ratio between width and height. A negative value used to map the mouse coordinates into 3D world coordinates.
+            + self.right --> Specifies the ratio between width and height. A positive value used to map the mouse coordinates into 3D world coordinates.
+            + self.selected_atoms --> An array containing Atom types. The array contains the atoms selected with the mouse.
+            + self.mouse_x --> Specifies the X position of the mouse in the window. It's used for the rotation function of the mouse.
+            + self.mouse_y --> Specifies the Y position of the mouse in the window. It's used for the rotation function of the mouse.
+            + self.dist_cam_zrp --> Specifies the distance from the camera (eye) to the zero reference point (zrp) of the 3D world. Used in zoom and pan functions.
+            + self.scroll --> Specifies the amount of distance that the mouse wheel moves the clipping planes.
+            + self.pick_radius --> An array containing the X and Y radius for selection. Specifies how much far the object to the mouse can be to be selected when clicked.
+            + self.gl_backgrd --> An array containing a RGBA color in 0.0 to 1.0 scale. Specifies the color for the background.
+            + self.zrp --> An array containing X, Y and Z coordinates in 3D world. Specifies the Zero Reference Point of the 3D world. This parameter determines the center of rotation.
+            + self.mouse_rotate --> Flag for the rotation function. Specifies if the mouse is in rotation mode or not.
+            + self.mouse_pan --> Flag for the pan function. Specifies if the mouse is in pan mode or not.
+            + self.mouse_zoom --> Flag for the zoom function. Specifies if the mouse is in zoom mode or not.
+            + self.dragging --> Flag for dragging the mouse. Specifies if the mouse is being dragged or not. Used to diferentiate between selection or movement.
+            + self.drag_pos_x --> Specifies the X coordinate the mouse is being dragged.
+            + self.drag_pos_y --> Specifies the Y coordinate the mouse is being dragged.
+            + self.drag_pos_z --> Specifies the Z coordinate the mouse is being dragged.
+            + self.frame --> Specifies the frame in the trajectory file.
+            
+        """
+        QtOpenGL.QGLWidget.__init__(self, parent)
+        
+        #self.glmenu          = glmenu
+        self.trolltechGreen  = QtGui.QColor.fromCmykF(0.40, 0.0, 1.0, 0.0)
+        self.trolltechPurple = QtGui.QColor.fromCmykF(0.39, 0.39, 0.0, 0.0)
+        
+        #self.data   = None
+        self.fovy   = 30.0
+        self.aspect = 0.0
+        self.z_near = 1.0
+        self.z_far  = 10.0
+        
+        self.fog_start  = self.z_far - 4.5
+        self.fog_end    = self.z_far
+        self.scale_zoom = self.fog_start # increse /decrese the dot size and line width
+        
+        self.width  = 640
+        self.height = 420
+        self.top    = 1.0
+        self.bottom = -1.0
+        self.left   = -10.0
+        self.right  = 10
+        
+        self.mouse_x = 0
+        self.mouse_y = 0
+        
+        self.dist_cam_zrp = frame_i = 0
+        self.scroll = 0.5
+        self.pick_radius = [10, 10]
+        #self.pos_mouse = [None, None]
+        self.gl_backgrd = [0.0, 0.0, 0.0, 0.0]
+        
+        self.zrp          = np.array([0, 0, 0])
+        
+        self.mouse_rotate = False
+        self.mouse_pan    = False
+        self.mouse_zoom   = False
+        self.dragging     = False
+        
+        self.drag_pos_x = 0.0
+        self.drag_pos_y = 0.0
+        self.drag_pos_z = 0.0
+        self.frame = 0
+        self.LINES = self.DOTS = self.BALL_STICK = self.VDW = self.PRETTY_VDW = self.RIBBON = self.SPHERES = self.WIRES = self.SELECTION = self.MODIFIED = False
+        self.gl_ball_stick_list = self.gl_point_list = self.gl_lines_list = self.gl_pretty_vdw_list = self.gl_ribbon_list =  self.gl_sphere_list = self.gl_vdw_list = self.gl_wires_list = None  
+        
+        #self.sel_atom = True
+        #self.sel_resid = self.sel_chain = self.sel_mol = False
+        
+        self.gl_lists_counter = 1
+        self.EMSession = EMSession
+        self.generate_gL_actions()
+
+        #self.gl_menu   = glMenu(glwidget = self, EMSession = EMSession)
+        self.selected_atom_on_click = None
     
         
     def initializeGL(self):
@@ -399,7 +414,6 @@ class GLWidget(QtOpenGL.QGLWidget, GL_menus):
                 #glVertex3f(coord1[0], coord1[1], coord1[2])
                 rep.draw_selected(atom, coord)
 
-    
     def draw_to_pick(self, frame = -1):
         """ Defines wich type of representations will be displayed for the pick
             function to work. The only difference with the draw method should be
@@ -572,7 +586,7 @@ class GLWidget(QtOpenGL.QGLWidget, GL_menus):
                 nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
                 selected = self.select(nearest, hits)                    
                 #menu = QtGui.QMenu(self)
-            
+                self.selected_atom_on_click = selected
                 if selected is None:
                     self.open_gl_menu (_type = 'on_bg', selected = selected, event = event)
                     #for item in self.glmenu['background']:

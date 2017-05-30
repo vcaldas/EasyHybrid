@@ -14,11 +14,9 @@ import sys
 #from PySide.QtCore import *
 
 from PySide import QtCore, QtGui
-
 from GUI.untitled      import Ui_MainWindow
-
 from GLarea.easyMolObj import EasyMolSession
-from GLarea.GLWidget   import GLWidget
+#from GLarea.GLWidget   import GLWidget
 
 
 
@@ -224,15 +222,16 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
         
         self.current_row = None     # selected row from the treeview menu
 
-        self.glwidget = GLWidget(self, glmenu = glmenu)
 
         
         QtCore.QObject.connect(self.toolBar_2, QtCore.SIGNAL("toggled(bool)"), self.change_viewing_and_picking_mode)
         #self.toolBar_2.addAction(self.actionViewing)
 
-        self.EasyMol  = EasyMolSession(glwidget =  self.glwidget)
-
-        self.setCentralWidget(self.glwidget)
+        #self.EasyMol.glwidget = GLWidget       (self   , glmenu = glmenu)
+        #self.EasyMol  = EasyMolSession(glwidget =  self.EasyMol.glwidget)
+        #self.setCentralWidget(self.EasyMol.glwidget)
+        self.EasyMol  = EasyMolSession( parent = self)#glwidget =  self.EasyMol.glwidget)
+        self.setCentralWidget(self.EasyMol.glwidget)
         self.show()
     
 
@@ -399,16 +398,16 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
     def change_viewing_and_picking_mode (self):
         """ Function doc """
         if self.actionViewing.isChecked() :
-            self.glwidget.setCursor(QtCore.Qt.CrossCursor)
+            self.EasyMol.glwidget.setCursor(QtCore.Qt.CrossCursor)
             self.selection_mode_combo.setEnabled(False)
             self.actionViewing.setText("Picking")
             self.EasyMol._picking_selection_mode = True 
         else:
-            self.glwidget.setCursor(QtCore.Qt.ArrowCursor)
+            self.EasyMol.glwidget.setCursor(QtCore.Qt.ArrowCursor)
             self.selection_mode_combo.setEnabled(True)
             self.actionViewing.setText("Viewing")
             self.EasyMol._picking_selection_mode = False 
-        self.glwidget.updateGL()
+        self.EasyMol.glwidget.updateGL()
     
     def change_selection_mode(self, selection_mode):
         """ Function doc """
@@ -525,8 +524,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
     def horizontal_slider_change (self, data):
         """ Function doc """
         #print (data)
-        self.glwidget.frame = data 
-        self.glwidget.updateGL()
+        self.EasyMol.glwidget.frame = data 
+        self.EasyMol.glwidget.updateGL()
 '''     
 if __name__ == '__main__':
     app = QApplication(sys.argv)

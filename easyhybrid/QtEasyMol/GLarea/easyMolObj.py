@@ -24,6 +24,7 @@
 #from visual import gl_draw_area as gda, vis_parser
 from GLarea.vis_parser import parse_pdb, parse_xyz
 from pprint import pprint
+from GLarea.GLWidget   import GLWidget
 
 
 
@@ -442,7 +443,7 @@ class EasyMolSession:
 
     
     
-    def __init__ (self, glwidget):
+    def __init__ (self, parent = None, glwidget = None):
         """ Class initialiser """
         self.Vobjects         = []
         self.Vobjects_dic     = {}        
@@ -455,9 +456,10 @@ class EasyMolSession:
         #---------------------------------------------------------------
         # gl stuffs
         #---------------------------------------------------------------
-        self.glwidget           = glwidget # a gl area recebe 
-        self.glwidget.EMSession = self
-        self.glwidget.generate_gL_actions()
+        self.glwidget = GLWidget (parent   , EMSession = self)
+        #self.glwidget           = glwidget # a gl area recebe 
+        #self.glwidget.EMSession = self
+        #self.glwidget.generate_gL_actions()
         self.gl_parameters      =     {
                                       
                                       'dot_size'      : 3      ,
