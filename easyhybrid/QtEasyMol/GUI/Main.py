@@ -44,114 +44,126 @@ class EasyMolFunctions:
     
     """   D O T S   """
 
-    def show_dots      (self, Vobject_index = None):
+    def show_dots      (self, Vobject_indexes = None):
         """ show """
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.show (_type = 'dots', Vobject_index = Vobject_index)  
+        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+            atom.dots = True
+        
+        self.EasyMol.show (_type = 'dots', Vobject_indexes = Vobject_indexes)  
     
-    def hide_dots      (self, Vobject_index = None):
+    def hide_dots      (self, Vobject_indexes = None):
         """ hide """
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.hide (_type = 'dots', Vobject_index = Vobject_index)  
+        self.EasyMol.hide (_type = 'dots', Vobject_indexes = Vobject_indexes)  
 
     
 
 
     """   L I N E S   """
 
-    def show_lines      (self, Vobject_index = None):
+    def show_lines      (self, Vobject_indexes = None):
         """ show """
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.show (_type = 'lines', Vobject_index = Vobject_index)  
+        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+            atom.lines = True
+            
+        self.EasyMol.show (_type = 'lines', Vobject_indexes = Vobject_indexes)  
     
-    def hide_lines      (self, Vobject_index = None):
+    def hide_lines      (self, Vobject_indexes = None):
         """ hide """
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.hide (_type = 'lines', Vobject_index = Vobject_index)  
+        self.EasyMol.hide (_type = 'lines', Vobject_indexes = Vobject_indexes)  
 
     
     
     
     """   R I B B O N S   """
 
-    def show_ribbons (self, Vobject_index = None):
+    def show_ribbons (self, Vobject_indexes = None):
         """ show """
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.show (_type = 'ribbons', Vobject_index = Vobject_index)  
+        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+            atom.ribbons = True
+        
+        self.EasyMol.show (_type = 'ribbons', Vobject_indexes = Vobject_indexes)  
 
     
-    def hide_ribbons (self, Vobject_index = None):
+    def hide_ribbons (self, Vobject_indexes = None):
         """ hide """
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.hide (_type = 'ribbons', Vobject_index = Vobject_index)  
+        self.EasyMol.hide (_type = 'ribbons', Vobject_indexes = Vobject_indexes)  
 
 
     """   B A L L  A N D  S T I C K   """
 
 
-    def show_ball_and_stick (self, Vobject_index = None):
+    def show_ball_and_stick (self, Vobject_indexes = None):
         """ show """
         #print ('here  show_ball_and_stick - gui')
 
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.show (_type = 'ball_and_stick', Vobject_index = Vobject_index)  
+        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+            atom.ball_and_stick = True
+        self.EasyMol.show (_type = 'ball_and_stick', Vobject_indexes = Vobject_indexes)  
     
-    def hide_ball_and_stick2 (self, Vobject_index = None):
+    def hide_ball_and_stick2 (self, Vobject_indexes = None):
         """ hide """
         print ('here  hide_ball_and_stick - gui')
-        if Vobject_index == None:
-            Vobject_index = self.current_row
-        self.EasyMol.hide (_type = 'ball_and_stick', Vobject_index = Vobject_index)  
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
+        self.EasyMol.hide (_type = 'ball_and_stick', Vobject_indexes = Vobject_indexes)  
         
 
     """   S P H E R E S   """
 
         
-    def show_spheres (self, Vobject_index = None):
+    def show_spheres (self, Vobject_indexes = None):
         """ show """
         #print ('here  show_ball_and_stick - gui')
 
-        if Vobject_index == None:
-            Vobject_index = self.current_row
-        
-        self.EasyMol.show (_type = 'spheres', Vobject_index = Vobject_index)
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
+        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+            atom.sphere = True
+        self.EasyMol.show (_type = 'spheres', Vobject_indexes = Vobject_indexes)
 
     
-    #def hide_spheres (self, Vobject_index = None):
+    #def hide_spheres (self, Vobject_indexes = None):
     #    """ hide """
     #    print ('here  spheres - gui')
     #    
-    #    if Vobject_index == None:
-    #        Vobject_index = self.current_row
-    #    self.EasyMol.hide (_type = 'spheres', Vobject_index = Vobject_index)  
+    #    if Vobject_indexes == None:
+    #        Vobject_indexes = self.current_row
+    #    self.EasyMol.hide (_type = 'spheres', Vobject_indexes = Vobject_indexes)  
 
-    def hide_spheres2 (self, Vobject_index = None):
+    def hide_spheres2 (self, Vobject_indexes = None):
         """ hide """
         print ('here  spheres - gui')
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
-        self.EasyMol.hide (_type = 'spheres', Vobject_index = Vobject_index)
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
+        self.EasyMol.hide (_type = 'spheres', Vobject_indexes = Vobject_indexes)
 
 
 
