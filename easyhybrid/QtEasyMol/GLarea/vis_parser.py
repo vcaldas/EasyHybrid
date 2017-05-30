@@ -50,6 +50,8 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         pprint (models[-1][2:])
         
         Vobject  = mm.Vobject()
+        Vobject.label  = label.split('.')
+        Vobject.label  = Vobject.label[0]
         chains_m = {}
         residues = {}
         atoms    = []
@@ -75,9 +77,11 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
                           index      =  index, 
                           pos        =  at_pos, 
                           resi       =  at_res_i, 
+                          resn       =  at_res_n, 
                           chain      =  at_ch, 
                           atom_id    =  counter, 
-                          Vobject_id =  Vobject_id)
+                          Vobject_id =  Vobject_id,
+                          Vobject_name =  Vobject.label)
 
 
             if atom_dic_id is not None:
@@ -116,6 +120,15 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         Vobject.chains = chains_m
         total = len(Vobject.atoms)
         
+        Vobject.list_atom_lines          = [True] *total
+        Vobject.list_atom_ribbons        = [False]*total
+        Vobject.list_atom_dots           = [False]*total
+        Vobject.list_atom_sticks         = [False]*total
+        Vobject.list_atom_spheres        = [False]*total
+        Vobject.list_atom_surface        = [False]*total
+        Vobject.list_atom_ball_and_stick = [False]*total
+        
+        
         Vobject.mass_center[0] = sum_x / total
         Vobject.mass_center[1] = sum_y / total
         Vobject.mass_center[2] = sum_z / total
@@ -134,7 +147,6 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
             #pprint (frame)
             Vobject.frames.append(frame)
             n += 1
-        Vobject.label  = label
         #print atom_dic_id
         return Vobject, atom_dic_id
 
@@ -147,7 +159,10 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
 
         
         Vobject = mm.Vobject()
-    
+        
+        Vobject.label  = label.split('.')
+        Vobject.label  = Vobject.label[0]
+                
         chains_m = {}
         residues = {}
         atoms    = []
@@ -167,13 +182,15 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
                 at_res_n = line[17:20].strip()
                 at_ch = line[21]
                 
-                atm = mm.Atom(name       =  at_name, 
-                              index      =  index, 
-                              pos        =  at_pos, 
-                              resi       =  at_res_i, 
-                              chain      =  at_ch, 
-                              atom_id    =  counter, 
-                              Vobject_id =  Vobject_id)
+                atm = mm.Atom(name         =  at_name, 
+                              index        =  index, 
+                              pos          =  at_pos, 
+                              resi         =  at_res_i, 
+                              resn         =  at_res_n, 
+                              chain        =  at_ch, 
+                              atom_id      =  counter, 
+                              Vobject_id   =  Vobject_id,
+                              Vobject_name =  Vobject.label )
                 
                 if atom_dic_id is not None:
                     atom_dic_id[counter] = atm
@@ -240,11 +257,18 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         Vobject.chains = chains_m
         
         total = len(Vobject.atoms)
+        Vobject.list_atom_lines          = [True] *total
+        Vobject.list_atom_ribbons        = [False]*total
+        Vobject.list_atom_dots           = [False]*total
+        Vobject.list_atom_sticks         = [False]*total
+        Vobject.list_atom_spheres        = [False]*total
+        Vobject.list_atom_surface        = [False]*total
+        Vobject.list_atom_ball_and_stick = [False]*total
+
         
         Vobject.mass_center[0] = sum_x / total
         Vobject.mass_center[1] = sum_y / total
         Vobject.mass_center[2] = sum_z / total
-        Vobject.label  = label
         #print Vobject.mass_center
         return Vobject, atom_dic_id
 

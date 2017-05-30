@@ -41,29 +41,58 @@ class Vobject:
     def __init__ (self, chains=None, bonds=None, mass_center=None):
         """ Class initialiser """
         
-        self.actived      = True       
+        self.actived           = True       
         
-        self.show_dots    = True
-        self.list_dots    = []
+        """   D O T S   """
+        self.show_dots         = False
+        self.GL_list_dots      = []    # GL list -  GPU compiled 
+        self.modified_dots     = False
+        #self.list_atom_dots    = []    # <-- True/False lista containg all atoms 
         
-        self.show_lines   = True
-        self.list_lines   = []
-        
-        self.show_ribbons = False
-        self.list_ribbons = []
-        
-        self.show_sticks  = False
-        self.list_sticks  = []
+        """   L I N E S   """
+        self.show_lines        = True
+        self.list_lines        = []
+        self.modified_lines    = False
 
-        self.show_spheres = False
-        self.list_spheres = []
+        #self.list_atom_lines   = []    # <-- True/False lista containg all atoms 
         
-        self.show_ball_and_stick = False
-        self.list_ball_and_stick = []
+        """   R I B B O N S   """
+        self.show_ribbons      = False
+        self.list_ribbons      = []
+        self.modified_ribbons  = False
+
+        #self.list_atom_ribbons = []    # <-- True/False lista containg all atoms 
         
-        self.show_surface = False
-        self.list_surface = []
+        """   S T I C K S   """
+        self.show_sticks       = False
+        self.list_sticks       = []
+        self.modified_sticks   = False
+
+        #self.list_atom_sticks  = []   # <-- True/False lista containg all atoms 
         
+        """   S P H E R E S   """
+        self.show_spheres      = False
+        self.list_spheres      = []
+        self.modified_spheres  = False
+
+        #self.list_atom_spheres = []   # <-- True/False lista containg all atoms 
+        
+        """   S U R F A C E   """
+        self.show_surface      = False
+        self.list_surface      = []
+        self.modified_surface  = False
+
+        #self.list_atom_surface = []
+        
+        """   B A L L  A N D  S T I C K   """   
+        self.show_ball_and_stick      = False
+        self.list_ball_and_stick      = []
+        self.modified_ball_and_stick  = False
+
+        #self.list_atom_ball_and_stick = []
+
+
+
         self.Type  = 'molecule'
         self.label = 'unkown'
 
@@ -158,26 +187,40 @@ class Residue:
 class Atom:
     """ Class doc """
     
-    def __init__ (self, name='Xx', index=None, symbol='X', pos=None, resi = None, chain = '', atom_id = 0, Vobject_id = None):
+    def __init__ (self, name='Xx', index=None, symbol='X', pos=None, resi = None, resn = None, chain = '', atom_id = 0, Vobject_id = None, Vobject_name = ''):
         """ Class initialiser """
         
         if pos is None:
             pos = np.array([0.0, 0.0, 0.0])
         
-        self.pos     = pos
-        self.index   = index
-        self.name    = name
-        self.symbol  = symbol
-        self.resi    = resi 
-        self.chain   = chain
+        self.pos          = pos                   # - coordinates of the first frame
+        self.index        = index                 # 
+        self.name         = name                  #
+        self.symbol       = symbol                #
+        self.resi         = resi                  #
+        self.resn         = resn                  #
+        self.chain        = chain                 #
+        self.Vobject_id   = Vobject_id            #
+        self.Vobject_name = Vobject_name          #
+                                                  
+        self.atom_id      = atom_id               # An unique number
 
-        self.Vobject_id = Vobject_id
-        self.atom_id = atom_id
+        self.color        = at.get_color    (name)
+        self.col_rgb      = at.get_color_rgb(name)
+        self.radius       = at.get_radius   (name)
+        self.vdw_rad      = at.get_vdw_rad  (name)
+        self.cov_rad      = at.get_cov_rad  (name)
+        self.ball_radius  = at.get_ball_rad (name)
 
-        self.color       = at.get_color(name)
-        self.col_rgb     = at.get_color_rgb(name)
-        self.radius      = at.get_radius(name)
-        self.vdw_rad     = at.get_vdw_rad(name)
-        self.cov_rad     = at.get_cov_rad(name)
-        self.ball_radius = at.get_ball_rad(name)
+        self.lines          = True
+        self.dots           = False
+        self.ribbons        = False
+        self.ball_and_stick = False
+        self.sticks         = False
+        self.spheres        = False
+        self.surface        = False
+        
+        
+        self.connected      = []
+
 

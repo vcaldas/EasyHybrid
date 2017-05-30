@@ -24,6 +24,7 @@
 #from visual import gl_draw_area as gda, vis_parser
 from GLarea.vis_parser import parse_pdb, parse_xyz
 from pprint import pprint
+from GLarea.GLWidget   import GLWidget
 
 
 
@@ -63,115 +64,117 @@ class EasyMolSession:
         
         pprint(self.Vobjects)
         self.glwidget.draw_lines(self.Vobjects[-1])
-        self.glwidget.draw_dots(self.Vobjects[-1])
-
+        #self.glwidget.draw_dots(self.Vobjects[-1])
+        #Vobject.show_dots = False
+        self.center (Vobject_index =  -1)
+        for atom in self.Vobjects[-1].atoms:
+            print (atom.index-1, atom.name, atom.connected)
+        
         return True
         
 
-    def _hide_dots (self, Vobject_index ):
-        """ Function doc """
-        self.Vobjects[Vobject_index].show_dots = False
-        self.glwidget.draw_dots(self.Vobjects[Vobject_index])
+    def _hide_dots (self, Vobject_indexes ):
+        for index in Vobject_indexes:
+            #self.Vobjects[Vobject_index].show_ribbons = False
+            self.Vobjects[index].show_dots = False
+        #self.glwidget.draw_dots(self.Vobjects[Vobject_index])
 
-    def _show_dots (self, Vobject_index ):
+    def _show_dots (self, Vobject_indexes = [], selection = False ):
         """ Function doc """
-        self.Vobjects[Vobject_index].show_dots = True
-        self.glwidget.draw_dots(self.Vobjects[Vobject_index])
+        for index in Vobject_indexes:
+            self.Vobjects[index].show_dots = True
+            self.glwidget.draw_dots(Vobject = self.Vobjects[index], selection = True)
 
 
-    def _hide_ribbons (self, Vobject_index ):
+    def _hide_ribbons (self, Vobject_indexes ):
         """ Function doc """
-        self.Vobjects[Vobject_index].show_ribbons = False
-        self.glwidget.draw_ribbon(self.Vobjects[Vobject_index])
-        self.glwidget.draw()
+        for index in Vobject_indexes:
+            self.Vobjects[index].show_ribbons = False
+            #self.glwidget.draw_ribbon(self.Vobjects[Vobject_index])
+            #self.glwidget.draw()
     
-    def _show_ribbons (self, Vobject_index ):
+    def _show_ribbons (self, Vobject_indexes ):
         """ Function doc """
-        self.Vobjects[Vobject_index].show_ribbons = True
-        self.glwidget.draw_ribbon(self.Vobjects[Vobject_index])
-        self.glwidget.draw()
+        for index in Vobject_indexes:
+            self.Vobjects[index].show_ribbons = True
+            self.glwidget.draw_ribbon(self.Vobjects[index])
+            #self.glwidget.draw()
         
-    def _hide_lines (self, Vobject_index ):
+    def _hide_lines (self, Vobject_indexes ):
         """ Function doc """
-        self.Vobjects[Vobject_index].show_lines = False
-        self.glwidget.draw_lines(self.Vobjects[Vobject_index])
+        for index in Vobject_indexes:
+            self.Vobjects[index].show_lines = False
+            #self.glwidget.draw_lines(self.Vobjects[Vobject_index])
 
-    def _show_lines (self, Vobject_index ):
+    def _show_lines (self, Vobject_indexes ):
         """ Function doc """
-        self.Vobjects[Vobject_index].show_lines = True
-        self.glwidget.draw_lines(self.Vobjects[Vobject_index])
+        for index in Vobject_indexes:
+            self.Vobjects[index].show_lines = True
+            self.glwidget.draw_lines(self.Vobjects[index])
     
     
-    def _hide_ball_and_stick (self, Vobject_index ):
+    def _hide_ball_and_stick (self, Vobject_indexes ):
         """ Function doc """
-        #print ('here  _hide_ball_and_stick')
-        self.Vobjects[Vobject_index].show_ball_and_stick = False
-        self.glwidget.draw_ball_and_stick(self.Vobjects[Vobject_index])
+        for index in Vobject_indexes:
+            self.Vobjects[index].show_ball_and_stick = False
         
-    def _show_ball_and_stick(self, Vobject_index):
+    def _show_ball_and_stick(self, Vobject_indexes):
         """ Function doc """
-        self.Vobjects[Vobject_index].show_ball_and_stick = True
-        self.glwidget.draw_ball_and_stick(self.Vobjects[Vobject_index])
+        for index in Vobject_indexes:
+            self.Vobjects[index].show_ball_and_stick = True
+            self.glwidget.draw_ball_and_stick(self.Vobjects[index])
     
-    
-    
-    def _hide_spheres (self, Vobject_index ):
+    def _hide_spheres (self, Vobject_indexes ):
         """ Function doc """
-        #print ('here  _hide_ball_and_stick')
-        self.Vobjects[Vobject_index].show_spheres = False
-        self.glwidget.draw_spheres(self.Vobjects[Vobject_index])
+        for index in Vobject_indexes:
+            self.Vobjects[index].show_spheres = False
         
-    def _show_spheres (self, Vobject_index):
+    def _show_spheres (self, Vobject_indexes):
         """ Function doc """
-        self.Vobjects[Vobject_index].show_spheres = True
-        self.glwidget.draw_spheres(self.Vobjects[Vobject_index])
+        for index in Vobject_indexes:
+            self.Vobjects[index].show_spheres = True
+            self.glwidget.draw_spheres(self.Vobjects[index])
     
-    
-    
-    
-    
-    def hide (self, _type = 'lines', Vobject_index =  None):
+
+    def hide (self, _type = 'lines', Vobject_indexes =  []):
         """ Function doc """    
         if _type == 'dots':
-            self._hide_dots (Vobject_index )
+            self._hide_dots (Vobject_indexes )
 
         if _type == 'lines':
-            self._hide_lines (Vobject_index )
+            self._hide_lines (Vobject_indexes )
 
         if _type == 'ribbons':
-            self._hide_ribbons (Vobject_index )
+            self._hide_ribbons (Vobject_indexes )
         
         if _type == 'ball_and_stick':
-            self._hide_ball_and_stick(Vobject_index )
+            self._hide_ball_and_stick(Vobject_indexes )
         
         if _type == 'spheres':
-            self._hide_spheres(Vobject_index )            
+            self._hide_spheres (Vobject_indexes )            
         
         self.glwidget.updateGL()
 
-
-
-
-
-    def show (self, _type = 'lines', Vobject_index =  None):
+    def show (self, _type = 'lines', Vobject_indexes =  []):
         """ Function doc """
         if _type == 'dots':
-            self._show_dots (Vobject_index )
+            self._show_dots (Vobject_indexes )
 
         if _type == 'lines':
-            self._show_lines (Vobject_index )
+            self._show_lines (Vobject_indexes )
 
         if _type == 'ribbons':
-            self._show_ribbons (Vobject_index )
+            self._show_ribbons (Vobject_indexes )
         
         if _type == 'ball_and_stick':
-            self._show_ball_and_stick(Vobject_index)
+            self._show_ball_and_stick(Vobject_indexes)
         
         if _type == 'spheres':
-            self._show_spheres(Vobject_index ) 
+            self._show_spheres(Vobject_indexes ) 
     
         self.glwidget.updateGL()
 
+    
     def delete(self, Vobject_index = None):
         """ Function doc """
         self.Vobjects.pop(Vobject_index)
@@ -240,6 +243,100 @@ class EasyMolSession:
         if self._selection_mode == 'molecule':
             self.glwidget.selection_mode(mode = 'molecule')
         
+    def selection_change_presentation_mode (self, _type = 'lines', show =  True):
+        """ Function doc """
+        modified_objects = [False] * len(self.Vobjects)
+        
+        for atom in self.viewing_selections:
+            index      = atom.index-1
+            vobj_index = atom.Vobject_id
+            
+            modified_objects[vobj_index] = True
+            
+            if _type == 'lines':
+                if show:
+                    atom.lines = True
+                else:
+                    atom.lines = False
+                self.Vobjects[vobj_index].modified_lines    = True
+            
+            if _type == 'dots':
+                if show:
+                    atom.dots = True
+                else:
+                    atom.dots = False
+                self.Vobjects[vobj_index].modified_dots     = True
+            
+            if _type == 'ribbons':
+                if show:
+                    atom.ribbons = True
+                else:
+                    atom.ribbons = False
+                self.Vobjects[vobj_index].modified_ribbons  = True
+            
+            if _type == 'spheres':
+                if show:
+                    atom.spheres = True
+                else:
+                    atom.spheres = False
+                self.Vobjects[vobj_index].modified_spheres  = True
+            
+            if _type == 'ball_and_stick':
+                if show:
+                    atom.ball_and_stick = True
+                else:
+                    atom.ball_and_stick = False
+                self.Vobjects[vobj_index].modified_ball_and_stick = True
+            
+            if _type == 'surface':
+                if show:
+                    atom.surface = True
+                else:
+                    atom.surface = False
+                self.Vobjects[vobj_index].modified_surface  = True
+        
+        #self.modified_sticks   = False
+
+        '''
+        if selection:
+            _vobjects = [[]]* len(self.EMSession.Vobjects)
+            
+            print ('len(self.EMSession.Vobjects)',_vobjects )
+            print ('len(self.EMSession.viewing_selections)',len(self.EMSession.viewing_selections) )
+            
+            for atom in self.EMSession.viewing_selections:
+                _vobjects[atom.Vobject_id].append(atom)
+            
+            for _vobject in _vobjects:
+                if _vobject == []:
+                    pass
+                
+                else:
+                    vobj_index = _vobjects.index(_vobject)
+                                        
+                    gl_dt_li = glGenLists(self.gl_lists_counter)
+                    glNewList(gl_dt_li, GL_COMPILE)
+                    
+                    for frame in self.EMSession.Vobjects[vobj_index].frames:
+                        for atom in _vobject:
+                            #-------------------------------------------------------
+                            #                        D O T S
+                            #-------------------------------------------------------
+                            glPushMatrix()
+                            glPushName(atom.atom_id)
+                            glColor3f(atom.color[0], atom.color[1], atom.color[2])
+                            glPointSize(self.EMSession.GL_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
+                            glBegin(GL_POINTS)
+                            coord1   = frame[atom.index-1]
+                            glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
+                            glEnd()
+                            glPopName()
+                            glPopMatrix()
+        
+                    glEndList()            
+                    self.EMSession.Vobjects[vobj_index].GL_list_dots.append(gl_dt_li) 
+        '''
+    
     def selection_function (self, selected):
         """ Function doc """
 
@@ -311,7 +408,6 @@ class EasyMolSession:
                     if selected not in self.viewing_selections:
                         # So, add all atoms  - selected residue <- selected.resi
                         for residue in self.Vobjects[selected.Vobject_id].chains[selected.chain].residues:
-                            #for residue in chain.residues:
                             for atom in residue.atoms:
                                 # the atom is not on the list -  add atom by atom
                                 if atom not in self.viewing_selections:
@@ -351,7 +447,7 @@ class EasyMolSession:
 
     
     
-    def __init__ (self, glwidget):
+    def __init__ (self, parent = None, glwidget = None):
         """ Class initialiser """
         self.Vobjects         = []
         self.Vobjects_dic     = {}        
@@ -361,22 +457,31 @@ class EasyMolSession:
                                  }
         
 
+        #---------------------------------------------------------------
+        # gl stuffs
+        #---------------------------------------------------------------
+        self.glwidget = GLWidget (parent   , EMSession = self)
+        #self.glwidget           = glwidget # a gl area recebe 
+        #self.glwidget.EMSession = self
+        #self.glwidget.generate_gL_actions()
+        self.gl_parameters      =     {
+                                      
+                                      'dot_size'      : 7      ,
+                                      'line_width'    : 2      ,
+                                      'sphere_scale'  : 0.7    ,
+                                      'stick_scale'   : 1      ,
+                                
+                                      'antialias'     : False  ,
+                                      'bg_color'      : 'black',
+                                      }
+        
+        
+        #---------------------------------------------------------------
+        #                S E L E C T I O N S
+        #---------------------------------------------------------------
 
-        self.glwidget           = glwidget # a gl area recebe 
-        
-        self.glwidget.EMSession = self
-        
-        self.GL_parameters =     {
-                                 
-                                 'dot_size'      : 5      ,
-                                 'line_width'   : 3      ,
-                                 'sphere_scale' : 1      ,
-                                 'antialias'    : False  ,
-                                 'bg_color'     : 'black',
-                                 }
-        
         self._picking_selection_mode = False # True/False  - interchange between viewing  and picking mode
-        self._selection_mode   = 'residue'
+        self._selection_mode    = 'residue'
         self.viewing_selections = []
         self.picking_selections = [None]*4
         self.selected_residues  = []

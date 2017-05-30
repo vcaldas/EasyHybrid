@@ -14,11 +14,9 @@ import sys
 #from PySide.QtCore import *
 
 from PySide import QtCore, QtGui
-
 from GUI.untitled      import Ui_MainWindow
-
 from GLarea.easyMolObj import EasyMolSession
-from GLarea.GLWidget   import GLWidget
+#from GLarea.GLWidget   import GLWidget
 
 
 
@@ -46,114 +44,126 @@ class EasyMolFunctions:
     
     """   D O T S   """
 
-    def show_dots      (self, Vobject_index = None):
+    def show_dots      (self, Vobject_indexes = None):
         """ show """
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.show (_type = 'dots', Vobject_index = Vobject_index)  
+        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+            atom.dots = True
+        
+        self.EasyMol.show (_type = 'dots', Vobject_indexes = Vobject_indexes)  
     
-    def hide_dots      (self, Vobject_index = None):
+    def hide_dots      (self, Vobject_indexes = None):
         """ hide """
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.hide (_type = 'dots', Vobject_index = Vobject_index)  
+        self.EasyMol.hide (_type = 'dots', Vobject_indexes = Vobject_indexes)  
 
     
 
 
     """   L I N E S   """
 
-    def show_lines      (self, Vobject_index = None):
+    def show_lines      (self, Vobject_indexes = None):
         """ show """
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.show (_type = 'lines', Vobject_index = Vobject_index)  
+        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+            atom.lines = True
+            
+        self.EasyMol.show (_type = 'lines', Vobject_indexes = Vobject_indexes)  
     
-    def hide_lines      (self, Vobject_index = None):
+    def hide_lines      (self, Vobject_indexes = None):
         """ hide """
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.hide (_type = 'lines', Vobject_index = Vobject_index)  
+        self.EasyMol.hide (_type = 'lines', Vobject_indexes = Vobject_indexes)  
 
     
     
     
     """   R I B B O N S   """
 
-    def show_ribbons (self, Vobject_index = None):
+    def show_ribbons (self, Vobject_indexes = None):
         """ show """
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.show (_type = 'ribbons', Vobject_index = Vobject_index)  
+        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+            atom.ribbons = True
+        
+        self.EasyMol.show (_type = 'ribbons', Vobject_indexes = Vobject_indexes)  
 
     
-    def hide_ribbons (self, Vobject_index = None):
+    def hide_ribbons (self, Vobject_indexes = None):
         """ hide """
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.hide (_type = 'ribbons', Vobject_index = Vobject_index)  
+        self.EasyMol.hide (_type = 'ribbons', Vobject_indexes = Vobject_indexes)  
 
 
     """   B A L L  A N D  S T I C K   """
 
 
-    def show_ball_and_stick (self, Vobject_index = None):
+    def show_ball_and_stick (self, Vobject_indexes = None):
         """ show """
         #print ('here  show_ball_and_stick - gui')
 
-        if Vobject_index == None:
-            Vobject_index = self.current_row
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
         
-        self.EasyMol.show (_type = 'ball_and_stick', Vobject_index = Vobject_index)  
+        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+            atom.ball_and_stick = True
+        self.EasyMol.show (_type = 'ball_and_stick', Vobject_indexes = Vobject_indexes)  
     
-    def hide_ball_and_stick2 (self, Vobject_index = None):
+    def hide_ball_and_stick2 (self, Vobject_indexes = None):
         """ hide """
         print ('here  hide_ball_and_stick - gui')
-        if Vobject_index == None:
-            Vobject_index = self.current_row
-        self.EasyMol.hide (_type = 'ball_and_stick', Vobject_index = Vobject_index)  
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
+        self.EasyMol.hide (_type = 'ball_and_stick', Vobject_indexes = Vobject_indexes)  
         
 
     """   S P H E R E S   """
 
         
-    def show_spheres (self, Vobject_index = None):
+    def show_spheres (self, Vobject_indexes = None):
         """ show """
         #print ('here  show_ball_and_stick - gui')
 
-        if Vobject_index == None:
-            Vobject_index = self.current_row
-        
-        self.EasyMol.show (_type = 'spheres', Vobject_index = Vobject_index)
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
+        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+            atom.sphere = True
+        self.EasyMol.show (_type = 'spheres', Vobject_indexes = Vobject_indexes)
 
     
-    #def hide_spheres (self, Vobject_index = None):
+    #def hide_spheres (self, Vobject_indexes = None):
     #    """ hide """
     #    print ('here  spheres - gui')
     #    
-    #    if Vobject_index == None:
-    #        Vobject_index = self.current_row
-    #    self.EasyMol.hide (_type = 'spheres', Vobject_index = Vobject_index)  
+    #    if Vobject_indexes == None:
+    #        Vobject_indexes = self.current_row
+    #    self.EasyMol.hide (_type = 'spheres', Vobject_indexes = Vobject_indexes)  
 
-    def hide_spheres2 (self, Vobject_index = None):
+    def hide_spheres2 (self, Vobject_indexes = None):
         """ hide """
         print ('here  spheres - gui')
         
-        if Vobject_index == None:
-            Vobject_index = self.current_row
-        self.EasyMol.hide (_type = 'spheres', Vobject_index = Vobject_index)
+        if Vobject_indexes == None:
+            Vobject_indexes = [self.current_row]
+        self.EasyMol.hide (_type = 'spheres', Vobject_indexes = Vobject_indexes)
 
 
 
@@ -193,7 +203,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
         #QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("on_treeview_item_clicked(QtreeWidgetItem*)"), self.on_treeView_item_clicked)
         QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("itemClicked(QTreeWidgetItem*,int)"), self.on_treeview_item_clicked)
         self.generate_actions ()
-        
+        self.generate_menus   ()
 
         self.toolBar_2.addSeparator()
         self.label2 = QtGui.QLabel()
@@ -210,18 +220,30 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
 
         QtCore.QObject.connect(self.horizontalSlider, QtCore.SIGNAL("sliderMoved(int)"), self.horizontal_slider_change)
         
-        glmenu = [self.actionOpen]
+        glmenu = {'on_bg'        :[self.actionOpen],
+                  
+                  'on_atom'      :[self.Action_center],
+                  
+                  'on_selection' :[]
+                  
+                  }
+        
+        
+        
+        
+        
         self.current_row = None     # selected row from the treeview menu
 
-        self.glwidget = GLWidget(self, glmenu = glmenu)
 
         
         QtCore.QObject.connect(self.toolBar_2, QtCore.SIGNAL("toggled(bool)"), self.change_viewing_and_picking_mode)
         #self.toolBar_2.addAction(self.actionViewing)
 
-        self.EasyMol  = EasyMolSession(glwidget =  self.glwidget)
-
-        self.setCentralWidget(self.glwidget)
+        #self.EasyMol.glwidget = GLWidget       (self   , glmenu = glmenu)
+        #self.EasyMol  = EasyMolSession(glwidget =  self.EasyMol.glwidget)
+        #self.setCentralWidget(self.EasyMol.glwidget)
+        self.EasyMol  = EasyMolSession( parent = self)#glwidget =  self.EasyMol.glwidget)
+        self.setCentralWidget(self.EasyMol.glwidget)
         self.show()
     
 
@@ -339,6 +361,28 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
         self.Action_exite.triggered.connect(self.close)
 
 
+    def generate_menus (self):
+        """ Function doc """
+        self.treeview_menu = QtGui.QMenu()
+        self.treeview_menu.addAction(self.Action_center)
+        self.menu_show = self.treeview_menu.addMenu("&Show")
+        self.menu_show.addAction(self.Action_show_dots)
+        self.menu_show.addAction(self.Action_show_lines)
+        self.menu_show.addAction(self.Action_show_ribbons)
+        self.menu_show.addAction(self.Action_show_ball_and_stick)
+        self.menu_show.addAction(self.Action_show_spheres)
+        self.menu_hide = self.treeview_menu.addMenu("&Hide")
+        self.menu_hide.addAction(self.Action_hide_dots)
+        self.menu_hide.addAction(self.Action_hide_lines)
+        self.menu_hide.addAction(self.Action_hide_ribbons)
+        self.menu_hide.addAction(self.Action_hide_ball_and_stick)
+        self.menu_hide.addAction(self.Action_hide_spheres)
+        self.treeview_menu.addSeparator()
+        self.treeview_menu.addAction(self.Action_delete)
+        self.current_row =  None
+
+	
+
     def on_treeview_clicked_QModelIndex(self, model):
         """ Function doc """
         print (model)
@@ -366,16 +410,16 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
     def change_viewing_and_picking_mode (self):
         """ Function doc """
         if self.actionViewing.isChecked() :
-            self.glwidget.setCursor(QtCore.Qt.CrossCursor)
+            self.EasyMol.glwidget.setCursor(QtCore.Qt.CrossCursor)
             self.selection_mode_combo.setEnabled(False)
             self.actionViewing.setText("Picking")
             self.EasyMol._picking_selection_mode = True 
         else:
-            self.glwidget.setCursor(QtCore.Qt.ArrowCursor)
+            self.EasyMol.glwidget.setCursor(QtCore.Qt.ArrowCursor)
             self.selection_mode_combo.setEnabled(True)
             self.actionViewing.setText("Viewing")
             self.EasyMol._picking_selection_mode = False 
-        self.glwidget.updateGL()
+        self.EasyMol.glwidget.updateGL()
     
     def change_selection_mode(self, selection_mode):
         """ Function doc """
@@ -462,36 +506,38 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
                  
                  #print (index.checkState())
                  level += 1
-         
-        menu = QtGui.QMenu()
-        if level == 0:
-            menu.addAction(self.Action_center)
-            
-            menu_show = menu.addMenu("&Show")
-            menu_show.addAction(self.Action_show_dots)
-            menu_show.addAction(self.Action_show_lines)
-            menu_show.addAction(self.Action_show_ribbons)
-            menu_show.addAction(self.Action_show_ball_and_stick)
-            menu_show.addAction(self.Action_show_spheres)
+	
+        self.treeview_menu.exec_(self.treeWidget.viewport().mapToGlobal(position))
 
-            menu_hide = menu.addMenu("&Hide")
-            menu_hide.addAction(self.Action_hide_dots)
-            menu_hide.addAction(self.Action_hide_lines)
-            menu_hide.addAction(self.Action_hide_ribbons)
-            menu_hide.addAction(self.Action_hide_ball_and_stick)
-            menu_hide.addAction(self.Action_hide_spheres)
-
-            menu.addSeparator()
-            menu.addAction(self.Action_delete)
-
-        menu.exec_(self.treeWidget.viewport().mapToGlobal(position))
-        self.current_row =  None
+        #menu = QtGui.QMenu()
+        #if level == 0:
+        #    menu.addAction(self.Action_center)
+        #    
+        #    menu_show = menu.addMenu("&Show")
+        #    menu_show.addAction(self.Action_show_dots)
+        #    menu_show.addAction(self.Action_show_lines)
+        #    menu_show.addAction(self.Action_show_ribbons)
+        #    menu_show.addAction(self.Action_show_ball_and_stick)
+        #    menu_show.addAction(self.Action_show_spheres)
+        #
+        #    menu_hide = menu.addMenu("&Hide")
+        #    menu_hide.addAction(self.Action_hide_dots)
+        #    menu_hide.addAction(self.Action_hide_lines)
+        #    menu_hide.addAction(self.Action_hide_ribbons)
+        #    menu_hide.addAction(self.Action_hide_ball_and_stick)
+        #    menu_hide.addAction(self.Action_hide_spheres)
+        #
+        #    menu.addSeparator()
+        #    menu.addAction(self.Action_delete)
+        #
+        #menu.exec_(self.treeWidget.viewport().mapToGlobal(position))
+        #self.current_row =  None
     
     def horizontal_slider_change (self, data):
         """ Function doc """
         #print (data)
-        self.glwidget.frame = data 
-        self.glwidget.updateGL()
+        self.EasyMol.glwidget.frame = data 
+        self.EasyMol.glwidget.updateGL()
 '''     
 if __name__ == '__main__':
     app = QApplication(sys.argv)

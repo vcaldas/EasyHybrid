@@ -25,9 +25,533 @@ import GLarea.representations as rep
 from GLarea.vector_math import Vector
 
 
-class GLWidget(QtOpenGL.QGLWidget):
+class glMenu:
+    """ Class doc """
+    def __init__ (self):
+        """ Class initialiser """
+        self.glwidget  = glwidget
+        self.EMSession = EMSession
+        
+
+
+    def change_show_hide_ (self, selection_type = 'atom', _type = 'lines', show = True):
+        """ Function doc """
+        selection_list = []
+        sel = self.selected_atom_on_click
+        
+        if selection_type == 'atom':
+            #chain = self.selected_atom_on_click.chain
+            #name  = self.selected_atom_on_click.name
+            #index = self.selected_atom_on_click.index
+            #label = selected.Vobject_name+' / '+selected.chain+' / '+str(selected.resn)+ ' ' +str(selected.resi)+' / '+str(selected.name)+' ' +str(selected.index)                    
+            atom   = sel
+            selection_list = [atom]
+            sel.dots = True
+            print('atom: ',atom.chain, atom.resi, atom.resn, atom.index, atom.name)    
+            if show:
+                if _type == 'dots':
+                    atom.dots = True
+                if _type == 'lines':
+                    atom.lines = True
+                if _type == 'ribbons':
+                    atom.ribbons = True
+                if _type == 'ball_and_stick':
+                    atom.ball_and_stick = True                        
+                if _type == 'spheres':
+                    atom.spheres = True
+                if _type == 'surface':
+                    atom.surface = True
+            else:
+                if _type == 'dots':
+                    atom.dots = False
+                if _type == 'lines':
+                    atom.lines = False
+                if _type == 'ribbons':
+                    atom.ribbons = False
+                if _type == 'ball_and_stick':
+                    atom.ball_and_stick = False                        
+                if _type == 'spheres':
+                    atom.spheres = False
+                if _type == 'surface':
+                    atom.surface = False
+        
+        if selection_type == 'residue':
+            sel = self.selected_atom_on_click
+           
+            for atom in self.EMSession.Vobjects[sel.Vobject_id].chains[sel.chain].residues[sel.resi].atoms:
+                selection_list.append(atom)
+                atom.dots = True
+                
+                if show:
+                    if _type == 'dots':
+                        atom.dots = True
+                    if _type == 'lines':
+                        atom.lines = True
+                    if _type == 'ribbons':
+                        atom.ribbons = True
+                    if _type == 'ball_and_stick':
+                        atom.ball_and_stick = True                        
+                    if _type == 'spheres':
+                        atom.spheres = True
+                    if _type == 'surface':
+                        atom.surface = True
+                else:
+                    if _type == 'dots':
+                        atom.dots = False
+                    if _type == 'lines':
+                        atom.lines = False
+                    if _type == 'ribbons':
+                        atom.ribbons = False
+                    if _type == 'ball_and_stick':
+                        atom.ball_and_stick = False                        
+                    if _type == 'spheres':
+                        atom.spheres = False
+                    if _type == 'surface':
+                        atom.surface = False
+                print('atom: ',atom.chain, atom.resi, atom.resn, atom.index, atom.name)    
+
+        if selection_type == 'chain':
+            for residue in self.EMSession.Vobjects[sel.Vobject_id].chains[sel.chain].residues:
+                for atom in self.EMSession.Vobjects[sel.Vobject_id].chains[sel.chain].residues[residue].atoms:            
+                    selection_list.append(atom)
+                    print('atom: ',atom.chain, atom.resi, atom.resn, atom.index, atom.name)    
+                    if show:
+                        if _type == 'dots':
+                            atom.dots = True
+                        if _type == 'lines':
+                            atom.lines = True
+                        if _type == 'ribbons':
+                            atom.ribbons = True
+                        if _type == 'ball_and_stick':
+                            atom.ball_and_stick = True                        
+                        if _type == 'spheres':
+                            atom.spheres = True
+                        if _type == 'surface':
+                            atom.surface = True
+                    else:
+                        if _type == 'dots':
+                            atom.dots = False
+                        if _type == 'lines':
+                            atom.lines = False
+                        if _type == 'ribbons':
+                            atom.ribbons = False
+                        if _type == 'ball_and_stick':
+                            atom.ball_and_stick = False                        
+                        if _type == 'spheres':
+                            atom.spheres = False
+                        if _type == 'surface':
+                            atom.surface = False
+        self.EMSession.show (_type = _type , Vobject_indexes = [sel.Vobject_id])
+
+
+    def _show_atom_dots    (self):
+        self.change_show_hide_ (selection_type = 'atom', _type = 'dots', show = True)
     
-    def __init__(self, parent=None, glmenu = None):
+    def _show_residue_dots (self):
+        self.change_show_hide_ (selection_type = 'residue', _type = 'dots', show = True)
+
+    def _show_chain_dots   (self):
+        self.change_show_hide_ (selection_type = 'chain', _type = 'dots', show = True)
+   
+    def _hide_atom_dots    (self):
+        self.change_show_hide_ (selection_type = 'atom', _type = 'dots', show = False)
+
+    def _hide_residue_dots (self):
+        self.change_show_hide_ (selection_type = 'residue', _type = 'dots', show = False)
+    
+    def _hide_chain_dots   (self):
+        self.change_show_hide_ (selection_type = 'chain', _type = 'dots', show = False)
+
+    '''  LINES '''
+    def _show_atom_lines    (self):
+        self.change_show_hide_ (selection_type = 'atom', _type = 'lines', show = True)
+    
+    def _show_residue_lines (self):
+        self.change_show_hide_ (selection_type = 'residue', _type = 'lines', show = True)
+
+    def _show_chain_lines   (self):
+        self.change_show_hide_ (selection_type = 'chain', _type = 'lines', show = True)
+   
+    def _hide_atom_lines    (self):
+        self.change_show_hide_ (selection_type = 'atom', _type = 'lines', show = False)
+
+    def _hide_residue_lines (self):
+        self.change_show_hide_ (selection_type = 'residue', _type = 'lines', show = False)
+    
+    def _hide_chain_lines   (self):
+        self.change_show_hide_ (selection_type = 'chain', _type = 'lines', show = False)
+
+
+
+
+    '''  RIBBONS '''
+    def _show_atom_ribbons    (self):
+        self.change_show_hide_ (selection_type = 'atom', _type = 'ribbons', show = True)
+    
+    def _show_residue_ribbons (self):
+        self.change_show_hide_ (selection_type = 'residue', _type = 'ribbons', show = True)
+
+    def _show_chain_ribbons   (self):
+        self.change_show_hide_ (selection_type = 'chain', _type = 'ribbons', show = True)
+   
+    def _hide_atom_ribbons    (self):
+        self.change_show_hide_ (selection_type = 'atom', _type = 'ribbons', show = False)
+
+    def _hide_residue_ribbons (self):
+        self.change_show_hide_ (selection_type = 'residue', _type = 'ribbons', show = False)
+    
+    def _hide_chain_ribbons   (self):
+        self.change_show_hide_ (selection_type = 'chain', _type = 'ribbons', show = False)
+
+
+
+    '''  ball_and_stick '''
+    def _show_atom_ball_and_stick    (self):
+        self.change_show_hide_ (selection_type = 'atom', _type = 'ball_and_stick', show = True)
+    
+    def _show_residue_ball_and_stick (self):
+        self.change_show_hide_ (selection_type = 'residue', _type = 'ball_and_stick', show = True)
+
+    def _show_chain_ball_and_stick   (self):
+        self.change_show_hide_ (selection_type = 'chain', _type = 'ball_and_stick', show = True)
+   
+    def _hide_atom_ball_and_stick    (self):
+        self.change_show_hide_ (selection_type = 'atom', _type = 'ball_and_stick', show = False)
+
+    def _hide_residue_ball_and_stick (self):
+        self.change_show_hide_ (selection_type = 'residue', _type = 'ball_and_stick', show = False)
+    
+    def _hide_chain_ball_and_stick   (self):
+        self.change_show_hide_ (selection_type = 'chain', _type = 'ball_and_stick', show = False)
+
+    
+    '''  spheres '''
+    def _show_atom_spheres    (self):
+        self.change_show_hide_ (selection_type = 'atom', _type = 'spheres', show = True)
+    
+    def _show_residue_spheres (self):
+        self.change_show_hide_ (selection_type = 'residue', _type = 'spheres', show = True)
+
+    def _show_chain_spheres   (self):
+        self.change_show_hide_ (selection_type = 'chain', _type = 'spheres', show = True)
+   
+    def _hide_atom_spheres    (self):
+        self.change_show_hide_ (selection_type = 'atom', _type = 'spheres', show = False)
+
+    def _hide_residue_spheres (self):
+        self.change_show_hide_ (selection_type = 'residue', _type = 'spheres', show = False)
+    
+    def _hide_chain_spheres   (self):
+        self.change_show_hide_ (selection_type = 'chain', _type = 'spheres', show = False)
+
+
+    '''  surface '''
+    def _show_atom_surface    (self):
+        self.change_show_hide_ (selection_type = 'atom', _type = 'surface', show = True)
+    
+    def _show_residue_surface (self):
+        self.change_show_hide_ (selection_type = 'residue', _type = 'surface', show = True)
+
+    def _show_chain_surface   (self):
+        self.change_show_hide_ (selection_type = 'chain', _type = 'surface', show = True)
+   
+    def _hide_atom_surface    (self):
+        self.change_show_hide_ (selection_type = 'atom', _type = 'surface', show = False)
+
+    def _hide_residue_surface (self):
+        self.change_show_hide_ (selection_type = 'residue', _type = 'surface', show = False)
+    
+    def _hide_chain_surface   (self):
+        self.change_show_hide_ (selection_type = 'chain', _type = 'surface', show = False)
+
+
+
+
+
+
+    def _selection_show_dots (self):
+        """ Function doc """
+    
+    def _selection_hide_dots (self):
+        """ Function doc """
+        
+        
+
+
+    def  generate_gL_actions(self):       
+        
+        
+        
+        """     Clicked On Atom    """
+        
+        '''    Center    '''
+        self.Action_center = QtGui.QAction('Center', self)
+        
+        '''    Delete    '''
+        self.Action_delete = QtGui.QAction('Delete', self)
+
+        self.Action_show_atom_dots    = QtGui.QAction('dots', self)
+        self.Action_show_residue_dots = QtGui.QAction('dots', self)
+        self.Action_show_chain_dots   = QtGui.QAction('dots', self)
+        self.Action_hide_atom_dots    = QtGui.QAction('dots', self)
+        self.Action_hide_residue_dots = QtGui.QAction('dots', self)
+        self.Action_hide_chain_dots   = QtGui.QAction('dots', self)
+        
+        self.Action_show_atom_dots   .triggered.connect(self._show_atom_dots)
+        self.Action_show_residue_dots.triggered.connect(self._show_residue_dots)
+        self.Action_show_chain_dots  .triggered.connect(self._show_chain_dots)
+        self.Action_hide_atom_dots   .triggered.connect(self._hide_atom_dots)
+        self.Action_hide_residue_dots.triggered.connect(self._hide_residue_dots)
+        self.Action_hide_chain_dots  .triggered.connect(self._hide_chain_dots)
+        
+        
+        self.Action_show_atom_lines    = QtGui.QAction('lines', self)
+        self.Action_show_residue_lines = QtGui.QAction('lines', self)
+        self.Action_show_chain_lines   = QtGui.QAction('lines', self)
+        self.Action_hide_atom_lines    = QtGui.QAction('lines', self)
+        self.Action_hide_residue_lines = QtGui.QAction('lines', self)
+        self.Action_hide_chain_lines   = QtGui.QAction('lines', self)
+        
+        self.Action_show_atom_lines   .triggered.connect(self._show_atom_lines)
+        self.Action_show_residue_lines.triggered.connect(self._show_residue_lines)
+        self.Action_show_chain_lines  .triggered.connect(self._show_chain_lines)
+        self.Action_hide_atom_lines   .triggered.connect(self._hide_atom_lines)
+        self.Action_hide_residue_lines.triggered.connect(self._hide_residue_lines)
+        self.Action_hide_chain_lines  .triggered.connect(self._hide_chain_lines)
+        
+
+
+        self.Action_show_atom_spheres    = QtGui.QAction('spheres', self)
+        self.Action_show_residue_spheres = QtGui.QAction('spheres', self)
+        self.Action_show_chain_spheres   = QtGui.QAction('spheres', self)
+        self.Action_hide_atom_spheres    = QtGui.QAction('spheres', self)
+        self.Action_hide_residue_spheres = QtGui.QAction('spheres', self)
+        self.Action_hide_chain_spheres   = QtGui.QAction('spheres', self)
+        
+        self.Action_show_atom_spheres   .triggered.connect(self._show_atom_spheres)
+        self.Action_show_residue_spheres.triggered.connect(self._show_residue_spheres)
+        self.Action_show_chain_spheres  .triggered.connect(self._show_chain_spheres)
+        self.Action_hide_atom_spheres   .triggered.connect(self._hide_atom_spheres)
+        self.Action_hide_residue_spheres.triggered.connect(self._hide_residue_spheres)
+        self.Action_hide_chain_spheres  .triggered.connect(self._hide_chain_spheres)
+
+        self.Action_show_atom_ball_and_stick    = QtGui.QAction('ball_and_stick', self)
+        self.Action_show_residue_ball_and_stick = QtGui.QAction('ball_and_stick', self)
+        self.Action_show_chain_ball_and_stick   = QtGui.QAction('ball_and_stick', self)
+        self.Action_hide_atom_ball_and_stick    = QtGui.QAction('ball_and_stick', self)
+        self.Action_hide_residue_ball_and_stick = QtGui.QAction('ball_and_stick', self)
+        self.Action_hide_chain_ball_and_stick   = QtGui.QAction('ball_and_stick', self)
+        
+        self.Action_show_atom_ball_and_stick   .triggered.connect(self._show_atom_ball_and_stick)
+        self.Action_show_residue_ball_and_stick.triggered.connect(self._show_residue_ball_and_stick)
+        self.Action_show_chain_ball_and_stick  .triggered.connect(self._show_chain_ball_and_stick)
+        self.Action_hide_atom_ball_and_stick   .triggered.connect(self._hide_atom_ball_and_stick)
+        self.Action_hide_residue_ball_and_stick.triggered.connect(self._hide_residue_ball_and_stick)
+        self.Action_hide_chain_ball_and_stick  .triggered.connect(self._hide_chain_ball_and_stick)
+
+        self.Action_show_atom_ribbons    = QtGui.QAction('ribbons', self)
+        self.Action_show_residue_ribbons = QtGui.QAction('ribbons', self)
+        self.Action_show_chain_ribbons   = QtGui.QAction('ribbons', self)
+        self.Action_hide_atom_ribbons    = QtGui.QAction('ribbons', self)
+        self.Action_hide_residue_ribbons = QtGui.QAction('ribbons', self)
+        self.Action_hide_chain_ribbons   = QtGui.QAction('ribbons', self)
+        
+        self.Action_show_atom_ribbons   .triggered.connect(self._show_atom_ribbons)
+        self.Action_show_residue_ribbons.triggered.connect(self._show_residue_ribbons)
+        self.Action_show_chain_ribbons  .triggered.connect(self._show_chain_ribbons)
+        self.Action_hide_atom_ribbons   .triggered.connect(self._hide_atom_ribbons)
+        self.Action_hide_residue_ribbons.triggered.connect(self._hide_residue_ribbons)
+        self.Action_hide_chain_ribbons  .triggered.connect(self._hide_chain_ribbons)
+
+        self.Action_show_atom_surface    = QtGui.QAction('surface', self)
+        self.Action_show_residue_surface = QtGui.QAction('surface', self)
+        self.Action_show_chain_surface   = QtGui.QAction('surface', self)
+        self.Action_hide_atom_surface    = QtGui.QAction('surface', self)
+        self.Action_hide_residue_surface = QtGui.QAction('surface', self)
+        self.Action_hide_chain_surface   = QtGui.QAction('surface', self)
+        
+        self.Action_show_atom_surface   .triggered.connect(self._show_atom_surface)
+        self.Action_show_residue_surface.triggered.connect(self._show_residue_surface)
+        self.Action_show_chain_surface  .triggered.connect(self._show_chain_surface)
+        self.Action_hide_atom_surface   .triggered.connect(self._hide_atom_surface)
+        self.Action_hide_residue_surface.triggered.connect(self._hide_residue_surface)
+        self.Action_hide_chain_surface  .triggered.connect(self._hide_chain_surface)
+
+
+
+
+        """     Clicked On Selection    """
+        self.Action_show_dots = QtGui.QAction('dots', self)
+        self.Action_hide_dots = QtGui.QAction('dots', self)
+        self.Action_show_dots.triggered.connect(self._selection_show_dots)
+        self.Action_hide_dots.triggered.connect(self._selection_hide_dots)
+
+        '''    Lines    '''
+        # show
+        self.Action_show_lines = QtGui.QAction('Lines', self)
+        self.Action_show_lines.setStatusTip('Show lines')
+        #self.Action_show_lines.triggered.connect(self.show_lines)
+        # hide
+        self.Action_hide_lines = QtGui.QAction('Lines', self)
+        self.Action_hide_lines.setStatusTip('Show lines')
+        #self.Action_hide_lines.triggered.connect(self.hide_lines)
+
+        '''   Ribbons   '''
+        # show
+        self.Action_show_ribbons = QtGui.QAction('Ribbons', self)
+        self.Action_show_ribbons.setStatusTip('Show Ribbons')
+        #self.Action_show_ribbons.triggered.connect(self.show_ribbons)
+        # hide
+        self.Action_hide_ribbons = QtGui.QAction('Ribbons', self)
+        self.Action_hide_ribbons.setStatusTip('Hide Ribbons')
+        #self.Action_hide_ribbons.triggered.connect(self.hide_ribbons)
+        
+        '''   Ball and Stick   '''
+        # show
+        self.Action_show_ball_and_stick = QtGui.QAction('Ball and Stick', self)
+        self.Action_show_ball_and_stick.setStatusTip('Show Ball and Stick')
+        #self.Action_show_ball_and_stick.triggered.connect(self.show_ball_and_stick)
+        # hide
+        self.Action_hide_ball_and_stick = QtGui.QAction('Ball and Stick', self)
+        self.Action_hide_ball_and_stick.setStatusTip('Hide Ball and Stick')
+        #self.Action_hide_ball_and_stick.triggered.connect(self.hide_ball_and_stick2)
+        
+        '''   Spheres   '''
+        # show
+        self.Action_show_spheres = QtGui.QAction('Spheres', self)
+        self.Action_show_spheres.setStatusTip('Show Spheres')
+        #self.Action_show_spheres.triggered.connect(self.show_spheres)
+        # hide          
+        self.Action_hide_spheres = QtGui.QAction('Spheres', self)
+        self.Action_hide_spheres.setStatusTip('Hide Spheres')
+        #self.Action_hide_spheres.triggered.connect(self.hide_spheres2)
+
+
+
+    def open_gl_menu (self, _type = 'on_bg', selected = None, event = None):
+        """ Function doc """
+        menu = QtGui.QMenu()
+        if _type == 'on_bg':
+            for item in self.glmenu['on_bg']:
+                menu.addAction(item)
+        else:
+            if _type == 'on_atom':
+                if selected not in self.EMSession.viewing_selections:
+                    #               obj             /      chain      /       residue                  resi           /         atom                  index
+                    label = selected.Vobject_name+' / '+selected.chain+' / '+str(selected.resn)+ ' ' +str(selected.resi)+' / '+str(selected.name)+' ' +str(selected.index)                    
+                    #str(selected.index) + ' ' + str(selected.name) + ' ' + str(selected.resi)+ ' ' + str(selected.resn)
+                    Action_label = QtGui.QAction(label, self)
+                    #Action_delete.triggered.connect(self.delete_obj)                    
+                    menu.addAction(Action_label)
+                    menu.addSeparator()            
+                
+                    menu.addAction(self.Action_center)
+                    menu_atom = menu.addMenu("&Atom")
+
+                    ''' S H O W    A T O M S '''
+                    menu_atom_show = menu_atom.addMenu("&Show")
+                    menu_atom_show.addAction(self.Action_show_atom_dots)
+                    menu_atom_show.addAction(self.Action_show_atom_lines)
+                    menu_atom_show.addAction(self.Action_show_atom_ribbons)
+                    menu_atom_show.addAction(self.Action_show_atom_ball_and_stick)
+                    menu_atom_show.addAction(self.Action_show_atom_spheres)
+                    menu_atom_show.addAction(self.Action_show_atom_surface)
+
+                    
+                    ''' H I D E    A T O M S '''
+                    menu_atom_hide = menu_atom.addMenu("&Hide")
+                    menu_atom_hide.addAction(self.Action_hide_atom_dots)
+                    menu_atom_hide.addAction(self.Action_hide_atom_lines)
+                    menu_atom_hide.addAction(self.Action_hide_atom_ribbons)
+                    menu_atom_hide.addAction(self.Action_hide_atom_ball_and_stick)
+                    menu_atom_hide.addAction(self.Action_hide_atom_spheres)
+                    menu_atom_hide.addAction(self.Action_hide_atom_surface)
+
+                    
+                    ''' S H O W     R E S I D U E '''
+                    menu_residue = menu.addMenu("&Residue")
+                    menu_residue_show = menu_residue.addMenu("&Show")
+                    menu_residue_show.addAction(self.Action_show_residue_dots)
+                    menu_residue_show.addAction(self.Action_show_residue_lines)
+                    menu_residue_show.addAction(self.Action_show_residue_ribbons)
+                    menu_residue_show.addAction(self.Action_show_residue_ball_and_stick)
+                    menu_residue_show.addAction(self.Action_show_residue_spheres)
+                    menu_residue_show.addAction(self.Action_show_residue_surface)
+                    
+                    
+                    ''' H I D E      R E S I D U E '''
+                    menu_residue_hide = menu_residue.addMenu("&Hide")
+                    menu_residue_hide.addAction(self.Action_hide_residue_dots)
+                    menu_residue_hide.addAction(self.Action_hide_residue_lines)
+                    menu_residue_hide.addAction(self.Action_hide_residue_ribbons)
+                    menu_residue_hide.addAction(self.Action_hide_residue_ball_and_stick)
+                    menu_residue_hide.addAction(self.Action_hide_residue_spheres)
+                    menu_residue_hide.addAction(self.Action_hide_residue_surface)
+                    
+                    ''' S H O W     C H A I N '''
+                    menu_chain = menu.addMenu("&Chain")
+                    menu_chain_show = menu_chain.addMenu("&Show")
+                    menu_chain_show.addAction(self.Action_show_chain_dots)
+                    menu_chain_show.addAction(self.Action_show_chain_lines)
+                    menu_chain_show.addAction(self.Action_show_chain_ribbons)
+                    menu_chain_show.addAction(self.Action_show_chain_ball_and_stick)
+                    menu_chain_show.addAction(self.Action_show_chain_spheres)
+                    menu_chain_show.addAction(self.Action_show_chain_surface)
+                    
+                    ''' H I D E     C H A I N '''
+                    menu_chain_hide = menu_chain.addMenu("&Hide")
+                    menu_chain_hide.addAction(self.Action_hide_chain_dots)
+                    menu_chain_hide.addAction(self.Action_hide_chain_lines)
+                    menu_chain_hide.addAction(self.Action_hide_chain_ribbons)
+                    menu_chain_hide.addAction(self.Action_hide_chain_ball_and_stick)
+                    menu_chain_hide.addAction(self.Action_hide_chain_spheres)
+                    menu_chain_hide.addAction(self.Action_hide_chain_surface)
+
+                    menu.addSeparator()
+                    menu.addAction(self.Action_delete)
+            
+            if _type == 'on_selection':
+                label ='Selection'
+                Action_label = QtGui.QAction(label, self)
+                #Action_delete.triggered.connect(self.delete_obj)                    
+                menu.addAction(Action_label)
+                menu.addSeparator()
+                menu.addAction(self.Action_center)
+
+                menu_show = menu.addMenu("&Show")
+                #menu_show.addAction(self.Action_show_dots)
+                #menu_show.addAction(self.Action_show_lines)
+                #menu_show.addAction(self.Action_show_ribbons)
+                #menu_show.addAction(self.Action_show_ball_and_stick)
+                #menu_show.addAction(self.Action_show_spheres)
+
+                menu_hide = menu.addMenu("&Hide")
+                #menu_hide.addAction(self.Action_hide_dots)
+                #menu_hide.addAction(self.Action_hide_lines)
+                #menu_hide.addAction(self.Action_hide_ribbons)
+                #menu_hide.addAction(self.Action_hide_ball_and_stick)
+                #menu_hide.addAction(self.Action_hide_spheres)
+
+                menu.addSeparator()
+                menu.addAction(self.Action_delete)
+
+        menu.exec_(event.globalPos())
+
+
+
+
+
+
+
+
+
+
+
+
+
+class GLWidget(QtOpenGL.QGLWidget, glMenu):
+    
+    def __init__(self, parent=None, EMSession = None):
         """ GLWidget is a QtWidget with OpenGL capabilities.
             Attributes:
             
@@ -63,7 +587,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         """
         QtOpenGL.QGLWidget.__init__(self, parent)
         
-        self.glmenu          = glmenu
+        #self.glmenu          = glmenu
         self.trolltechGreen  = QtGui.QColor.fromCmykF(0.40, 0.0, 1.0, 0.0)
         self.trolltechPurple = QtGui.QColor.fromCmykF(0.39, 0.39, 0.0, 0.0)
         
@@ -73,7 +597,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.z_near = 1.0
         self.z_far  = 10.0
         
-        self.fog_start  = self.z_far - 1.5
+        self.fog_start  = self.z_far - 4.5
         self.fog_end    = self.z_far
         self.scale_zoom = self.fog_start # increse /decrese the dot size and line width
         
@@ -83,8 +607,6 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.bottom = -1.0
         self.left   = -10.0
         self.right  = 10
-        #self.selected_atoms = [None]*4
-        #self.selected_residues = []
         
         self.mouse_x = 0
         self.mouse_y = 0
@@ -109,11 +631,15 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.LINES = self.DOTS = self.BALL_STICK = self.VDW = self.PRETTY_VDW = self.RIBBON = self.SPHERES = self.WIRES = self.SELECTION = self.MODIFIED = False
         self.gl_ball_stick_list = self.gl_point_list = self.gl_lines_list = self.gl_pretty_vdw_list = self.gl_ribbon_list =  self.gl_sphere_list = self.gl_vdw_list = self.gl_wires_list = None  
         
-        self.sel_atom = True
-        self.sel_resid = self.sel_chain = self.sel_mol = False
+        #self.sel_atom = True
+        #self.sel_resid = self.sel_chain = self.sel_mol = False
         
         self.gl_lists_counter = 1
-        self.EMSession = None
+        self.EMSession = EMSession
+        self.generate_gL_actions()
+
+        #self.gl_menu   = glMenu(glwidget = self, EMSession = EMSession)
+        self.selected_atom_on_click = None
     
         
     def initializeGL(self):
@@ -167,7 +693,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glEnable (GL_DEPTH_TEST)
                 
                 if Vobject.show_dots    :
-                    glCallList(Vobject.list_dots[input_frame], GL_COMPILE)
+                    glCallList(Vobject.GL_list_dots[input_frame], GL_COMPILE)
                 
                 if Vobject.show_lines   :
                     glCallList(Vobject.list_lines[input_frame], GL_COMPILE)
@@ -218,7 +744,6 @@ class GLWidget(QtOpenGL.QGLWidget):
                 #glVertex3f(coord1[0], coord1[1], coord1[2])
                 rep.draw_selected(atom, coord)
 
-    
     def draw_to_pick(self, frame = -1):
         """ Defines wich type of representations will be displayed for the pick
             function to work. The only difference with the draw method should be
@@ -240,7 +765,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 glDisable(GL_COLOR_MATERIAL)
                 glEnable (GL_DEPTH_TEST)
                 if Vobject.show_dots    :
-                    glCallList(Vobject.list_dots[input_frame], GL_COMPILE)
+                    glCallList(Vobject.GL_list_dots[input_frame], GL_COMPILE)
                 if Vobject.show_lines   :
                     glCallList(Vobject.list_lines[input_frame], GL_COMPILE)
                 if Vobject.show_ribbons :
@@ -387,83 +912,49 @@ class GLWidget(QtOpenGL.QGLWidget):
         if dx == 0 and dy == 0:
             button = event.button()
             if button == QtCore.Qt.MouseButton.RightButton and not self.dragging:
-                #print('RightButton')
-                menu = QtGui.QMenu(self)
+
+                nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
+                selected = self.select(nearest, hits)                    
+                #menu = QtGui.QMenu(self)
+                self.selected_atom_on_click = selected
+                if selected is None:
+                    self.open_gl_menu (_type = 'on_bg', selected = selected, event = event)
+                    #for item in self.glmenu['background']:
+                    #    menu.addAction(item)
+
+                else:
+                    if self.EMSession._picking_selection_mode:
+                        pass
+                    
+                    else:
+                        if selected not in self.EMSession.viewing_selections:
+                            self.open_gl_menu (_type = 'on_atom', selected = selected, event = event)
+                            ##               obj             /      chain      /       residue                  resi           /         atom                  index
+                            #label = selected.Vobject_name+' / '+selected.chain+' / '+str(selected.resn)+ ' ' +str(selected.resi)+' / '+str(selected.name)+' ' +str(selected.index)                    
+                            ##str(selected.index) + ' ' + str(selected.name) + ' ' + str(selected.resi)+ ' ' + str(selected.resn)
+                            #Action_label = QtGui.QAction(label, self)
+                            ##Action_delete.triggered.connect(self.delete_obj)                    
+                            #menu.addAction(Action_label)
+                            #menu.addSeparator()
+                        else:
+                            self.open_gl_menu (_type = 'on_selection', selected = selected, event = event)
+
+                            #label = 'Selection'
+                            #Action_label = QtGui.QAction(label, self)
+                            ##Action_delete.triggered.connect(self.delete_obj)                    
+                            #menu.addAction(Action_label)
+                            #menu.addSeparator()
                 
-                for item in self.glmenu:
-                    menu.addAction(item)
-                menu.exec_(event.globalPos())
+                #menu.exec_(event.globalPos())
+            
             if button == QtCore.Qt.MouseButton.LeftButton and not self.dragging:
                 #print('LeftButton')
                 if dx <= self.pick_radius[0] and dy <= self.pick_radius[1]:
                     nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
-                    selected = self.select(nearest, hits)
-                    
+                    selected = self.select(nearest, hits)                    
                     self.EMSession.selection_function(selected)
-                    
-                    
-                    #if selected is None:
-                    #    self.selected_atoms = [None]*len(self.selected_atoms)
-                    #    self.selected_residues = []
-                    #else:
-                    #    if self.sel_atom:
-                    #        if selected not in self.selected_atoms:
-                    #            for i in range(len(self.selected_atoms)):
-                    #                if self.selected_atoms[i] == None:
-                    #                    self.selected_atoms[i] = selected
-                    #                    selected = None
-                    #                    break
-                    #            if selected is not None:
-                    #                self.selected_atoms[len(self.selected_atoms)-1] = selected
-                    #        else:
-                    #            for i in range(len(self.selected_atoms)):
-                    #                if self.selected_atoms[i] == selected:
-                    #                    self.selected_atoms[i] = None
-                    #    elif self.sel_resid:
-                    #        pass
-                    #        if self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi] not in self.selected_residues:
-                    #            self.selected_residues.append(self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi])
-                    #        else:
-                    #            pass
-                    #        #for atom in self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi]
-                    
-                    
-                    
                     self.updateGL()
-            """
-            if button == QtCore.Qt.MouseButton.LeftButton:
-                #print('LeftButton')
-                nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
-                selected = self.select(nearest, hits)
-                ''' selecao por residuo - ainda nao esta bom - sera arrumado depois '''
-                if selected == None:
-                    #zera a lista
-                    self.selected_atoms = []
-                    self.updateGL()
-                else:    
-                    if selected in self.selected_atoms:
-                        index = self.selected_atoms.index(selected)
-                        self.selected_atoms.pop(index)
 
-                        for atom in self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi].atoms:
-                            print (atom.atom_id, atom.index, atom.name, atom.resi, atom.chain, atom.Vobject_id)                        
-                            
-                            index = self.selected_atoms.index(atom)
-                            self.selected_atoms.pop(index)
-                        self.updateGL()
-                    
-                    else:
-                        print(selected.atom_id, selected.index, selected.name, selected.resi, selected.chain, selected.Vobject_id)
-                        
-                        for atom in self.EMSession.Vobjects[selected.Vobject_id].chains[selected.chain].residues[selected.resi].atoms:
-                            print (atom.atom_id, atom.index, atom.name, atom.resi, atom.chain, atom.Vobject_id)                        
-                            
-                            if atom in self.selected_atoms:
-                                pass
-                            else:
-                                self.selected_atoms.append(atom)
-                        self.updateGL()
-            """
             
             if button == QtCore.Qt.MouseButton.MidButton:
                 if self.dragging:
@@ -746,34 +1237,36 @@ class GLWidget(QtOpenGL.QGLWidget):
                 pass
             n += 1
     
-    def draw_dots(self, Vobject):
+    def draw_dots(self, Vobject = None, selection = True):
         """ Change the representation to Dots.
         """
-        #print 'Dots Representation'
-        # Center dots representations of the atoms
-        #n = 100
+        Vobject.GL_list_dots =[]
         for frame in Vobject.frames:
             gl_dt_li = glGenLists(self.gl_lists_counter)
             glNewList(gl_dt_li, GL_COMPILE)
             for chain in  Vobject.chains:
                 for res in Vobject.chains[chain].residues:
                     for atom in Vobject.chains[chain].residues[res].atoms:
-                        #-------------------------------------------------------
-                        #                        D O T S
-                        #-------------------------------------------------------
-                        glPushMatrix()
-                        glPushName(atom.atom_id)
-                        glColor3f(atom.color[0], atom.color[1], atom.color[2])
-                        glPointSize(self.EMSession.GL_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
-                        glBegin(GL_POINTS)
-                        coord1   = frame[atom.index-1]
-                        glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
-                        glEnd()
-                        glPopName()
-                        glPopMatrix()
-
+                        # checking if the selection is actived
+                        if atom.dots:
+                            #-------------------------------------------------------
+                            #                        D O T S
+                            #-------------------------------------------------------
+                            glPushMatrix()
+                            glPushName(atom.atom_id)
+                            glColor3f(atom.color[0], atom.color[1], atom.color[2])
+                            glPointSize(self.EMSession.gl_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
+                            glBegin(GL_POINTS)
+                            coord1   = frame[atom.index-1]
+                            glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
+                            glEnd()
+                            glPopName()
+                            glPopMatrix()
+                        else:
+                            pass
+                            
             glEndList()
-            Vobject.list_dots.append(gl_dt_li) 
+            Vobject.GL_list_dots.append(gl_dt_li) 
             self.gl_lists_counter += 1
         return True
         
@@ -787,54 +1280,57 @@ class GLWidget(QtOpenGL.QGLWidget):
         glDisable(GL_LIGHTING)
         glEnable(GL_COLOR_MATERIAL)
         glEnable(GL_DEPTH_TEST)
-        #n = 1
+        Vobject.list_lines =[]
         for frame in Vobject.frames:
             gl_ln_li = glGenLists(self.gl_lists_counter)
             
             glNewList(gl_ln_li,GL_COMPILE) #GL_COMPILE_AND_EXECUTE) #GL_COMPILE)
-            glLineWidth(self.EMSession.GL_parameters['line_width'])
+            glLineWidth(self.EMSession.gl_parameters['line_width'])
 
             for bond in Vobject.index_bonds:
-                
+
                 atom1    = Vobject.atoms[bond[0]]
                 atom2    = Vobject.atoms[bond[1]]
-                coord1   = frame[bond[0]]
-                coord2   = frame[bond[1]]
-
-                midcoord = [
-                        (coord1[0] + coord2[0])/2,	   
-                        (coord1[1] + coord2[1])/2,
-                        (coord1[2] + coord2[2])/2,
-                        ]
+                # checking if the selection is actived
+                if  atom1.lines and atom2.lines:
                 
-                glPushMatrix()		
-                glPushName(atom1.atom_id) 
-                glColor3f(atom1.color[0], 
-                          atom1.color[1], 
-                      atom1.color[2])
+                    coord1   = frame[bond[0]]
+                    coord2   = frame[bond[1]]
 
-                
-                glBegin(GL_LINES)
-                glVertex3f(coord1[0],coord1[1],coord1[2])
-                glVertex3f(midcoord[0],midcoord[1],midcoord[2])
-                glEnd()
-                glPopName()
-                glPopMatrix()
-                
-                
-                glPushMatrix()		
-                glPushName(atom2.atom_id) 
-                glColor3f (atom2.color[0], 
-                           atom2.color[1], 
-                       atom2.color[2])
+                    midcoord = [
+                            (coord1[0] + coord2[0])/2,	   
+                            (coord1[1] + coord2[1])/2,
+                            (coord1[2] + coord2[2])/2,
+                            ]
+                    
+                    glPushMatrix()		
+                    glPushName(atom1.atom_id) 
+                    glColor3f(atom1.color[0], 
+                              atom1.color[1], 
+                          atom1.color[2])
 
-                glBegin(GL_LINES)
-                glVertex3f(midcoord[0],midcoord[1],midcoord[2])
-                glVertex3f(coord2[0],coord2[1],coord2[2])
+                    
+                    glBegin(GL_LINES)
+                    glVertex3f(coord1[0],coord1[1],coord1[2])
+                    glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+                    glEnd()
+                    glPopName()
+                    glPopMatrix()
+                    
+                    
+                    glPushMatrix()		
+                    glPushName(atom2.atom_id) 
+                    glColor3f (atom2.color[0], 
+                               atom2.color[1], 
+                           atom2.color[2])
 
-                glEnd()
-                glPopName()
-                glPopMatrix()
+                    glBegin(GL_LINES)
+                    glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+                    glVertex3f(coord2[0],coord2[1],coord2[2])
+
+                    glEnd()
+                    glPopName()
+                    glPopMatrix()
             glEndList()
             Vobject.list_lines.append(gl_ln_li)
             
@@ -844,7 +1340,8 @@ class GLWidget(QtOpenGL.QGLWidget):
     def draw_ribbon(self, Vobject = None , selection = None):
         """ Change the representation to Ribbon.
         """
-        
+        Vobject.list_ribbons =[]
+
         for frame in Vobject.frames:
             glEnable(GL_COLOR_MATERIAL)
             glEnable(GL_DEPTH_TEST)
@@ -860,17 +1357,18 @@ class GLWidget(QtOpenGL.QGLWidget):
                     for i in range(0, len(Vobject.chains[chain].backbone) -1):
                         ATOM1  = Vobject.chains[chain].backbone[i]
                         ATOM2  = Vobject.chains[chain].backbone[i+1]
-                        #if (ATOM1.resi - ATOM2.resi) == 1:	    
-                        coord1 = frame[ATOM1.index -1]
-                        coord2 = frame[ATOM2.index -1]
-                        #print coord1, coord2
-                        glPushMatrix()
-                        glColor3f(ATOM1.color[0],ATOM1.color[1], ATOM1.color[1])
-                        glBegin(GL_LINES)
-                        glVertex3f(coord1[0],coord1[1],coord1[2])
-                        glVertex3f(coord2[0],coord2[1],coord2[2])
-                        glEnd()
-                        glPopMatrix()
+                        if  ATOM1.ribbons and   ATOM2.ribbons:
+                            #if (ATOM1.resi - ATOM2.resi) == 1:	    
+                            coord1 = frame[ATOM1.index -1]
+                            coord2 = frame[ATOM2.index -1]
+                            #print coord1, coord2
+                            glPushMatrix()
+                            glColor3f(ATOM1.color[0],ATOM1.color[1], ATOM1.color[1])
+                            glBegin(GL_LINES)
+                            glVertex3f(coord1[0],coord1[1],coord1[2])
+                            glVertex3f(coord2[0],coord2[1],coord2[2])
+                            glEnd()
+                            glPopMatrix()
 
             glEndList()
             #'''
@@ -902,6 +1400,7 @@ class GLWidget(QtOpenGL.QGLWidget):
     def draw_ball_and_stick (self, Vobject = None , selection = None):
         """ Draws all the elements for Ball-Stick representation.
         """
+        Vobject.list_ball_and_stick =[]
         sphere_quality = 15
         for frame in Vobject.frames:
             glEnable(GL_LIGHT0)
@@ -917,78 +1416,82 @@ class GLWidget(QtOpenGL.QGLWidget):
                 atom1    = Vobject.atoms[bond[0]]
                 atom2    = Vobject.atoms[bond[1]]
 
-                coord1   = frame[bond[0]]
-                coord2   = frame[bond[1]]
+                if atom1.ball_and_stick  and atom2.ball_and_stick:
+                    coord1   = frame[bond[0]]
+                    coord2   = frame[bond[1]]
 
-                midcoord = [
-                           (coord1[0] + coord2[0])/2,	   
-                           (coord1[1] + coord2[1])/2,
-                           (coord1[2] + coord2[2])/2,
-                           ]
-
-
-
-                #self.PointSize =20
-                #-------------------------------------------------------
-                #                        B A L L 
-                #-------------------------------------------------------
-                glPushMatrix()                
-                glPushName(atom1.atom_id)
-                
-                coord1   = frame[atom1.index-1]
-                glTranslate(coord1[0],   coord1[1],   coord1[2])
-                glColor3f(atom1.color[0], atom1.color[1], atom1.color[2])
-                glutSolidSphere(atom1.radius, sphere_quality, sphere_quality)
-                glPopMatrix()
-                glPopName()
-
-                glPushMatrix()                
-                glPushName(atom2.atom_id)
-                coord2   = frame[atom2.index-1]
-                glTranslate(coord2[0]     ,   coord2[1]   ,   coord2[2])
-                glColor3f  (atom2.color[0], atom2.color[1],   atom2.color[2])
-                glutSolidSphere(atom2.radius, sphere_quality, sphere_quality)                           
-                glPopName()
-                glPopMatrix()
-                #-------------------------------------------------------
+                    midcoord = [
+                               (coord1[0] + coord2[0])/2,	   
+                               (coord1[1] + coord2[1])/2,
+                               (coord1[2] + coord2[2])/2,
+                               ]
 
 
-                #-------------------------------------------------------
-                #                        S T I C K S
-                #-------------------------------------------------------
-                #rep.draw_stick_bond(atom1 = atom1, atom2 = atom2, radius = 2)
-                
-                v = Vector()
-                #base of cylinder is at the origin, the top is in the positive z axis
-                radius = 0.05
-                a = coord1
-                b = coord2
-                
-                axis_start = [0, 0, .1]
-                axis_end = v.subtract(a, b)
 
-                #find angle between the starting and ending axis
-                angle = v.angle(axis_start, axis_end)
-                
-                # determina the axis of rotation of the angle
-                axis_rotation = v.crossproduct (axis_start, axis_end)
+                    #self.PointSize =20
+                    #-------------------------------------------------------
+                    #                        B A L L 
+                    #-------------------------------------------------------
+                    glPushMatrix()                
+                    glPushName(atom1.atom_id)
+                    
+                    coord1   = frame[atom1.index-1]
+                    glTranslate(coord1[0],   coord1[1],   coord1[2])
+                    glColor3f(atom1.color[0], atom1.color[1], atom1.color[2])
+                    glutSolidSphere(atom1.radius *self.EMSession.gl_parameters['sphere_scale'], sphere_quality, sphere_quality)
+                    glPopMatrix()
+                    glPopName()
 
-                #calculate the distance from a to b
-                length = v.mag(axis_end)
-                glColor3f(0.9, 0.9, 0.9)
+                    glPushMatrix()                
+                    glPushName(atom2.atom_id)
+                    coord2   = frame[atom2.index-1]
+                    glTranslate(coord2[0]     ,   coord2[1]   ,   coord2[2])
+                    glColor3f  (atom2.color[0], atom2.color[1],   atom2.color[2])
+                    glutSolidSphere(atom2.radius *self.EMSession.gl_parameters['sphere_scale'] , sphere_quality, sphere_quality)                           
+                    glPopName()
+                    glPopMatrix()
+                    #-------------------------------------------------------
 
-                # set the bottom  and the top radius to be the same thing
-                radius_bottom = radius
-                radius_top    = radius
 
-                # draw the bond ( use glTranslate beofre using glRotate)
-                cyl = gluNewQuadric()
-                glPushMatrix()
-                glTranslate(b[0], b[1], b[2])
-                glRotate(angle, axis_rotation[0], axis_rotation[1], axis_rotation[2])
-                gluCylinder(cyl, radius_bottom, radius_top, length, 15, 15)
-                glPopMatrix()
-                #-------------------------------------------------------
+                    #-------------------------------------------------------
+                    #                        S T I C K S
+                    #-------------------------------------------------------
+                    #rep.draw_stick_bond(atom1 = atom1, atom2 = atom2, radius = 2)
+                    
+                    v = Vector()
+                    #base of cylinder is at the origin, the top is in the positive z axis
+                    radius = 0.07
+                    a = coord1
+                    b = coord2
+                    
+                    axis_start = [0, 0, .1]
+                    axis_end = v.subtract(a, b)
+
+                    #find angle between the starting and ending axis
+                    angle = v.angle(axis_start, axis_end)
+                    
+                    # determina the axis of rotation of the angle
+                    axis_rotation = v.crossproduct (axis_start, axis_end)
+
+                    #calculate the distance from a to b
+                    length = v.mag(axis_end)
+                    glColor3f(0.9, 0.9, 0.9)
+
+                    # set the bottom  and the top radius to be the same thing
+                    radius_bottom = radius
+                    radius_top    = radius
+
+                    # draw the bond ( use glTranslate beofre using glRotate)
+                    cyl = gluNewQuadric()
+                    glPushMatrix()
+                    glTranslate(b[0], b[1], b[2])
+                    glRotate(angle, axis_rotation[0], axis_rotation[1], axis_rotation[2])
+                    
+                    gluCylinder(cyl, radius_bottom *self.EMSession.gl_parameters['stick_scale'], 
+                                     radius_top*self.EMSession.gl_parameters['stick_scale'], 
+                                     length, 15, 15)
+                    glPopMatrix()
+                    #-------------------------------------------------------
 
             glEndList()
             Vobject.list_ball_and_stick.append(gl_bs_li)
@@ -999,6 +1502,7 @@ class GLWidget(QtOpenGL.QGLWidget):
     def draw_spheres (self, Vobject = None , selection = None):
         """ Draws all the elements for Ball-Stick representation.
         """
+        Vobject.list_spheres = []
         sphere_quality = 15
         for frame in Vobject.frames:
             glEnable(GL_LIGHT0)
@@ -1008,21 +1512,36 @@ class GLWidget(QtOpenGL.QGLWidget):
            
             gl_bs_li = glGenLists(self.gl_lists_counter)
             glNewList(gl_bs_li, GL_COMPILE)
-            for chain in  Vobject.chains:
-                for res in Vobject.chains[chain].residues:
-                    for atom in Vobject.chains[chain].residues[res].atoms:
-                        #-------------------------------------------------------
-                        #                        S P H E R E S
-                        #-------------------------------------------------------
-                        glPushMatrix()                
-                        glPushName(atom.atom_id)
-                        coord1 = frame[atom.index-1]
-                        glTranslate(float(coord1[0]),float( coord1[1]),float( coord1[2]))
-                        glColor3f(atom.color[0],   atom.color[1], atom.color[2])
-                        glutSolidSphere(atom.vdw_rad, sphere_quality, sphere_quality)
-                        glPopMatrix()
-                        glPopName()
-
+            
+            for atom in Vobject.atoms:
+                #-------------------------------------------------------
+                #                        S P H E R E S
+                #-------------------------------------------------------
+                if atom.spheres:
+                    glPushMatrix()                
+                    glPushName(atom.atom_id)
+                    coord1 = frame[atom.index-1]
+                    glTranslate(float(coord1[0]),float( coord1[1]),float( coord1[2]))
+                    glColor3f(atom.color[0],   atom.color[1], atom.color[2])
+                    glutSolidSphere(atom.vdw_rad, sphere_quality, sphere_quality)
+                    glPopMatrix()
+                    glPopName()
+            
+            #for chain in  Vobject.chains:
+            #    for res in Vobject.chains[chain].residues:
+            #        for atom in Vobject.chains[chain].residues[res].atoms:
+            #            #-------------------------------------------------------
+            #            #                        S P H E R E S
+            #            #-------------------------------------------------------
+            #            glPushMatrix()                
+            #            glPushName(atom.atom_id)
+            #            coord1 = frame[atom.index-1]
+            #            glTranslate(float(coord1[0]),float( coord1[1]),float( coord1[2]))
+            #            glColor3f(atom.color[0],   atom.color[1], atom.color[2])
+            #            glutSolidSphere(atom.vdw_rad, sphere_quality, sphere_quality)
+            #            glPopMatrix()
+            #            glPopName()
+            #
            
             glEndList()
             Vobject.list_spheres.append(gl_bs_li)
