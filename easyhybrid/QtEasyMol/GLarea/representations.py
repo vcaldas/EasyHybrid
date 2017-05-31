@@ -31,7 +31,8 @@ from GLarea.vector_math import Vector
 
 
 gl_settings = {'sphere_scale':0.15, 'sphere_res':15, 'pretty_res':20, 'selection_radius':1.0, 'ribbon_res':0.4}
-select_color = [16, 255, 0, 80]
+select_color = [16, 255, 0  , 80]
+picked_color = [0 , 255, 255, 100]
 sel_col_font = [178, 23, 0]
 sel_col_font = [178, 0 , 0]
 
@@ -388,7 +389,10 @@ def draw_picked(atom, slices=4):
     #glTranslate(atom.pos[0], atom.pos[1], atom.pos[2])
     glPushName(atom.index)
     #glColor4ub(39, 255, 0, 60)
-    glColor4ub(select_color[0], select_color[1], select_color[2], select_color[3])
+    #glColor4ub(select_color[0], select_color[1], select_color[2], select_color[3])
+    glColor4ub(picked_color[0], picked_color[1], picked_color[2], picked_color[3])
+
+    picked_color
     #glutSolidSphere(0.5, gl_settings['sphere_res'], gl_settings['sphere_res'])
     #glColor3f(atom.color[0], atom.color[1], atom.color[2])
     glPointSize(40)
@@ -403,7 +407,7 @@ def draw_picked(atom, slices=4):
     glEnable(GL_COLOR_MATERIAL)
     glDisable(GL_BLEND)
 
-def draw_selected(atom, coord):
+def draw_selected(atom, coord = None, color = [0, 1, 1]):
     """ Draw a selection marker to an atom.
     """
     glMatrixMode(GL_MODELVIEW)
@@ -413,8 +417,10 @@ def draw_selected(atom, coord):
     glDisable(GL_DEPTH_TEST)
     glPushMatrix()
     glPushName(atom.atom_id)
-    glPointSize(20)
-    glColor3f(0, 1,1)
+    glPointSize(15)
+    #glColor3f(0, 1,1)
+    glColor3f(color[0], color[1], color[2])
+
     #glColor3ub(0, 100,100)
     glBegin(GL_POINTS)
     glVertex3f(coord[0], coord[1], coord[2])

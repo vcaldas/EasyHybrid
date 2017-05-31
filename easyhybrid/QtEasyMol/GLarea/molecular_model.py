@@ -187,7 +187,17 @@ class Residue:
 class Atom:
     """ Class doc """
     
-    def __init__ (self, name='Xx', index=None, symbol='X', pos=None, resi = None, resn = None, chain = '', atom_id = 0, Vobject_id = None, Vobject_name = ''):
+    def __init__ (self, name         ='Xx',
+                        index        =None, 
+                        symbol       ='X', 
+                        pos          = None, 
+                        resi         = None, 
+                        resn         = None, 
+                        chain        = '', 
+                        atom_id      = 0, 
+                        #Vobject_id   = None, 
+                        #Vobject_name = '', 
+                        Vobject      = None):
         """ Class initialiser """
         
         if pos is None:
@@ -200,9 +210,10 @@ class Atom:
         self.resi         = resi                  #
         self.resn         = resn                  #
         self.chain        = chain                 #
-        self.Vobject_id   = Vobject_id            #
-        self.Vobject_name = Vobject_name          #
-                                                  
+        #self.Vobject_id   = Vobject_id            #
+        #self.Vobject_name = Vobject_name          #
+        self.Vobject      = Vobject
+                                         
         self.atom_id      = atom_id               # An unique number
 
         self.color        = at.get_color    (name)
