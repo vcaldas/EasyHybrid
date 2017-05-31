@@ -73,15 +73,17 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
             at_ch    = 'A'
             
             #print at_name, '<--------'
-            atm = mm.Atom(name       =  at_name, 
-                          index      =  index, 
-                          pos        =  at_pos, 
-                          resi       =  at_res_i, 
-                          resn       =  at_res_n, 
-                          chain      =  at_ch, 
-                          atom_id    =  counter, 
-                          Vobject_id =  Vobject_id,
-                          Vobject_name =  Vobject.label)
+            atm = mm.Atom(name         =  at_name, 
+                          index        =  index, 
+                          pos          =  at_pos, 
+                          resi         =  at_res_i, 
+                          resn         =  at_res_n, 
+                          chain        =  at_ch, 
+                          atom_id      =  counter, 
+                          #Vobject_id   =  Vobject_id,
+                          #Vobject_name =  Vobject.label,
+                          Vobject      = Vobject
+                          )
 
 
             if atom_dic_id is not None:
@@ -189,8 +191,10 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
                               resn         =  at_res_n, 
                               chain        =  at_ch, 
                               atom_id      =  counter, 
-                              Vobject_id   =  Vobject_id,
-                              Vobject_name =  Vobject.label )
+                              #Vobject_id   =  Vobject_id,
+                              #Vobject_name =  Vobject.label,
+                              Vobject      =  Vobject,
+                              )
                 
                 if atom_dic_id is not None:
                     atom_dic_id[counter] = atm

@@ -31,13 +31,14 @@ class EasyMolFunctions:
     
     def delete_obj (self, index = 0):
         """ Function doc """
-        self.EasyMol.delete(self.current_row)
+        self.EasyMol.delete_by_index(index = self.current_row)
         self.update_list_view()
     
     
     def center_obj (self, index = 0):
         """ Function doc """
-        self.EasyMol.center(self.current_row)
+        self.EasyMol.center_by_index(index = self.current_row)
+        
         #self.update_list_view()
 
     
@@ -50,10 +51,12 @@ class EasyMolFunctions:
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
         
-        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+        Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+        
+        for atom in Vobject.atoms:
             atom.dots = True
         
-        self.EasyMol.show (_type = 'dots', Vobject_indexes = Vobject_indexes)  
+        self.EasyMol.show (_type = 'dots', Vobjects = [Vobject])  
     
     def hide_dots      (self, Vobject_indexes = None):
         """ hide """
@@ -61,7 +64,8 @@ class EasyMolFunctions:
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
         
-        self.EasyMol.hide (_type = 'dots', Vobject_indexes = Vobject_indexes)  
+        Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+        self.EasyMol.hide (_type = 'dots', Vobjects = [Vobject])  
 
     
 
@@ -73,11 +77,12 @@ class EasyMolFunctions:
         
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
-        
-        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+        Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+
+        for atom in Vobject.atoms:
             atom.lines = True
-            
-        self.EasyMol.show (_type = 'lines', Vobject_indexes = Vobject_indexes)  
+        self.EasyMol.show (_type = 'lines', Vobjects = [Vobject])  
+    
     
     def hide_lines      (self, Vobject_indexes = None):
         """ hide """
@@ -85,7 +90,8 @@ class EasyMolFunctions:
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
         
-        self.EasyMol.hide (_type = 'lines', Vobject_indexes = Vobject_indexes)  
+        Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+        self.EasyMol.hide (_type = 'lines', Vobjects = [Vobject])  
 
     
     
@@ -97,11 +103,11 @@ class EasyMolFunctions:
         
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
-        
-        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+        Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+
+        for atom in Vobject.atoms:
             atom.ribbons = True
-        
-        self.EasyMol.show (_type = 'ribbons', Vobject_indexes = Vobject_indexes)  
+        self.EasyMol.show (_type = 'ribbons', Vobjects = [Vobject])  
 
     
     def hide_ribbons (self, Vobject_indexes = None):
@@ -110,7 +116,8 @@ class EasyMolFunctions:
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
         
-        self.EasyMol.hide (_type = 'ribbons', Vobject_indexes = Vobject_indexes)  
+        Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+        self.EasyMol.hide (_type = 'ribbons', Vobjects = [Vobject])   
 
 
     """   B A L L  A N D  S T I C K   """
@@ -118,21 +125,23 @@ class EasyMolFunctions:
 
     def show_ball_and_stick (self, Vobject_indexes = None):
         """ show """
-        #print ('here  show_ball_and_stick - gui')
-
+        
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
-        
-        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
+        Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+
+        for atom in Vobject.atoms:
             atom.ball_and_stick = True
-        self.EasyMol.show (_type = 'ball_and_stick', Vobject_indexes = Vobject_indexes)  
+        self.EasyMol.show (_type = 'ball_and_stick', Vobjects = [Vobject])  
     
     def hide_ball_and_stick2 (self, Vobject_indexes = None):
         """ hide """
-        print ('here  hide_ball_and_stick - gui')
+        
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
-        self.EasyMol.hide (_type = 'ball_and_stick', Vobject_indexes = Vobject_indexes)  
+        
+        Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+        self.EasyMol.hide (_type = 'ball_and_stick', Vobjects = [Vobject])   
         
 
     """   S P H E R E S   """
@@ -140,13 +149,14 @@ class EasyMolFunctions:
         
     def show_spheres (self, Vobject_indexes = None):
         """ show """
-        #print ('here  show_ball_and_stick - gui')
-
+        
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
-        for atom in self.EasyMol.Vobjects[Vobject_indexes[0]].atoms:
-            atom.sphere = True
-        self.EasyMol.show (_type = 'spheres', Vobject_indexes = Vobject_indexes)
+        Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+
+        for atom in Vobject.atoms:
+            atom.spheres = True
+        self.EasyMol.show (_type = 'spheres', Vobjects = [Vobject])  
 
     
     #def hide_spheres (self, Vobject_indexes = None):
@@ -159,11 +169,12 @@ class EasyMolFunctions:
 
     def hide_spheres2 (self, Vobject_indexes = None):
         """ hide """
-        print ('here  spheres - gui')
         
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
-        self.EasyMol.hide (_type = 'spheres', Vobject_indexes = Vobject_indexes)
+        
+        Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+        self.EasyMol.hide (_type = 'spheres', Vobjects = [Vobject])   
 
 
 
@@ -389,23 +400,22 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
    
 
     def on_treeview_item_clicked (self, item, Int):
-        #print (item, Int)
-        #print (item.text(0),item.text(1))
-        
         state = item.checkState(0)
-        #print ('state: ',state)
+        
         object_id = int(item.text(1))
-        #print (object_id)
+        
         if state == QtCore.Qt.CheckState.Unchecked:
-            #setCheckState(int column, Qt::CheckState state)
+        
             item.setCheckState(0, QtCore.Qt.CheckState.Checked)
-            self.EasyMol.enable(int(object_id))
-            #print (self.EasyMol.Vobjects[object_id].actived)
+        
+            self.EasyMol.enable_by_index(index  = int(object_id))
             
         if state == QtCore.Qt.CheckState.Checked:
-            item.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
-            self.EasyMol.disable(int(object_id))
         
+            item.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
+         
+            self.EasyMol.disable_by_index(index  = int(object_id))
+
     
     def change_viewing_and_picking_mode (self):
         """ Function doc """
