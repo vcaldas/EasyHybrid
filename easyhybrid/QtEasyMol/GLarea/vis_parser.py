@@ -29,6 +29,52 @@ import numpy as np
 from pprint import pprint
 import random
 
+
+def new_parse_pdb (infile = None, counter = 0, atom_dic_id = None):
+    """ Function doc """
+    with open(infile, 'r') as pdb_file:
+
+        label = os.path.basename(infile)
+        Vobject = mm.Vobject(label = label)
+
+                
+        chains_m = {}
+        residues = {}
+        atoms    = []
+        
+        index = 1
+        
+        sum_x        = 0
+        sum_y        = 0
+        sum_z        = 0
+        frame        = []
+        residue_list = []
+        parser_resi  = None
+        parser_resn  = None
+        
+        for line in pdb_file:
+            if line[:4] == 'ATOM' or line[:6] == 'HETATM':
+                at_name = line[12:16].strip()
+                #at_index = int(line[6:11])
+                at_pos = np.array([float(line[30:38]), float(line[38:46]), float(line[46:54])])
+                at_res_i = int(line[22:26])
+                at_res_n = line[17:20].strip()
+                at_ch = line[21]             
+                atm = mm.Atom(name         =  at_name, 
+                              index        =  index, 
+                              pos          =  at_pos, 
+                              resi         =  at_res_i, 
+                              resn         =  at_res_n, 
+                              chain        =  at_ch, 
+                              atom_id      =  counter, 
+                              #Vobject_id   =  Vobject_id,
+                              #Vobject_name =  Vobject.label,
+                              Vobject      =  Vobject,
+                              )
+                Vobject.atoms.append(atm)
+
+
+
 def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None ):
     """ Function doc """
     #frames = []
@@ -60,7 +106,9 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         sum_x = 0
         sum_y = 0
         sum_z = 0  
-        
+        residue_list = []
+        parser_resi  = None
+        parser_resn  = None
         
         frame = []
         for line in models[0][2:]:
@@ -100,18 +148,40 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
                 ch = mm.Chain(name=at_ch, label = 'UNK')
                 chains_m[at_ch] = ch
 
-            if at_res_i in ch.residues.keys():
-                res = ch.residues[at_res_i]
-                ch.residues[at_res_i].atoms.append(atm)
+
+            if at_res_i == parser_resi:# and at_res_n == parser_resn:
+                atm.residue = ch.residues[-1]
+                ch.residues[-1].atoms.append(atm)
+                #res.atoms.append(atm)
                 Vobject.atoms.append(atm)
                 frame.append([atm.pos[0],atm.pos[1],atm.pos[2]])
+                
+                #ch.residues[at_res_i].atoms.append(atm)
+                #Vobject.atoms.append(atm)
 
             else:
-                res = mm.Residue(name=at_res_n, index=at_res_i, chain=at_ch)
-                ch.residues[at_res_i] = res
-                ch.residues[at_res_i].atoms.append(atm)
+                residue     = mm.Residue(name=at_res_n, index=at_res_i, chain=at_ch)
+                atm.residue = residue
+                residue.atoms.append(atm)
+                ch.residues.append(residue)
+                
                 Vobject.atoms.append(atm)
                 frame.append([atm.pos[0],atm.pos[1],atm.pos[2]])
+                parser_resi  = at_res_i
+                parser_resn  = at_res_n
+                
+            #if at_res_i in ch.residues.keys():
+            #    res = ch.residues[at_res_i]
+            #    ch.residues[at_res_i].atoms.append(atm)
+            #    Vobject.atoms.append(atm)
+            #    frame.append([atm.pos[0],atm.pos[1],atm.pos[2]])
+            #
+            #else:
+            #    res = mm.Residue(name=at_res_n, index=at_res_i, chain=at_ch)
+            #    ch.residues[at_res_i] = res
+            #    ch.residues[at_res_i].atoms.append(atm)
+            #    Vobject.atoms.append(atm)
+            #    frame.append([atm.pos[0],atm.pos[1],atm.pos[2]])
 
             sum_x += atm.pos[0]
             sum_y += atm.pos[1]
@@ -171,12 +241,19 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         
         index = 1
         
-        sum_x = 0
-        sum_y = 0
-        sum_z = 0
-        frame = []
+        sum_x        = 0
+        sum_y        = 0
+        sum_z        = 0
+        frame        = []
+        residue_list = []
+        parser_resi  = None
+        parser_resn  = None
+        
         for line in pdb_file:
             if line[:4] == 'ATOM' or line[:6] == 'HETATM':
+                
+
+                
                 at_name = line[12:16].strip()
                 #at_index = int(line[6:11])
                 at_pos = np.array([float(line[30:38]), float(line[38:46]), float(line[46:54])])
@@ -210,21 +287,46 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
                     chains_m[at_ch] = ch
                     #print 'n existe'
 
-                if at_res_i in ch.residues.keys():
-                    res = ch.residues[at_res_i]
-                    #print 'existe'
-                    ch.residues[at_res_i].atoms.append(atm)
+                
+                if at_res_i == parser_resi:# and at_res_n == parser_resn:
+                    atm.residue = ch.residues[-1]
+                    ch.residues[-1].atoms.append(atm)
+                    #res.atoms.append(atm)
                     Vobject.atoms.append(atm)
                     frame.append([atm.pos[0],atm.pos[1],atm.pos[2]])
-
+                    
+                    #ch.residues[at_res_i].atoms.append(atm)
+                    #Vobject.atoms.append(atm)
+                    
 
                 else:
-                    #print at_res_n, at_res_i, at_ch
-                    res = mm.Residue(name=at_res_n, index=at_res_i, chain=at_ch)
-                    ch.residues[at_res_i] = res
-                    ch.residues[at_res_i].atoms.append(atm)
+                    residue = mm.Residue(name=at_res_n, index=at_res_i, chain=at_ch)
+                    atm.residue     = residue
+                    residue.atoms.append(atm)
+                    
+                    ch.residues.append(residue)
+                    #ch.residues[at_res_i] = res
+                    #ch.residues[at_res_i].atoms.append(atm)
                     Vobject.atoms.append(atm)
                     frame.append([atm.pos[0],atm.pos[1],atm.pos[2]])
+                    parser_resi  = at_res_i
+                    parser_resn  = at_res_n
+                
+                
+                #if at_res_i in ch.residues.keys():
+                #    res = ch.residues[at_res_i]
+                #    #print 'existe'
+                #    ch.residues[at_res_i].atoms.append(atm)
+                #    Vobject.atoms.append(atm)
+                #    frame.append([atm.pos[0],atm.pos[1],atm.pos[2]])
+
+                #else:
+                #    #print at_res_n, at_res_i, at_ch
+                #    res = mm.Residue(name=at_res_n, index=at_res_i, chain=at_ch)
+                #    ch.residues[at_res_i] = res
+                #    ch.residues[at_res_i].atoms.append(atm)
+                #    Vobject.atoms.append(atm)
+                #    frame.append([atm.pos[0],atm.pos[1],atm.pos[2]])
 
                 
                 if atm.name == 'CA':
@@ -274,6 +376,9 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         Vobject.mass_center[1] = sum_y / total
         Vobject.mass_center[2] = sum_z / total
         #print Vobject.mass_center
+        for chain in Vobject.chains:
+            print('number_of_residues', len(Vobject.chains[chain].residues))
+        #print('number_of_residues', len())
         return Vobject, atom_dic_id
 
 

@@ -63,8 +63,11 @@ class EasyMolFunctions:
         
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
-        
         Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+
+        for atom in Vobject.atoms:
+            atom.dots = False
+        
         self.EasyMol.hide (_type = 'dots', Vobjects = [Vobject])  
 
     
@@ -89,8 +92,10 @@ class EasyMolFunctions:
         
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
-        
         Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+
+        for atom in Vobject.atoms:
+            atom.lines = False
         self.EasyMol.hide (_type = 'lines', Vobjects = [Vobject])  
 
     
@@ -115,8 +120,10 @@ class EasyMolFunctions:
         
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
-        
         Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+
+        for atom in Vobject.atoms:
+            atom.ribbons = False
         self.EasyMol.hide (_type = 'ribbons', Vobjects = [Vobject])   
 
 
@@ -139,8 +146,11 @@ class EasyMolFunctions:
         
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
-        
         Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+
+        for atom in Vobject.atoms:
+            atom.ball_and_stick = False
+        
         self.EasyMol.hide (_type = 'ball_and_stick', Vobjects = [Vobject])   
         
 
@@ -173,7 +183,11 @@ class EasyMolFunctions:
         if Vobject_indexes == None:
             Vobject_indexes = [self.current_row]
         
+
+        
         Vobject = self.EasyMol.Vobjects[Vobject_indexes[0]]    
+        for atom in Vobject.atoms:
+            atom.spheres = False        
         self.EasyMol.hide (_type = 'spheres', Vobjects = [Vobject])   
 
 

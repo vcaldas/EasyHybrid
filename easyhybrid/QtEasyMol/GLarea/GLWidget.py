@@ -114,7 +114,7 @@ class glMenu:
         
         if selection_type == 'residue':
             sel = self.selected_atom_on_click
-            for atom in sel.Vobject.chains[sel.chain].residues[sel.resi].atoms:
+            for atom in sel.residue.atoms:
                 selection_list.append(atom)
                
                 if show:
@@ -147,7 +147,7 @@ class glMenu:
 
         if selection_type == 'chain':
             for residue in sel.Vobject.chains[sel.chain].residues:
-                for atom in sel.Vobject.chains[sel.chain].residues[residue].atoms:            
+                for atom in residue.atoms:            
                     selection_list.append(atom)
                     print('atom: ',atom.chain, atom.resi, atom.resn, atom.index, atom.name)    
                     if show:
@@ -630,7 +630,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         self.trolltechPurple = QtGui.QColor.fromCmykF(0.39, 0.39, 0.0, 0.0)
         
         #self.data   = None
-        self.fovy   = 30.0
+        self.fovy   = 50.0
         self.aspect = 0.0
         self.z_near = 1.0
         self.z_far  = 10.0
@@ -656,6 +656,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         self.gl_backgrd = [0.0, 0.0, 0.0, 0.0]
         self.gl_backgrd = [1.0, 1.0, 1.0, 1.0]
         self.gl_backgrd = [0.5, 0.5, 0.5, 0.5]
+        self.gl_backgrd = [0.3, 0.3, 0.3, 0.3]
 
         self.zrp          = np.array([0, 0, 0])
         
@@ -1552,7 +1553,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
                     coord1 = frame[atom.index-1]
                     glTranslate(float(coord1[0]),float( coord1[1]),float( coord1[2]))
                     glColor3f(atom.color[0],   atom.color[1], atom.color[2])
-                    glutSolidSphere(atom.vdw_rad, sphere_quality, sphere_quality)
+                    glutSolidSphere(atom.vdw_rad*self.EMSession.gl_parameters['sphere_scale'], sphere_quality, sphere_quality)
                     glPopMatrix()
                     glPopName()
             

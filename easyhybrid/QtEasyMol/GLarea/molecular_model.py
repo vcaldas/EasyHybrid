@@ -38,7 +38,7 @@ import GLarea.cfunctions as cfunctions
 class Vobject:
     """ Class doc """
     
-    def __init__ (self, chains=None, bonds=None, mass_center=None):
+    def __init__ (self, chains=None, bonds=None, mass_center=None, label = None):
         """ Class initialiser """
         
         self.actived           = True       
@@ -94,8 +94,11 @@ class Vobject:
 
 
         self.Type  = 'molecule'
-        self.label = 'unkown'
-
+        
+        if label:
+            self.label = self._get_label(label)
+        else:
+            label = 'unkown'
 
         self.chains       = {}
 
@@ -111,6 +114,11 @@ class Vobject:
         #self.coords       = []
         pass  
 
+
+    def _get_label (self, label):
+        """ Function doc """
+        self.label  = label.split('.')
+        self.label  = self.label[0]
 
     def generete_atom_list (self):
         """ Function doc """
@@ -143,28 +151,44 @@ class Vobject:
             #'''
         return bonds 
 
+    #'''
+    def generate_bonds (self):
+        """ Function doc """
+        print ('start')
+        initial          = time.time()
+        self.index_bonds = cfunctions.C_generate_bonds3 (self.atoms)
+        print ('end')
+        final = time.time() 
+        print (final - initial)
     
+    '''
     def generate_bonds (self):
         """ Function doc """
         print ('start')
         initial = time.time()
         #self.bonds = self.generete_atom_list()
         #self.bonds = cfunctions.C_generate_bonds (self.coords)
-        self.bonds, self.index_bonds = cfunctions.C_generate_bonds3 (self.atoms)
+        #self.bonds, self.index_bonds = cfunctions.C_generate_bonds3 (self.atoms)
+        for chain in self.chains:
+            for residue in self.chains[chain].residues:
+                
+        self.index_bonds = cfunctions.C_generate_bonds3 (self.atoms)
         #self.bonds = cfunctions.C_np_generate_bonds (self.coords)
         #self.bonds = self.distances_from_point()
         print ('end')
         final = time.time() 
         print (final - initial)
-
-
+    #'''
+    
 
 class Chain:
     """ Class doc """
     
     def __init__ (self, name=None, residues=None, label=None):
         """ Class initialiser """
-        self.residues = {}
+        #self.residues = {}
+        self.residues = []
+        
         self.backbone = []
         self.name     = ''
         self.label    = None
@@ -195,6 +219,7 @@ class Atom:
                         resn         = None, 
                         chain        = '', 
                         atom_id      = 0, 
+                        residue      = None,
                         #Vobject_id   = None, 
                         #Vobject_name = '', 
                         Vobject      = None):
@@ -213,7 +238,8 @@ class Atom:
         #self.Vobject_id   = Vobject_id            #
         #self.Vobject_name = Vobject_name          #
         self.Vobject      = Vobject
-                                         
+        self.residue      = residue                                
+        
         self.atom_id      = atom_id               # An unique number
 
         self.color        = at.get_color    (name)

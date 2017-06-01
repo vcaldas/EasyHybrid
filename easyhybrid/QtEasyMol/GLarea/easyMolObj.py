@@ -280,8 +280,8 @@ class EasyMolSession:
                     # if the selected atoms is not on the selected list
                     if selected not in self.viewing_selections:
                         
-                        for atom in selected.Vobject.chains[selected.chain].residues[selected.resi].atoms:
-                            
+                        for atom in selected.residue.atoms:
+                            print (len(selected.residue.atoms), atom.name, atom.index)
                             # the atom is not on the list -  add atom by atom
                             if atom not in self.viewing_selections:
                                 self.viewing_selections.append(atom)
@@ -293,7 +293,7 @@ class EasyMolSession:
                     # if the selected atoms IS on the selected list
                     else:
                         # So, add all atoms  - selected residue <- selected.resi
-                        for atom in selected.Vobject.chains[selected.chain].residues[selected.resi].atoms:
+                        for atom in selected.residue.atoms:
                             
                             # the atom is not on the list -  add atom by atom
                             if atom in self.viewing_selections:
@@ -308,9 +308,8 @@ class EasyMolSession:
                     # if the selected atoms is not on the selected list
                     if selected not in self.viewing_selections:
                         # So, add all atoms  - selected residue <- selected.resi
-                        for residue_key in selected.Vobject.chains[selected.chain].residues:
-                            
-                            for atom in selected.Vobject.chains[selected.chain].residues[residue_key].atoms:
+                        for residue in selected.Vobject.chains[selected.chain].residues:
+                            for atom in residue.atoms:
                                 # the atom is not on the list -  add atom by atom
                                 if atom not in self.viewing_selections:
                                     self.viewing_selections.append(atom)
@@ -321,9 +320,9 @@ class EasyMolSession:
                 
                     # if the selected atoms IS on the selected list
                     else:
-                        for residue_key in selected.Vobject.chains[selected.chain].residues:
+                        for residue in selected.Vobject.chains[selected.chain].residues:
                             #for residue in chain.residues:
-                            for atom in selected.Vobject.chains[selected.chain].residues[residue_key].atoms:
+                            for atom in residue.atoms:
                                 # the atom is not on the list -  add atom by atom
                                 if atom in self.viewing_selections:
                                     index = self.viewing_selections.index(atom)
@@ -368,9 +367,9 @@ class EasyMolSession:
         #self.glwidget.generate_gL_actions()
         self.gl_parameters      =     {
                                       
-                                      'dot_size'                   : 7      ,
-                                      'line_width'                 : 4      ,
-                                      'sphere_scale'               : 0.5    ,
+                                      'dot_size'                   : 5      ,
+                                      'line_width'                 : 3      ,
+                                      'sphere_scale'               : 0.85    ,
                                       'stick_scale'                : 1.5    ,
                                       'ball_and_sick_sphere_scale' : 1      ,
                                       'antialias'                  : False  ,
