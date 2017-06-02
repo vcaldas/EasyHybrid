@@ -1285,27 +1285,43 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         for frame in Vobject.frames:
             gl_dt_li = glGenLists(self.gl_lists_counter)
             glNewList(gl_dt_li, GL_COMPILE)
-            for chain in  Vobject.chains:
-                for res in Vobject.chains[chain].residues:
-                    for atom in Vobject.chains[chain].residues[res].atoms:
-                        # checking if the selection is actived
-                        if atom.dots:
-                            #-------------------------------------------------------
-                            #                        D O T S
-                            #-------------------------------------------------------
-                            glPushMatrix()
-                            glPushName(atom.atom_id)
-                            glColor3f(atom.color[0], atom.color[1], atom.color[2])
-                            glPointSize(self.EMSession.gl_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
-                            glBegin(GL_POINTS)
-                            coord1   = frame[atom.index-1]
-                            glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
-                            glEnd()
-                            glPopName()
-                            glPopMatrix()
-                        else:
-                            pass
-                            
+            for atom in Vobject.atoms:
+                if atom.dots:
+                    #-------------------------------------------------------
+                    #                        D O T S
+                    #-------------------------------------------------------
+                    glPushMatrix()
+                    glPushName(atom.atom_id)
+                    glColor3f(atom.color[0], atom.color[1], atom.color[2])
+                    glPointSize(self.EMSession.gl_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
+                    glBegin(GL_POINTS)
+                    coord1   = frame[atom.index-1]
+                    glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
+                    glEnd()
+                    glPopName()
+                    glPopMatrix()
+                
+                #for chain in  Vobject.chains:
+            #    for res in Vobject.chains[chain].residues:
+            #        for atom in Vobject.chains[chain].residues[res].atoms:
+            #            # checking if the selection is actived
+            #            if atom.dots:
+            #                #-------------------------------------------------------
+            #                #                        D O T S
+            #                #-------------------------------------------------------
+            #                glPushMatrix()
+            #                glPushName(atom.atom_id)
+            #                glColor3f(atom.color[0], atom.color[1], atom.color[2])
+            #                glPointSize(self.EMSession.gl_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
+            #                glBegin(GL_POINTS)
+            #                coord1   = frame[atom.index-1]
+            #                glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
+            #                glEnd()
+            #                glPopName()
+            #                glPopMatrix()
+            #            else:
+            #                pass
+            #                
             glEndList()
             Vobject.GL_list_dots.append(gl_dt_li) 
             self.gl_lists_counter += 1
