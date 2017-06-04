@@ -1433,8 +1433,8 @@ static PyObject *__pyx_f_9QtEasyMol_6GLarea_10cfunctions_C_generate_bonds3(PyObj
  *                     vec_o = 0
  * 
  *                     index_bonds.append([i, j])             # <<<<<<<<<<<<<<
- *                     atoms[i].connected.append(j)
- *                     atoms[j].connected.append(i)
+ *                     atoms[i].connected.append(atoms[j])
+ *                     atoms[j].connected.append(atoms[i])
  */
           __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 179; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           __Pyx_GOTREF(__pyx_t_3);
@@ -1454,8 +1454,8 @@ static PyObject *__pyx_f_9QtEasyMol_6GLarea_10cfunctions_C_generate_bonds3(PyObj
           /* "QtEasyMol/GLarea/cfunctions.pyx":180
  * 
  *                     index_bonds.append([i, j])
- *                     atoms[i].connected.append(j)             # <<<<<<<<<<<<<<
- *                     atoms[j].connected.append(i)
+ *                     atoms[i].connected.append(atoms[j])             # <<<<<<<<<<<<<<
+ *                     atoms[j].connected.append(atoms[i])
  * 
  */
           __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_atoms, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(__pyx_t_5 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 180; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
@@ -1463,7 +1463,7 @@ static PyObject *__pyx_f_9QtEasyMol_6GLarea_10cfunctions_C_generate_bonds3(PyObj
           __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_connected); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 180; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           __Pyx_GOTREF(__pyx_t_4);
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-          __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_j); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 180; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_atoms, __pyx_v_j, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(__pyx_t_5 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 180; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
           __Pyx_GOTREF(__pyx_t_5);
           __pyx_t_12 = __Pyx_PyObject_Append(__pyx_t_4, __pyx_t_5); if (unlikely(__pyx_t_12 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 180; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -1471,8 +1471,8 @@ static PyObject *__pyx_f_9QtEasyMol_6GLarea_10cfunctions_C_generate_bonds3(PyObj
 
           /* "QtEasyMol/GLarea/cfunctions.pyx":181
  *                     index_bonds.append([i, j])
- *                     atoms[i].connected.append(j)
- *                     atoms[j].connected.append(i)             # <<<<<<<<<<<<<<
+ *                     atoms[i].connected.append(atoms[j])
+ *                     atoms[j].connected.append(atoms[i])             # <<<<<<<<<<<<<<
  * 
  *                     #bonds.append((atoms[i], distance , angle    , vec_o, midpoint))
  */
@@ -1481,7 +1481,7 @@ static PyObject *__pyx_f_9QtEasyMol_6GLarea_10cfunctions_C_generate_bonds3(PyObj
           __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_connected); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 181; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           __Pyx_GOTREF(__pyx_t_4);
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-          __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 181; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+          __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_atoms, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(__pyx_t_5 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 181; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
           __Pyx_GOTREF(__pyx_t_5);
           __pyx_t_12 = __Pyx_PyObject_Append(__pyx_t_4, __pyx_t_5); if (unlikely(__pyx_t_12 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 181; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
