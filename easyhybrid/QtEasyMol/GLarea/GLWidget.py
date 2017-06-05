@@ -1697,7 +1697,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
             self.sel_chain = False
         
         else:
-            self.sel_atom, self.sel_resid, self.sel_chain, self.sel_mol = False
+            self.sel_atom = self.sel_resid = self.sel_chain = self.sel_mol = False
         return True
     
     def keyPressEvent(self, event):

@@ -29,6 +29,7 @@ import math
 import OpenGL
 from OpenGL.GL import *
 from OpenGL.GLU import *
+from OpenGL.GLE import *
 from OpenGL.GLUT import *
 from PySide import QtCore, QtGui, QtOpenGL
 
@@ -133,22 +134,86 @@ class DrawArea(QtOpenGL.QGLWidget):
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
         
-        if self.DOTS:
-            glCallList(self.gl_point_list[self.frame_i])
-        if self.BALL_STICK:
-            glCallList(self.gl_ball_stick_list[self.frame_i])
-        if self.WIRES:
-            glCallList(self.gl_wires_list[self.frame_i])
-        if self.LINES:
-            glCallList(self.gl_lines_list[self.frame_i])
-        if self.VDW:
-            glCallList(self.gl_vdw_list[self.frame_i])
-        if self.PRETTY_VDW:
-            glCallList(self.gl_pretty_vdw_list[self.frame_i])
-        if self.RIBBON:
-            glCallList(self.gl_ribbon_list[self.frame_i])
-        if self.SPHERES:
-            glCallList(self.gl_sphere_list[self.frame_i])
+        #if self.DOTS:
+            #glCallList(self.gl_point_list[self.frame_i])
+        #if self.BALL_STICK:
+            #glCallList(self.gl_ball_stick_list[self.frame_i])
+        #if self.WIRES:
+            #glCallList(self.gl_wires_list[self.frame_i])
+        #if self.LINES:
+            #glCallList(self.gl_lines_list[self.frame_i])
+        #if self.VDW:
+            #glCallList(self.gl_vdw_list[self.frame_i])
+        #if self.PRETTY_VDW:
+            #glCallList(self.gl_pretty_vdw_list[self.frame_i])
+        #if self.RIBBON:
+            #glCallList(self.gl_ribbon_list[self.frame_i])
+        #if self.SPHERES:
+            #glCallList(self.gl_sphere_list[self.frame_i])
+        
+        opt_f = [[0.707,1.0,0.0],[-0.707,0.0,0.0]]
+        opt_g = [[0.0,0.0,0.0],[0.0,0.0,0.0]]
+        
+        screw = [[-5,2.5], [-2.5,2.5], [-2.5,5], [2.5,5], [2.5,2.5], [5,2.5], [5,-2.5], [2.5,-2.5], [2.5,-5], [-2.5,-5], [-2.5,-2.5], [-5,-2.5]]
+        screw_n = [[1,0], [0,1], [1,0], [0,1], [1,0], [0,1], [1,0], [0,1], [1,0], [0,1], [1,0], [0,1]]
+        up = [1.0,0.0,0.0]
+        
+        elipse = [[-5.952, 0.2524757414089516]              ,
+                  [-5.866666666666666, 0.4192880503136276]  ,
+                  [-5.76, 0.5600000000000002]               ,
+                  #[-5.52, 0.7838367176906174]               ,
+                  [-5.28, 0.9499473669630332]               ,
+                  #[-5.04, 1.085172797300043]                ,
+                  [-4.8, 1.2000000000000002]                ,
+                  #[-3.6, 1.6]                               ,
+                  [-2.4000000000000004, 1.833030277982336]  ,
+                  [-1.2000000000000002, 1.9595917942265426] ,
+                  [0.0, 2.0]                                ,
+                  [1.1999999999999993, 1.9595917942265426]  ,
+                  [2.4000000000000004, 1.833030277982336]   ,
+                  #[3.5999999999999996, 1.6]                 ,
+                  [4.799999999999999, 1.2000000000000006]   ,
+                  #[5.04, 1.085172797300043]                 ,
+                  [5.28, 0.9499473669630332]                ,
+                  #[5.52, 0.7838367176906174]                ,
+                  [5.76, 0.5600000000000002]                ,
+                  [5.866666666666666, 0.4192880503136276]   ,
+                  [5.952, 0.2524757414089516]               ,
+                  [5.952, -0.2524757414089516]              ,
+                  [5.866666666666666, -0.4192880503136276]  ,
+                  [5.76, -0.5600000000000002]               ,
+                  #[5.52, -0.7838367176906174]               ,
+                  [5.28, -0.9499473669630332]               ,
+                  #[5.04, -1.085172797300043]                ,
+                  [4.799999999999999, -1.2000000000000006]  ,
+                  #[3.5999999999999996, -1.6]                ,
+                  [2.4000000000000004, -1.833030277982336]  ,
+                  [1.1999999999999993, -1.9595917942265426] ,
+                  [0.0, -2.0]                               ,
+                  [-1.2000000000000002, -1.9595917942265426],
+                  [-2.4000000000000004, -1.833030277982336] ,
+                  #[-3.6, -1.6]                              ,
+                  [-4.8, -1.2000000000000002]               ,
+                  #[-5.04, -1.085172797300043]               ,
+                  [-5.28, -0.9499473669630332]              ,
+                  #[-5.52, -0.7838367176906174]              ,
+                  [-5.76, -0.5600000000000002]              ,
+                  [-5.866666666666666, -0.4192880503136276] ,
+                  [-5.952, -0.2524757414089516]             ,
+                  [-5.952, 0.2524757414089516]]
+        
+        cube = [[-2,-1], [-2,1], [2,1], [2,-1], [-2,-1]]
+        cube_n = [[1,0], [0,1], [1,0], [0,1], [1,0]]
+        gleSetJoinStyle (TUBE_NORM_EDGE | TUBE_JN_ANGLE | TUBE_JN_CAP)
+        glColor3f (0.6, 0.8, 0.3)
+        glPushMatrix ()
+        #glTranslatef (0.0, 0.0, -80.0)
+        #gleHelicoid (1.0, 6.0, 0.0, -3.0, 4.0, None, None, 0.0, 1080.0)
+        #gleHelicoid (1.0, 6.0, 0.0, -12.0, 6.0, None, None, 0.0, 1080.0)
+        #gleSpiral(elipse, None, up, 9.0, 0.0, -12.0, 36.0, None, None, 0.0, 180.0)
+        gleSpiral(elipse, elipse, None, 9.0, 0.0, -12.0, 36.0, None, None, 0.0, 1080.0)
+        #gleScrew(screw, screw_n, up, -12.0, 12.0, 360.0)
+        glPopMatrix ()
     
     def minimumSizeHint(self):
         return QtCore.QSize(400, 400)
@@ -703,8 +768,6 @@ class DrawArea(QtOpenGL.QGLWidget):
                 self.gl_wires_list.append(gl_wr_li)
         return True
     
-
-
 
 if __name__ == '__main__':
     import vis_parser as vp
