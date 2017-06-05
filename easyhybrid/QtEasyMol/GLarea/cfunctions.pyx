@@ -122,7 +122,7 @@ import numpy as np
 '''
 
 
-cpdef C_generate_bonds3(atoms):
+cpdef C_generate_bonds3(atoms, _limit = 50):
     
     #cdef double bonds[len(coords)]
     bonds       = []
@@ -134,8 +134,8 @@ cpdef C_generate_bonds3(atoms):
 
     size =  len(atoms)
     
-    if size >= 20:
-        limit = 20
+    if size >= _limit:
+        limit = _limit
     else: 
         limit = size
 
@@ -177,33 +177,17 @@ cpdef C_generate_bonds3(atoms):
                     vec_o = 0
                     
                     index_bonds.append([i, j])
-                    atoms[i].connected.append(j)
-                    atoms[j].connected.append(i)
+                    atoms[i].connected.append(atoms[j])
+                    atoms[j].connected.append(atoms[i])
 
-                    bonds.append((atoms[i], distance , angle    , vec_o, midpoint))
-		    
-                    bonds.append((atoms[j], distance , angle+180, vec_o, midpoint))
-
-                    
-                    #bonds.append(atoms[i].pos[0])
-                    #bonds.append(atoms[i].pos[1])
-                    #bonds.append(atoms[i].pos[2])
-                    #
-                    #bonds.append((atoms[i].pos[0] + atoms[j].pos[0])/2)
-                    #bonds.append((atoms[i].pos[1] + atoms[j].pos[1])/2)
-                    #bonds.append((atoms[i].pos[2] + atoms[j].pos[2])/2)
-                    #
-                    #
-                    #bonds.append(atoms[j].pos[0])
-                    #bonds.append(atoms[j].pos[1])
-                    #bonds.append(atoms[j].pos[2])
-                
+                    #bonds.append((atoms[i], distance , angle    , vec_o, midpoint))
+                    #bonds.append((atoms[j], distance , angle+180, vec_o, midpoint))                
                 else:
                     pass
     #return #bonds#, index_bonds
     #print index_bonds
-    return bonds, index_bonds
-    #return index_bonds
+    #return bonds, index_bonds
+    return index_bonds
 
 
 

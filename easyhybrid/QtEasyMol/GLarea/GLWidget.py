@@ -114,7 +114,7 @@ class glMenu:
         
         if selection_type == 'residue':
             sel = self.selected_atom_on_click
-            for atom in sel.Vobject.chains[sel.chain].residues[sel.resi].atoms:
+            for atom in sel.residue.atoms:
                 selection_list.append(atom)
                
                 if show:
@@ -147,7 +147,7 @@ class glMenu:
 
         if selection_type == 'chain':
             for residue in sel.Vobject.chains[sel.chain].residues:
-                for atom in sel.Vobject.chains[sel.chain].residues[residue].atoms:            
+                for atom in residue.atoms:            
                     selection_list.append(atom)
                     print('atom: ',atom.chain, atom.resi, atom.resn, atom.index, atom.name)    
                     if show:
@@ -630,7 +630,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         self.trolltechPurple = QtGui.QColor.fromCmykF(0.39, 0.39, 0.0, 0.0)
         
         #self.data   = None
-        self.fovy   = 30.0
+        self.fovy   = 50.0
         self.aspect = 0.0
         self.z_near = 1.0
         self.z_far  = 10.0
@@ -656,6 +656,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         self.gl_backgrd = [0.0, 0.0, 0.0, 0.0]
         self.gl_backgrd = [1.0, 1.0, 1.0, 1.0]
         self.gl_backgrd = [0.5, 0.5, 0.5, 0.5]
+        self.gl_backgrd = [0.3, 0.3, 0.3, 0.3]
 
         self.zrp          = np.array([0, 0, 0])
         
@@ -680,6 +681,48 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
 
         #self.gl_menu   = glMenu(glwidget = self, EMSession = EMSession)
         self.selected_atom_on_click = None
+    
+        #n = 0
+        #self.vertices =[]
+        #x =  100
+        #for h in range(-x,x):
+        #    for k in range(-x,x):
+        #        for l in range(-x,x):
+        #        
+        #            self.vertices.append(h)
+        #            self.vertices.append(k)
+        #            self.vertices.append(l)
+        #            #self.vertices.append(1)
+        #            #self.vertices.append(1)
+        #            #self.vertices.append(1)
+        #            n+=1
+        #print ('total number of points:', n)
+        #'''
+        #self.vertices =  [1.513671  ,   2.233656 , -0.529123, 1.0, 1.0, 0.0,
+        #                  2.636168  ,   3.754886 ,  0.238105, 1.0, 1.0, 0.0,
+        #                  1.574142  ,   2.556799 , -2.583256, 1.0, 1.0, 1.0,
+        #                  2.785456  ,  -0.239995 ,  0.457314, 1.0, 1.0, 1.0,
+        #                  2.713647  ,  -0.236216 ,  2.469872, 1.0, 1.0, 0.0,
+        #                  4.777228  ,  -0.257003 , -0.173855, 1.0, 1.0, 0.0,
+        #                  1.165961  ,  -2.494438 , -0.389284, 1.0, 1.0, 0.0,
+        #                  1.976654  ,  -4.223538 ,  0.179524, 1.0, 1.0, 0.0,
+        #                  1.379500  ,  -2.724985 , -2.371606, 1.0, 1.0, 1.0,
+        #                  -1.564693 ,  -2.254443 ,  0.393063, 1.0, 1.0, 1.0,
+        #                  -1.583591 ,  -2.577586 ,  2.324363, 1.0, 1.0, 0.0,
+        #                  -2.772228 ,  -3.762445 , -0.200311, 1.0, 1.0, 0.0,
+        #                  -2.660734 ,   0.232436 , -0.447865, 1.0, 1.0, 0.0,
+        #                  -4.484320 ,   0.402512 ,  0.285349, 1.0, 1.0, 0.0,
+        #                  -2.823251 ,   0.173855 , -2.473652, 1.0, 1.0, 1.0,
+        #                  -1.245330 ,   2.520895 ,  0.506447, 1.0, 1.0, 1.0,
+        #                  -1.152733 ,   2.700419 ,  2.473652, 1.0, 1.0, 0.0,
+        #                  -2.197751 ,   4.234876 , -0.073699, 1.0, 1.0, 0.0,]
+        #'''
+        #self.vertices = np.array(self.vertices, dtype=np.float32)
+        #self.VBOID    = GLuint(1)
+
+    
+    
+    
     
         
     def initializeGL(self):
@@ -716,7 +759,9 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
         frame = self.frame
         #glPointSize(self.scale_zoom)# *self.scale_zoom
-
+        
+        #self.load_mol()
+        
         for Vobject in self.EMSession.Vobjects:    
             if Vobject.actived:   
                 #-------------------------------------------------------
@@ -1162,120 +1207,68 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
             efficient.
         """
         
-        glDisable(GL_LIGHT0)
-        glDisable(GL_LIGHT1)
-        glDisable(GL_LIGHT2)
-        glDisable(GL_LIGHTING)
-        glEnable(GL_COLOR_MATERIAL)
-        glEnable(GL_DEPTH_TEST)
+        pass
+        '''
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 
-        n = 1
-        for Vobject in self.EMSession.Vobjects:
-            #print Vobject.label
-            if Vobject.actived:
-                
-                for chain in  Vobject.chains:
-                    
-                    for res in Vobject.chains[chain].residues:
-                        for atom in Vobject.chains[chain].residues[res].atoms:
-                            glPushMatrix()
-                            
-                            glPushName(atom.index)
-                            
-                            glColor3f(atom.color[0], atom.color[1], atom.color[2])
-                            glPointSize(self.PointSize*atom.vdw_rad)
-                            glBegin(GL_POINTS)
-                            glVertex3f(float(atom.pos[0]),float( atom.pos[1]),float( atom.pos[2]))
-                            glEnd()
-                            glPopName()
-                            glPopMatrix()
-                            #print atom.name, atom.pos
-                    #'''
-                    
-                   
-                    color = 1.0/n
-                    
-                    #'''
-                    for i in range(0, len(Vobject.chains[chain].backbone) -1):
-                        
-                        ATOM1 = Vobject.chains[chain].backbone[i]
-                        ATOM2 = Vobject.chains[chain].backbone[i+1]
-                        
-                        glEnable(GL_COLOR_MATERIAL)
-                        glEnable(GL_DEPTH_TEST)
-                        glPushMatrix()
-                        
-                        
-                        glColor3f(1,  color, 2*color)
-                        
-                        glLineWidth(self.LineWidth*3)
-                        #print Vobject.bonds[i],Vobject.bonds[i+1],Vobject.bonds[i+2], Vobject.bonds[i+3],Vobject.bonds[i+4],Vobject.bonds[i+5]
-                        glBegin(GL_LINES)
-                        
-                        glVertex3f(ATOM1.pos[0],ATOM1.pos[1],ATOM1.pos[2])
-                        glVertex3f(ATOM2.pos[0],ATOM2.pos[1],ATOM2.pos[2])
-                        
-                        glEnd()
-                        glPopName()
-                        glPopMatrix()
-                        
-                        #color += 0.001
-                    #'''
-            
-                
-                #initial = time.time()
-                for bond in Vobject.bonds:
-                    #glPushMatrix()
-                    #glDisable(GL_LIGHT0)
-                    #glDisable(GL_LIGHT1)
-                    #glDisable(GL_LIGHT2)
-                    #glDisable(GL_LIGHTING)
-                    glEnable(GL_COLOR_MATERIAL)
-                    glEnable(GL_DEPTH_TEST)
-                    glPushMatrix()
-                    #glPushName(bond[0])
-                    
-                    #glColor3f(0, 1, 1)
-                    
-                    glColor3f(Vobject.atoms[bond[0]].color[0], 
-                              Vobject.atoms[bond[0]].color[1], 
-                              Vobject.atoms[bond[0]].color[2])
-                    
-                    glLineWidth(self.LineWidth)
-                    
-                    #glBegin(GL_LINES)
-                    glBegin(GL_LINE_STRIP)
-                    glVertex3f(Vobject.atoms[bond[0]].pos[0], 
-                               Vobject.atoms[bond[0]].pos[1], 
-                               Vobject.atoms[bond[0]].pos[2])
-                    
-                    
-                    glVertex3f((Vobject.atoms[bond[0]].pos[0] + Vobject.atoms[bond[1]].pos[0])/2, 
-                               (Vobject.atoms[bond[0]].pos[1] + Vobject.atoms[bond[1]].pos[1])/2, 
-                               (Vobject.atoms[bond[0]].pos[2] + Vobject.atoms[bond[1]].pos[2])/2)                    
+        #vertices =  [1.513671  ,   2.233656 , -0.529123, 1.0, 0.0, 0.0,
+        #             2.636168  ,   3.754886 ,  0.238105, 0.0, 1.0, 0.0,
+        #             1.574142  ,   2.556799 , -2.583256, 0.0, 0.0, 1.0,
+        #             2.785456  ,  -0.239995 ,  0.457314, 0.0, 0.0, 1.0,
+        #             2.713647  ,  -0.236216 ,  2.469872, 0.0, 1.0, 0.0,
+        #             4.777228  ,  -0.257003 , -0.173855, 1.0, 0.0, 0.0,
+        #             1.165961  ,  -2.494438 , -0.389284, 1.0, 0.0, 0.0,
+        #             1.976654  ,  -4.223538 ,  0.179524, 0.0, 1.0, 0.0,
+        #             1.379500  ,  -2.724985 , -2.371606, 0.0, 0.0, 1.0,
+        #             -1.564693 ,  -2.254443 ,  0.393063, 0.0, 0.0, 1.0,
+        #             -1.583591 ,  -2.577586 ,  2.324363, 0.0, 1.0, 0.0,
+        #             -2.772228 ,  -3.762445 , -0.200311, 1.0, 0.0, 0.0,
+        #             -2.660734 ,   0.232436 , -0.447865, 1.0, 0.0, 0.0,
+        #             -4.484320 ,   0.402512 ,  0.285349, 0.0, 1.0, 0.0,
+        #             -2.823251 ,   0.173855 , -2.473652, 0.0, 0.0, 1.0,
+        #             -1.245330 ,   2.520895 ,  0.506447, 0.0, 0.0, 1.0,
+        #             -1.152733 ,   2.700419 ,  2.473652, 0.0, 1.0, 0.0,
+        #             -2.197751 ,   4.234876 , -0.073699, 0.0, 1.0, 0.0,]
+        
+        
+        #vertices = [-0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
+        #             0.5, -0.5, 0.0, 0.0, 1.0, 0.0,                    
+        #             0.0,  0.5, 0.0, 0.0, 0.0, 1.0,
+        #            -0.9, -0.2,  .0, 0.0, 0.0, 1.0,
+        #             0.2, -0.5,  .5, 0.0, 1.0, 0.0,
+        #            -0.3,  0.7, 0.0, 1.0, 0.0, 0.0,
+        #        ]        
+        
+        
+        
+        
+        
+        
+        #vertices = np.array(vertices, dtype=np.float32)
+        #VBOID    = GLuint(1)
+        #print (VBOID)
 
-                    
-                    glColor3f(Vobject.atoms[bond[1]].color[0], 
-                              Vobject.atoms[bond[1]].color[1], 
-                              Vobject.atoms[bond[1]].color[2])
-                    
-                    glVertex3f((Vobject.atoms[bond[0]].pos[0] + Vobject.atoms[bond[1]].pos[0])/2, 
-                               (Vobject.atoms[bond[0]].pos[1] + Vobject.atoms[bond[1]].pos[1])/2, 
-                               (Vobject.atoms[bond[0]].pos[2] + Vobject.atoms[bond[1]].pos[2])/2) 
+        
+        glEnableClientState(GL_VERTEX_ARRAY)
+        #glEnableClientState(GL_COLOR_ARRAY)
 
-                    glVertex3f(Vobject.atoms[bond[1]].pos[0], 
-                               Vobject.atoms[bond[1]].pos[1], 
-                               Vobject.atoms[bond[1]].pos[2])                    
-                    
-                    glEnd()
-                    glPopName()
-                    glPopMatrix()
-                #final = time.time() 
-                #print final - initial
+                    #   !            ^number of bytes
+        glVertexPointer(3, GL_FLOAT, 0 , self.vertices)
+       # glColorPointer (3, GL_FLOAT, 0 , self.vertices)
 
-            else:
-                pass
-            n += 1
+        #glDrawArrays(GL_POINTS, 0, 6)
+        glDrawArrays(GL_POINTS, 0, int((len(self.vertices)/3)))
+        #glDrawArrays(GL_TRIANGLES, 0, 18)
+        #glDrawArrays(GL_LINE_STRIP, 0, 3)
+        
+        glDisableClientState(GL_VERTEX_ARRAY)
+        #glDisableClientState(GL_COLOR_ARRAY)
+        
+        #glDisableClientState(GL_COLOR_ARRAY)
+        #glutSwapBuffers() #        
+        '''
+        
+
     
     def draw_dots(self, Vobject = None, selection = True):
         """ Change the representation to Dots.
@@ -1284,27 +1277,43 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         for frame in Vobject.frames:
             gl_dt_li = glGenLists(self.gl_lists_counter)
             glNewList(gl_dt_li, GL_COMPILE)
-            for chain in  Vobject.chains:
-                for res in Vobject.chains[chain].residues:
-                    for atom in Vobject.chains[chain].residues[res].atoms:
-                        # checking if the selection is actived
-                        if atom.dots:
-                            #-------------------------------------------------------
-                            #                        D O T S
-                            #-------------------------------------------------------
-                            glPushMatrix()
-                            glPushName(atom.atom_id)
-                            glColor3f(atom.color[0], atom.color[1], atom.color[2])
-                            glPointSize(self.EMSession.gl_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
-                            glBegin(GL_POINTS)
-                            coord1   = frame[atom.index-1]
-                            glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
-                            glEnd()
-                            glPopName()
-                            glPopMatrix()
-                        else:
-                            pass
-                            
+            for atom in Vobject.atoms:
+                if atom.dots:
+                    #-------------------------------------------------------
+                    #                        D O T S
+                    #-------------------------------------------------------
+                    glPushMatrix()
+                    glPushName(atom.atom_id)
+                    glColor3f(atom.color[0], atom.color[1], atom.color[2])
+                    glPointSize(self.EMSession.gl_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
+                    glBegin(GL_POINTS)
+                    coord1   = frame[atom.index-1]
+                    glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
+                    glEnd()
+                    glPopName()
+                    glPopMatrix()
+                
+                #for chain in  Vobject.chains:
+            #    for res in Vobject.chains[chain].residues:
+            #        for atom in Vobject.chains[chain].residues[res].atoms:
+            #            # checking if the selection is actived
+            #            if atom.dots:
+            #                #-------------------------------------------------------
+            #                #                        D O T S
+            #                #-------------------------------------------------------
+            #                glPushMatrix()
+            #                glPushName(atom.atom_id)
+            #                glColor3f(atom.color[0], atom.color[1], atom.color[2])
+            #                glPointSize(self.EMSession.gl_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
+            #                glBegin(GL_POINTS)
+            #                coord1   = frame[atom.index-1]
+            #                glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
+            #                glEnd()
+            #                glPopName()
+            #                glPopMatrix()
+            #            else:
+            #                pass
+            #                
             glEndList()
             Vobject.GL_list_dots.append(gl_dt_li) 
             self.gl_lists_counter += 1
@@ -1322,6 +1331,8 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         glEnable(GL_DEPTH_TEST)
         Vobject.list_lines =[]
         for frame in Vobject.frames:
+            
+            print ('rendering ',Vobject.frames.index(frame) )
             gl_ln_li = glGenLists(self.gl_lists_counter)
             
             glNewList(gl_ln_li,GL_COMPILE) #GL_COMPILE_AND_EXECUTE) #GL_COMPILE)
@@ -1359,10 +1370,9 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
                     
                     
                     glPushMatrix()		
-                    glPushName(atom2.atom_id) 
                     glColor3f (atom2.color[0], 
                                atom2.color[1], 
-                           atom2.color[2])
+                                atom2.color[2])
 
                     glBegin(GL_LINES)
                     glVertex3f(midcoord[0],midcoord[1],midcoord[2])
@@ -1552,7 +1562,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
                     coord1 = frame[atom.index-1]
                     glTranslate(float(coord1[0]),float( coord1[1]),float( coord1[2]))
                     glColor3f(atom.color[0],   atom.color[1], atom.color[2])
-                    glutSolidSphere(atom.vdw_rad, sphere_quality, sphere_quality)
+                    glutSolidSphere(atom.vdw_rad*self.EMSession.gl_parameters['sphere_scale'], sphere_quality, sphere_quality)
                     glPopMatrix()
                     glPopName()
             
