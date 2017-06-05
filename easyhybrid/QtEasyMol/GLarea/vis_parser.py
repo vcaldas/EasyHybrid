@@ -37,21 +37,10 @@ def new_parse_pdb (infile = None, counter = 0, atom_dic_id = None):
         label = os.path.basename(infile)
         Vobject = mm.Vobject(label = label)
 
-                
-        chains_m = {}
-        residues = {}
         atoms    = []
         
         index = 1
-        
-        sum_x        = 0
-        sum_y        = 0
-        sum_z        = 0
-        frame        = []
-        residue_list = []
-        parser_resi  = None
-        parser_resn  = None
-        
+        frame        = []     
         for line in pdb_file:
             if line[:4] == 'ATOM' or line[:6] == 'HETATM':
                 at_name = line[12:16].strip()
@@ -59,20 +48,22 @@ def new_parse_pdb (infile = None, counter = 0, atom_dic_id = None):
                 at_pos = np.array([float(line[30:38]), float(line[38:46]), float(line[46:54])])
                 at_res_i = int(line[22:26])
                 at_res_n = line[17:20].strip()
-                at_ch = line[21]             
-                atm = mm.Atom(name         =  at_name, 
+                at_ch    = line[21]             
+                
+		atm      = mm.Atom(name    =  at_name, 
                               index        =  index, 
                               pos          =  at_pos, 
                               resi         =  at_res_i, 
                               resn         =  at_res_n, 
                               chain        =  at_ch, 
                               atom_id      =  counter, 
-                              #Vobject_id   =  Vobject_id,
-                              #Vobject_name =  Vobject.label,
                               Vobject      =  Vobject,
                               )
-                Vobject.atoms.append(atm)
-
+                index   += 1
+		counter += 1
+		Vobject.atoms.append(atm)
+    
+    return Vobject, atom_dic_id
 
 
 def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None ):
