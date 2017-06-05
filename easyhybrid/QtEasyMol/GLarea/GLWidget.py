@@ -891,7 +891,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
             nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
             selected = self.select(nearest, hits)
             if selected is not None:
-                self.center_on_atom(selected.pos)
+                self.center_on_atom(selected.Vobject.frames[self.frame][selected.index-1]) # coord1   = frame[atom.index-1]
     
     def mouseMoveEvent(self, event):
         """ 
@@ -1054,7 +1054,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
                     nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
                     selected = self.select(nearest, hits)
                     if selected is not None:
-                        self.center_on_atom(selected.pos)
+                        self.center_on_atom(selected.Vobject.frames[self.frame][selected.index-1])
         self.dragging = False
     
     def wheelEvent(self, event):
@@ -1276,7 +1276,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         Vobject.GL_list_dots =[]
         for frame in Vobject.frames:
             gl_dt_li = glGenLists(self.gl_lists_counter)
-            glNewList(gl_dt_li, GL_COMPILE)
+            glNewList(gl_dt_li, GL_COMPILE_AND_EXECUTE)
             for atom in Vobject.atoms:
                 if atom.dots:
                     #-------------------------------------------------------
@@ -1318,7 +1318,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
             Vobject.GL_list_dots.append(gl_dt_li) 
             self.gl_lists_counter += 1
         return True
-        
+   
     def draw_lines(self, Vobject = None , selection = None):
         """ Change the representation to lines.
             It is the default representation.
@@ -1331,11 +1331,9 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         glEnable(GL_DEPTH_TEST)
         Vobject.list_lines =[]
         for frame in Vobject.frames:
-            
-            print ('rendering ',Vobject.frames.index(frame) )
             gl_ln_li = glGenLists(self.gl_lists_counter)
-            
-            glNewList(gl_ln_li,GL_COMPILE) #GL_COMPILE_AND_EXECUTE) #GL_COMPILE)
+            print ('rendering ',Vobject.frames.index(frame) )
+            glNewList(gl_ln_li,GL_COMPILE_AND_EXECUTE) #GL_COMPILE)
             glLineWidth(self.EMSession.gl_parameters['line_width'])
 
             for bond in Vobject.index_bonds:
@@ -1359,6 +1357,76 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
                     glColor3f(atom1.color[0], 
                               atom1.color[1], 
                           atom1.color[2])
+
+                    
+                    glBegin(GL_LINES)
+                    glVertex3f(coord1[0],coord1[1],coord1[2])
+                    glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+                    glEnd()
+                    glPopName()
+                    glPopMatrix()
+                    
+                    
+                    glPushMatrix()		
+                    glPushName(atom2.atom_id) 
+                    glColor3f (atom2.color[0], 
+                               atom2.color[1], 
+                           atom2.color[2])
+
+                    glBegin(GL_LINES)
+                    glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+                    glVertex3f(coord2[0],coord2[1],coord2[2])
+
+                    glEnd()
+                    glPopName()
+                    glPopMatrix()
+            glEndList()
+            Vobject.list_lines.append(gl_ln_li)
+            
+            self.gl_lists_counter += 1
+        return True
+   
+        
+    def draw_lines2(self, Vobject = None , selection = None):
+        """ Change the representation to lines.
+            It is the default representation.
+        """
+        glDisable(GL_LIGHT0)
+        glDisable(GL_LIGHT1)
+        glDisable(GL_LIGHT2)
+        glDisable(GL_LIGHTING)
+        glEnable(GL_COLOR_MATERIAL)
+        glEnable(GL_DEPTH_TEST)
+        Vobject.list_lines =[]
+        for frame in Vobject.frames:
+            
+            print ('rendering ',Vobject.frames.index(frame) )
+            gl_ln_li = glGenLists(self.gl_lists_counter)
+            
+            glNewList(gl_ln_li, GL_COMPILE_AND_EXECUTE) #GL_COMPILE)
+            glLineWidth(self.EMSession.gl_parameters['line_width'])
+
+            for bond in Vobject.index_bonds:
+
+                atom1    = Vobject.atoms[bond[0]]
+                atom2    = Vobject.atoms[bond[1]]
+                # checking if the selection is actived
+                if  atom1.lines and atom2.lines:
+                
+                    coord1   = frame[bond[0]]
+                    coord2   = frame[bond[1]]
+
+                    midcoord = [
+                            (coord1[0] + coord2[0])/2,	   
+                            (coord1[1] + coord2[1])/2,
+                            (coord1[2] + coord2[2])/2,
+                            ]
+                    
+                    glPushMatrix()		
+                    glPushName(atom1.atom_id) 
+                    glColor3f(atom1.color[0], 
+                              atom1.color[1], 
+                              atom1.color[2])
 
                     
                     glBegin(GL_LINES)
@@ -1397,7 +1465,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
             glEnable(GL_DEPTH_TEST)
             
             gl_rb_li = glGenLists(self.gl_lists_counter)
-            glNewList(gl_rb_li, GL_COMPILE)
+            glNewList(gl_rb_li, GL_COMPILE_AND_EXECUTE)
             #print 'aqui'
             glLineWidth(7)
 
@@ -1459,7 +1527,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
             glEnable(GL_DEPTH_TEST)
            
             gl_bs_li = glGenLists(self.gl_lists_counter)
-            glNewList(gl_bs_li, GL_COMPILE)
+            glNewList(gl_bs_li, GL_COMPILE_AND_EXECUTE)
             
             for atom in Vobject.atoms:
                 if atom.ball_and_stick:
@@ -1550,7 +1618,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
             glEnable(GL_DEPTH_TEST)
            
             gl_bs_li = glGenLists(self.gl_lists_counter)
-            glNewList(gl_bs_li, GL_COMPILE)
+            glNewList(gl_bs_li, GL_COMPILE_AND_EXECUTE)
             
             for atom in Vobject.atoms:
                 #-------------------------------------------------------
