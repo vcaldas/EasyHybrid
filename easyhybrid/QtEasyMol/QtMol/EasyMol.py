@@ -177,23 +177,6 @@ class DrawArea(QtOpenGL.QGLWidget):
         cube_n = [[1,0], [0,1], [1,0], [0,1], [1,0]]
         gleSetJoinStyle (TUBE_NORM_EDGE | TUBE_JN_ANGLE | TUBE_JN_CAP)
         
-        glColor3f(1.0, 0.0, 0.0)
-        glPointSize(5)
-        glBegin(GL_POINTS)
-        glVertex3f(0,0,0)
-        ##glPushMatrix()
-        ##glutSolidSphere(0.53, 15, 15)
-        ##glColor3f(0.0, 0.0, 1.0)
-        glColor3f(0.0, 0.0, 1.0)
-        glVertex3f(5,0,0)
-        ##glPopMatrix()
-        ##glPushMatrix()
-        ##glTranslate(5, 0, 0)
-        ##glutSolidSphere(0.53, 15, 15)
-        glEnd()
-        ##glPopMatrix()
-        
-        glTranslate(0, 0, 0)
         glColor3f (0.6, 0.8, 0.3)
         glPushMatrix ()
         glRotate(90,0,1,0)
