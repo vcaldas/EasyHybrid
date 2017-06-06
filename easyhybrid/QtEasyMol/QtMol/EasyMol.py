@@ -175,18 +175,18 @@ class DrawArea(QtOpenGL.QGLWidget):
         
         cube = [[-2,-1], [-2,1], [2,1], [2,-1], [-2,-1]]
         cube_n = [[1,0], [0,1], [1,0], [0,1], [1,0]]
-        gleSetJoinStyle (TUBE_NORM_EDGE | TUBE_JN_ANGLE | TUBE_JN_CAP)
-        
-        glColor3f (0.6, 0.8, 0.3)
-        glPushMatrix ()
-        glRotate(90,0,1,0)
-        #glTranslatef (-10.0, 0.0, 0.0)
-        #gleHelicoid (1.0, 6.0, 0.0, -3.0, 15.0, opt_f, opt_f, 0.0, 1080.0)
-        gleToroid (0.25, 1.5, 0.0, 0.0, 2.5, opt_f, None, 0.0, 720.0)
-        #gleSpiral(elipse, None, up, 9.0, 0.0, -12.0, 36.0, None, None, 0.0, 180.0)
-        #gleSpiral(elipse, elipse, up, 10.0, 0.0, 0.0, 25.0, None, None, 0.0, 720.0)
-        #gleScrew(screw, screw_n, up, -12.0, 12.0, 360.0)
-        glPopMatrix ()
+        rep.draw_cartoon(90, [0,1,0], 720)
+        #gleSetJoinStyle (TUBE_NORM_EDGE | TUBE_JN_ANGLE | TUBE_JN_CAP)
+        #glColor3f (0.6, 0.8, 0.3)
+        #glPushMatrix ()
+        #glRotate(90,0,1,0)
+        ##glTranslatef (-10.0, 0.0, 0.0)
+        ##gleHelicoid (1.0, 6.0, 0.0, -3.0, 15.0, opt_f, opt_f, 0.0, 1080.0)
+        #gleToroid (0.25, 1.5, 0.0, 0.0, 2.5, opt_f, None, 0.0, 720.0)
+        ##gleSpiral(elipse, None, up, 9.0, 0.0, -12.0, 36.0, None, None, 0.0, 180.0)
+        ##gleSpiral(elipse, elipse, up, 10.0, 0.0, 0.0, 25.0, None, None, 0.0, 720.0)
+        ##gleScrew(screw, screw_n, up, -12.0, 12.0, 360.0)
+        #glPopMatrix ()
     
     def minimumSizeHint(self):
         return QtCore.QSize(400, 400)

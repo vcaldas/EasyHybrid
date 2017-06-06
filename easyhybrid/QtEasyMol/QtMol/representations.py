@@ -24,11 +24,13 @@
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
+from OpenGL.GLE import *
 from OpenGL.GLUT import *
 
 from atom_types import get_color
 
 gl_settings = {'sphere_scale':0.15, 'sphere_res':15, 'pretty_res':20, 'selection_radius':1.0, 'ribbon_res':0.4}
+cartoon_mat = [[0.68,2.0,0.0],[-0.68,0.0,0.0]]
 
 def init_gl(fog_start, fog_end, fovy, width, height, z_near, z_far):
     """ Inside the realize function, you should put all you OpenGL
@@ -402,3 +404,24 @@ def draw_text(text="hola", x=0, y=0):
         glutBitmapCharacter( GLUT_BITMAP_TIMES_ROMAN_24, ord(c) )
     glEnable( GL_LIGHTING )
     glMatrixMode( GL_MODELVIEW )
+
+def draw_cartoon(angle, vec, length, color=[0.6, 0.8, 0.3]):
+    """ Function doc
+    """
+    glEnable(GL_LIGHT0)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_COLOR_MATERIAL)
+    glEnable(GL_DEPTH_TEST)
+    
+    gleSetJoinStyle(TUBE_NORM_EDGE | TUBE_JN_ANGLE | TUBE_JN_CAP)
+    glColor3f(color[0], color[1], color[2])
+    glPushMatrix()
+    glRotate(angle, vec[0], vec[1], vec[2])
+    gleToroid (0.25, 1.5, 0.0, 0.0, 2.5, cartoon_mat, None, 0.0, length)
+    
+    glPopMatrix()
+    glFlush()
+    glDisable(GL_LIGHT0)
+    glDisable(GL_LIGHTING)
+    glDisable(GL_COLOR_MATERIAL)
+    glDisable(GL_DEPTH_TEST)
