@@ -51,8 +51,7 @@ class EasyMolSession:
                              atom_dic_id = self.atom_dic_id,
                              Vobject_id  = Vobject_id
                              )
-        
-        print ('number of frames: ',len(Vobject.frames) , '<---------------')
+
         
         for frame in Vobject.frames:
             print ('framesize:', len(frame))
@@ -62,14 +61,21 @@ class EasyMolSession:
         self.atom_id_counter += len(Vobject.atoms)
         self.Vobjects.append(Vobject)
         
-        pprint(self.Vobjects)
+        #pprint(self.Vobjects)
+        
         self.glwidget.draw_lines(self.Vobjects[-1])
+        
         #self.glwidget.draw_dots(self.Vobjects[-1])
         #Vobject.show_dots = False
-        self.center_by_index (index =  -1)
-        for atom in self.Vobjects[-1].atoms:
-            print (atom.index-1, atom.name, atom.connected)
         
+        self.center_by_index (index =  -1)
+        
+        ##for atom in self.Vobjects[-1].atoms:
+        ##    print (atom.index-1, atom.name, atom.connected)
+        #print ('----------------------- >final label:', Vobject.label)
+        #print ('----------------------- >final label self.Vobjects[-1]:', self.Vobjects[-1].label)
+        #
+        #print ('number of frames: ',len(Vobject.frames) , '<---------------')
         return True
         
 
@@ -217,9 +223,11 @@ class EasyMolSession:
         Vobjects_dic = {}
 	
         for Vobject in self.Vobjects:
+            #print ('----------------------- > get_vobject_list ', Vobject.label)
             index = self.Vobjects.index(Vobject)
-            label = Vobject.label
-            Vobjects_dic[index] = label
+            name = Vobject.label
+            #print( '\n label get_vobject_list:', name, index, len(Vobject.atoms) )
+            Vobjects_dic[index] = name
 	
         return Vobjects_dic
 	
