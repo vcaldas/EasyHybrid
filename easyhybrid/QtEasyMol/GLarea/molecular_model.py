@@ -256,6 +256,8 @@ class Vobject:
         final = time.time() 
         print ('generate_bonds end -  total time: ', final - initial, '\n')
 
+        self.generate_trajectory_bonds()
+        self.generate_trajectory_coordinates()
     '''
     def generate_bonds (self):
         """ Function doc """
@@ -274,7 +276,138 @@ class Vobject:
         final = time.time() 
         print (final - initial)
     #'''
+
     
+    def generate_trajectory_bonds (self):
+        """ Function doc """
+        self.trajectory_bonds = []
+        self.bonds_trajectory_colors = []
+        for bond in self.index_bonds:
+            atom1    = self.atoms[bond[0]]
+            atom2    = self.atoms[bond[1]]
+            # checking if the selection is actived
+            if  atom1.lines and atom2.lines:
+                coord1   = self.frames[0][bond[0]]
+                coord2   = self.frames[0][bond[1]]
+                
+                midcoord = [
+                           (coord1[0] + coord2[0])/2,	   
+                           (coord1[1] + coord2[1])/2,
+                           (coord1[2] + coord2[2])/2,
+                           ]
+                
+                self.trajectory_bonds.append(float(coord1[0]))
+                self.trajectory_bonds.append(float(coord1[1]))
+                self.trajectory_bonds.append(float(coord1[2]))
+                
+                self.trajectory_bonds.append(float(midcoord[0]))
+                self.trajectory_bonds.append(float(midcoord[1]))
+                self.trajectory_bonds.append(float(midcoord[2]))
+                
+                self.trajectory_bonds.append(float(midcoord[0]))
+                self.trajectory_bonds.append(float(midcoord[1]))
+                self.trajectory_bonds.append(float(midcoord[2]))
+                
+                self.trajectory_bonds.append(float(coord2[0]))
+                self.trajectory_bonds.append(float(coord2[1]))
+                self.trajectory_bonds.append(float(coord2[2]))
+                
+                
+                
+                
+                self.bonds_trajectory_colors.append(atom1.color[0])        
+                self.bonds_trajectory_colors.append(atom1.color[1])        
+                self.bonds_trajectory_colors.append(atom1.color[2])  
+                
+                self.bonds_trajectory_colors.append(atom1.color[0])        
+                self.bonds_trajectory_colors.append(atom1.color[1])        
+                self.bonds_trajectory_colors.append(atom1.color[2])
+                
+                self.bonds_trajectory_colors.append(atom2.color[0])        
+                self.bonds_trajectory_colors.append(atom2.color[1])        
+                self.bonds_trajectory_colors.append(atom2.color[2])
+                
+                self.bonds_trajectory_colors.append(atom2.color[0])        
+                self.bonds_trajectory_colors.append(atom2.color[1])        
+                self.bonds_trajectory_colors.append(atom2.color[2])
+                
+                #midcoord = [
+                #        (coord1[0] + coord2[0])/2,	   
+                #        (coord1[1] + coord2[1])/2,
+                #        (coord1[2] + coord2[2])/2,
+                #        ]
+                #
+                #glPushMatrix()		
+                #glPushName(atom1.atom_id) 
+                #glColor3f(atom1.color[0], 
+                #          atom1.color[1], 
+                #      atom1.color[2])
+                #
+                #
+                #glBegin(GL_LINES)
+                #glVertex3f(coord1[0],coord1[1],coord1[2])
+                #glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+                #glEnd()
+                #glPopName()
+                #glPopMatrix()
+                #
+                #
+                #glPushMatrix()		
+                #glPushName(atom2.atom_id) 
+                #glColor3f (atom2.color[0], 
+                #           atom2.color[1], 
+                #       atom2.color[2])
+                #
+                #glBegin(GL_LINES)
+                #glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+                #glVertex3f(coord2[0],coord2[1],coord2[2])
+                #
+                #glEnd()
+                #glPopName()
+                #glPopMatrix()
+
+                
+        self.trajectory_bonds       = np.array(self.trajectory_bonds,        dtype=np.float32)
+        self.bonds_trajectory_colors= np.array(self.bonds_trajectory_colors, dtype=np.float32)
+        #self.VBOID    = GLuint(1)
+
+    def generate_trajectory_coordinates (self):
+        """ Function doc """
+        self.trajectory_coordinates  = []        
+        self.trajectory_colors       = []        
+        self.unique_colors_colors_id = [] 
+        
+        
+        for atom in self.atoms:
+            #if atom.dots:
+            #-------------------------------------------------------
+            #                        D O T S
+            #-------------------------------------------------------
+            coord1   = self.frames[0][atom.index-1]
+            self.trajectory_coordinates.append(float(coord1[0]))
+            self.trajectory_coordinates.append(float(coord1[1]))
+            self.trajectory_coordinates.append(float(coord1[2]))
+            
+            self.trajectory_colors.append(atom.color[0])        
+            self.trajectory_colors.append(atom.color[1])        
+            self.trajectory_colors.append(atom.color[2])        
+            
+            i = atom.atom_id
+            r = (i & 0x000000FF) >>  0
+            g = (i & 0x0000FF00) >>  8
+            b = (i & 0x00FF0000) >> 16
+            
+            
+            self.unique_colors_colors_id.append(r/255.0)
+            self.unique_colors_colors_id.append(g/255.0)
+            self.unique_colors_colors_id.append(b/255.0)
+        
+        self.trajectory_coordinates  = np.array(self.trajectory_coordinates , dtype=np.float32)
+        self.trajectory_colors       = np.array(self.trajectory_colors      , dtype=np.float32)
+        self.unique_colors_colors_id = np.array(self.unique_colors_colors_id, dtype=np.float32)
+
+        #self.VBOID    = GLuint(1)
+
 
 class Chain:
     """ Class doc """

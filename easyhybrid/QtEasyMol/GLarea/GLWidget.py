@@ -761,7 +761,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         frame = self.frame
         #glPointSize(self.scale_zoom)# *self.scale_zoom
         
-        #self.load_mol()
+        self.load_mol()
         
         for Vobject in self.EMSession.Vobjects:    
             if Vobject.actived:   
@@ -872,8 +872,19 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
     def mousePressEvent(self, event):
         """ 
         """
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
         self.mouse_x = event.x()
         self.mouse_y = event.y()
+        
+        
+        pos = [self.mouse_x, self.height - self.mouse_y] 
+        
+        #color = glReadPixelsf(self.mouse_x, self.height - self.mouse_y, 1, 1, GL_RGB, GL_INT)
+        #print ('aqui ohhh --------->',pos[0], pos[1], color,'<---------')
+        
+        self.draw_dots_selection_test(pos)
+        
+        
         if (event.button() == QtCore.Qt.LeftButton):
             self.mouse_rotate = True
             #self.pos_mouse[0] = float(event.x())
@@ -899,6 +910,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         """
         dx = float(event.x()) - self.mouse_x
         dy = float(event.y()) - self.mouse_y
+
         if ((dx == 0) and (dy == 0)):
             return
         self.mouse_x = float(event.x())
@@ -1199,6 +1211,48 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         crd_xyz = -1 * np.mat(modelview[:3,:3]) * np.mat(modelview[3,:3]).T
         return crd_xyz.A1
 
+
+    def draw_dots_selection_test(self, pos):
+        """
+            !!!  This fuction is called only to test new GL features  !!!  
+            
+            Loads the data (if is any) or replace it if new data is given.
+            This is the core of the representations, and need to be more
+            efficient.
+        """
+        
+        pass
+        #'''
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+        glDisable(GL_LIGHT0)
+        glDisable(GL_LIGHTING)
+        glDisable(GL_COLOR_MATERIAL)
+        glEnable (GL_DEPTH_TEST)
+        glEnable (GL_LINE_SMOOTH)
+        #glColor3f (255,0,0)
+        
+        if self.EMSession.Vobjects[0]:
+            glPointSize(20)
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glEnableClientState(GL_COLOR_ARRAY)
+            
+            glVertexPointer(3, GL_FLOAT, 0 , self.EMSession.Vobjects[0].trajectory_coordinates)
+            glColorPointer (3, GL_FLOAT, 0 , self.EMSession.Vobjects[0].unique_colors_colors_id)
+            glDrawArrays(GL_POINTS, 0, int((len(self.EMSession.Vobjects[0].trajectory_coordinates)/3)))
+            
+            glDisableClientState(GL_VERTEX_ARRAY)
+            glDisableClientState(GL_COLOR_ARRAY)
+            
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+            #color = glReadPixelsf(pos[0], pos[1], 1, 1, GL_RGB, GL_FLOAT)
+            data = glReadPixels(pos[0], pos[1], 1, 1, GL_RGBA, GL_UNSIGNED_BYTE)
+            
+            pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
+            print ('aqui ohhh --------->',pos[0], pos[1], data, pickedID,'<---------')
+            
+
+
+
     def load_mol(self, data=None):
         """
             !!!  This fuction is called only to test new GL features  !!!  
@@ -1209,66 +1263,79 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         """
         
         pass
-        '''
+        #'''
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+        glDisable(GL_LIGHT0)
+        glDisable(GL_LIGHTING)
+        glDisable(GL_COLOR_MATERIAL)
+        glEnable (GL_DEPTH_TEST)
+        glEnable (GL_LINE_SMOOTH)
+        
+        
+        if self.EMSession.Vobjects[0]:
+            glPointSize(250/self.z_far)
+            glEnableClientState(GL_VERTEX_ARRAY)
+            #glEnableClientState(GL_COLOR_ARRAY)
+            
+            glVertexPointer(3, GL_FLOAT, 0 , self.EMSession.Vobjects[0].trajectory_coordinates)
+            #glColorPointer (3, GL_FLOAT, 0 , self.EMSession.Vobjects[0].trajectory_colors)
+            glDrawArrays(GL_POINTS, 0, int((len(self.EMSession.Vobjects[0].trajectory_coordinates)/3)))
+            
+            glDisableClientState(GL_VERTEX_ARRAY)
+            #glDisableClientState(GL_COLOR_ARRAY)
+            
+            #lines
+            glLineWidth(100/self.z_far)
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glEnableClientState(GL_COLOR_ARRAY)
+            
+            glVertexPointer(3, GL_FLOAT, 0 , self.EMSession.Vobjects[0].trajectory_bonds)
+            glColorPointer (3, GL_FLOAT, 0 , self.EMSession.Vobjects[0].bonds_trajectory_colors)
+            glDrawArrays(GL_LINES, 0, int((len(self.EMSession.Vobjects[0].trajectory_bonds)/3)))
+            
+            glDisableClientState(GL_VERTEX_ARRAY)
+            glDisableClientState(GL_COLOR_ARRAY)
+            
+            
+            #vertices = [-0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
+            #             0.5, -0.5, 0.0, 0.0, 1.0, 0.0,                    
+            #             0.0,  0.5, 0.0, 0.0, 0.0, 1.0,
+            #            -0.9, -0.2,  .0, 0.0, 0.0, 1.0,
+            #             0.2, -0.5,  .5, 0.0, 1.0, 0.0,
+            #            -0.3,  0.7, 0.0, 1.0, 0.0, 0.0,
+            #        ]        
+            
+            
+            
+            
+            
+            '''
+            #vertices = np.array(vertices, dtype=np.float32)
+            #VBOID    = GLuint(1)
+            #print (VBOID)
 
-        #vertices =  [1.513671  ,   2.233656 , -0.529123, 1.0, 0.0, 0.0,
-        #             2.636168  ,   3.754886 ,  0.238105, 0.0, 1.0, 0.0,
-        #             1.574142  ,   2.556799 , -2.583256, 0.0, 0.0, 1.0,
-        #             2.785456  ,  -0.239995 ,  0.457314, 0.0, 0.0, 1.0,
-        #             2.713647  ,  -0.236216 ,  2.469872, 0.0, 1.0, 0.0,
-        #             4.777228  ,  -0.257003 , -0.173855, 1.0, 0.0, 0.0,
-        #             1.165961  ,  -2.494438 , -0.389284, 1.0, 0.0, 0.0,
-        #             1.976654  ,  -4.223538 ,  0.179524, 0.0, 1.0, 0.0,
-        #             1.379500  ,  -2.724985 , -2.371606, 0.0, 0.0, 1.0,
-        #             -1.564693 ,  -2.254443 ,  0.393063, 0.0, 0.0, 1.0,
-        #             -1.583591 ,  -2.577586 ,  2.324363, 0.0, 1.0, 0.0,
-        #             -2.772228 ,  -3.762445 , -0.200311, 1.0, 0.0, 0.0,
-        #             -2.660734 ,   0.232436 , -0.447865, 1.0, 0.0, 0.0,
-        #             -4.484320 ,   0.402512 ,  0.285349, 0.0, 1.0, 0.0,
-        #             -2.823251 ,   0.173855 , -2.473652, 0.0, 0.0, 1.0,
-        #             -1.245330 ,   2.520895 ,  0.506447, 0.0, 0.0, 1.0,
-        #             -1.152733 ,   2.700419 ,  2.473652, 0.0, 1.0, 0.0,
-        #             -2.197751 ,   4.234876 , -0.073699, 0.0, 1.0, 0.0,]
-        
-        
-        #vertices = [-0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
-        #             0.5, -0.5, 0.0, 0.0, 1.0, 0.0,                    
-        #             0.0,  0.5, 0.0, 0.0, 0.0, 1.0,
-        #            -0.9, -0.2,  .0, 0.0, 0.0, 1.0,
-        #             0.2, -0.5,  .5, 0.0, 1.0, 0.0,
-        #            -0.3,  0.7, 0.0, 1.0, 0.0, 0.0,
-        #        ]        
-        
-        
-        
-        
-        
-        
-        #vertices = np.array(vertices, dtype=np.float32)
-        #VBOID    = GLuint(1)
-        #print (VBOID)
+            #glPointSize(100/self.z_far)
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glEnableClientState(GL_COLOR_ARRAY)
 
-        
-        glEnableClientState(GL_VERTEX_ARRAY)
-        #glEnableClientState(GL_COLOR_ARRAY)
+                        #   !            ^number of bytes
+            glVertexPointer(3, GL_FLOAT, 0 , self.vertices)
+            glColorPointer (3, GL_FLOAT, 0 , self.vertices)
 
-                    #   !            ^number of bytes
-        glVertexPointer(3, GL_FLOAT, 0 , self.vertices)
-       # glColorPointer (3, GL_FLOAT, 0 , self.vertices)
+            #glDrawArrays(GL_POINTS, 0, 6)
+            glDrawArrays(GL_POINTS, 0, int((len(self.vertices)/3)))
+            #glDrawArrays(GL_LINE_STRIP, 0, int((len(self.vertices)/3)))
 
-        #glDrawArrays(GL_POINTS, 0, 6)
-        glDrawArrays(GL_POINTS, 0, int((len(self.vertices)/3)))
-        #glDrawArrays(GL_TRIANGLES, 0, 18)
-        #glDrawArrays(GL_LINE_STRIP, 0, 3)
-        
-        glDisableClientState(GL_VERTEX_ARRAY)
-        #glDisableClientState(GL_COLOR_ARRAY)
-        
-        #glDisableClientState(GL_COLOR_ARRAY)
-        #glutSwapBuffers() #        
-        '''
-        
+            #glDrawArrays(GL_TRIANGLES, 0, 18)
+            #glDrawArrays(GL_LINE_STRIP, 0, 3)
+            
+            glDisableClientState(GL_VERTEX_ARRAY)
+            glDisableClientState(GL_COLOR_ARRAY)
+            
+            #glDisableClientState(GL_COLOR_ARRAY)
+            #glutSwapBuffers() #        
+            #'''
+            
 
     
     def draw_dots(self, Vobject = None, selection = True):
