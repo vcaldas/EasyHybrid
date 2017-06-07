@@ -405,7 +405,7 @@ def draw_text(text="hola", x=0, y=0):
     glEnable( GL_LIGHTING )
     glMatrixMode( GL_MODELVIEW )
 
-def draw_cartoon(angle, vec, length, color=[0.6, 0.8, 0.3]):
+def draw_helix(angle, vec, length, atom, color=[0.6, 0.8, 0.3]):
     """ Function doc
     """
     glEnable(GL_LIGHT0)
@@ -414,10 +414,31 @@ def draw_cartoon(angle, vec, length, color=[0.6, 0.8, 0.3]):
     glEnable(GL_DEPTH_TEST)
     
     gleSetJoinStyle(TUBE_NORM_EDGE | TUBE_JN_ANGLE | TUBE_JN_CAP)
-    glColor3f(color[0], color[1], color[2])
+    glColor3f(atom.color[0], atom.color[1], atom.color[2])
     glPushMatrix()
+    glTranslatef(atom.pos[0], atom.pos[1], atom.pos[2])
     glRotate(angle, vec[0], vec[1], vec[2])
-    gleToroid (0.25, 1.5, 0.0, 0.0, 2.5, cartoon_mat, None, 0.0, length)
+    #gleToroid (0.25, 1.5, 0.0, 0.0, 2.5, cartoon_mat, None, 0.0, length)
+    
+    if length == 5.0:
+        gleToroid(0.25, 0.1, 1.38, 0.0, 2.5, cartoon_mat, None, 0.0, 360)
+        gleToroid(0.25, 1.5, -1.38, 2.5, 2.5, cartoon_mat, None, 0.0, 360)
+    elif length > 5.0:
+        gleToroid(0.25, 0.1, 1.38, 0.0, 2.5, cartoon_mat, None, 0.0, 360)
+        # The 'ang' variable is the angle length for the toroid to be
+        # constructed.
+        ang = (length-5.0)*360.0/2.5
+        gleToroid(0.25, 1.5, 0.0, 2.5, 2.5, cartoon_mat, None, 0.0, ang)
+        # Then we change the value of 'ang' to know where the end part of
+        # the helix will be constructed, i.e. in which point of the helix
+        # the final cap begins.
+        ang = round(ang, 6)
+        while ang >= 360.0:
+            ang -= 360.0
+        if ang > 98.571428 and ang <= 278.571429:
+            gleToroid(0.25, 1.5, 1.38, length-2.5, -2.5, cartoon_mat, None, ang, 360)
+        else:# (ang >= 0.0 and ang <= 98.571428) or (ang > 278.571429 and ang < 360.0):
+            gleToroid(0.25, 1.5, -1.38, length-2.5, 2.5, cartoon_mat, None, ang, 360)
     
     glPopMatrix()
     glFlush()

@@ -63,6 +63,8 @@ class DrawArea(QtOpenGL.QGLWidget):
         self.frame_i = 0
         self.LINES = self.DOTS = self.BALL_STICK = self.VDW = self.PRETTY_VDW = self.RIBBON = self.SPHERES = self.WIRES = self.SELECTION = self.MODIFIED = False
         self.gl_ball_stick_list = self.gl_point_list = self.gl_lines_list = self.gl_pretty_vdw_list = self.gl_ribbon_list =  self.gl_sphere_list = self.gl_vdw_list = self.gl_wires_list = None
+        self.gl_crt_li = None
+        self.CARTOON = False
     
     def initializeGL(self):
         """ Inside the realize function, you should put all you OpenGL
@@ -146,47 +148,13 @@ class DrawArea(QtOpenGL.QGLWidget):
             #glCallList(self.gl_vdw_list[self.frame_i])
         #if self.PRETTY_VDW:
             #glCallList(self.gl_pretty_vdw_list[self.frame_i])
-        #if self.RIBBON:
-            #glCallList(self.gl_ribbon_list[self.frame_i])
+        if self.RIBBON:
+            glCallList(self.gl_ribbon_list[self.frame_i])
         if self.SPHERES:
             glCallList(self.gl_sphere_list[self.frame_i])
-        
-        opt_f = [[0.68,2.0,0.0],[-0.68,0.0,0.0]]
-        opt_g = [[0.0,0.0,0.0],[0.0,0.0,0.0]]
-        
-        screw = [[-5,2.5], [-2.5,2.5], [-2.5,5], [2.5,5], [2.5,2.5], [5,2.5], [5,-2.5], [2.5,-2.5], [2.5,-5], [-2.5,-5], [-2.5,-2.5], [-5,-2.5]]
-        screw_n = [[1,0], [0,1], [1,0], [0,1], [1,0], [0,1], [1,0], [0,1], [1,0], [0,1], [1,0], [0,1]]
-        up = [0.0,1.0,0.0]
-        
-        elipse = [[ 0.282135,-5.940000], [ 0.397995,-5.880000],
-                  [ 0.486210,-5.820000], [ 1.322876,-4.500000],
-                  [ 1.732051,-3.000000], [ 1.936492,-1.500000],
-                  [ 2.000000, 0.000000], [ 1.936492, 1.500000],
-                  [ 1.732051, 3.000000], [ 1.322876, 4.500000],
-                  [ 0.486210, 5.820000], [ 0.397995, 5.880000],
-                  [ 0.282135, 5.940000], [-0.282135, 5.940000],
-                  [-0.397995, 5.880000], [-0.486210, 5.820000],
-                  [-1.322876, 4.500000], [-1.732051, 3.000000],
-                  [-1.936492, 1.500000], [-2.000000, 0.000000],
-                  [-1.936492,-1.500000], [-1.732051,-3.000000],
-                  [-1.322876,-4.500000], [-0.486210,-5.820000],
-                  [-0.397995,-5.880000], [-0.282135,-5.940000],
-                  [ 0.282135,-5.940000]]
-        
-        cube = [[-2,-1], [-2,1], [2,1], [2,-1], [-2,-1]]
-        cube_n = [[1,0], [0,1], [1,0], [0,1], [1,0]]
-        rep.draw_cartoon(90, [0,1,0], 720)
-        #gleSetJoinStyle (TUBE_NORM_EDGE | TUBE_JN_ANGLE | TUBE_JN_CAP)
-        #glColor3f (0.6, 0.8, 0.3)
-        #glPushMatrix ()
-        #glRotate(90,0,1,0)
-        ##glTranslatef (-10.0, 0.0, 0.0)
-        ##gleHelicoid (1.0, 6.0, 0.0, -3.0, 15.0, opt_f, opt_f, 0.0, 1080.0)
-        #gleToroid (0.25, 1.5, 0.0, 0.0, 2.5, opt_f, None, 0.0, 720.0)
-        ##gleSpiral(elipse, None, up, 9.0, 0.0, -12.0, 36.0, None, None, 0.0, 180.0)
-        ##gleSpiral(elipse, elipse, up, 10.0, 0.0, 0.0, 25.0, None, None, 0.0, 720.0)
-        ##gleScrew(screw, screw_n, up, -12.0, 12.0, 360.0)
-        #glPopMatrix ()
+        #rep.draw_helix(90, [0,1,0], 12.35)
+        if self.CARTOON:
+            glCallList(self.gl_crt_li)
     
     def minimumSizeHint(self):
         return QtCore.QSize(400, 400)
@@ -522,16 +490,20 @@ class DrawArea(QtOpenGL.QGLWidget):
         if (event.key() == QtCore.Qt.Key_Escape):
             self.close()
         if (event.key() == QtCore.Qt.Key_B):
-            self.pressed_B()
+            self.pressed_b()
         if (event.key() == QtCore.Qt.Key_S):
             self.pressed_s()
+        if (event.key() == QtCore.Qt.Key_R):
+            self.pressed_r()
+        if (event.key() == QtCore.Qt.Key_C):
+            self.pressed_c()
     
     def pressed_Key_Escape(self):
         """ Turn on/off Ball-Stick representation.
         """
         self.close()
     
-    def pressed_B(self):
+    def pressed_b(self):
         """ Turn on/off Ball-Stick representation.
         """
         self.BALL_STICK = not self.BALL_STICK
@@ -593,6 +565,45 @@ class DrawArea(QtOpenGL.QGLWidget):
         self.WIRES = not self.WIRES
         self.draw_wires()
         self.updateGL()
+        return True
+    
+    def pressed_c(self, pdb_resids=20):
+        """ Test Cartoon
+        """
+        import numpy as np, operations as op
+        cart = [(1,'N'), (2,'H'), (3,'H'), (4,'H'), (5,'H'),
+                (6,'H'), (7,'H'), (8,'H'), (9,'N'), (10,'N'),
+                (11,'N'), (12,'N'), (13,'N'), (14,'N'), (15,'N'),
+                (16,'N'), (17,'N'), (18,'N'), (19,'N'), (20,'N')]
+        frame = self.data[0]
+        i = 0
+        cartoons = []
+        while i < len(frame.ribbons):
+            if cart[i][1] == 'N':
+                temp = (0, frame.ribbons[i])
+                cartoons.append(temp)
+                i += 1
+            elif cart[i][1] == 'H':
+                atom1 = frame.ribbons[i][0]
+                while cart[i][1] == 'H':
+                    i += 1
+                atom2 = frame.ribbons[i][0]
+                arr1 = np.array([0, 0, 1])
+                arr2 = op.unit_vector(atom2.pos - atom1.pos)
+                angle = op.get_angle(arr1, arr2)
+                vec_o = np.cross(arr1, arr2)
+                length = op.get_euclidean(atom1.pos, atom2.pos)
+                temp = (1,(atom1, length, angle, vec_o))
+                cartoons.append(temp)
+        self.gl_crt_li = glGenLists(1)
+        glNewList(self.gl_crt_li, GL_COMPILE)
+        for car in cartoons:
+            if car[0] == 0:
+                rep.draw_ribbon(car[1][0], car[1][1], car[1][2], car[1][3])
+            elif car[0] == 1:
+                rep.draw_helix(car[1][2], car[1][3], car[1][1], car[1][0])
+        glEndList()
+        self.CARTOON = True
         return True
     
     def draw_ball_stick(self):
