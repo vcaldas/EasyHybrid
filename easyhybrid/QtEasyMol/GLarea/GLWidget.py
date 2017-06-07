@@ -1250,7 +1250,11 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
             pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
             print ('aqui ohhh --------->',pos[0], pos[1], data, pickedID,'<---------')
             
-
+            if pickedID == 5000268:
+                pass
+            else:
+                atom = self.EMSession.Vobjects[0].atom_unique_id_dic[pickedID]
+                print(atom.atom_id, atom.name, atom.index)
 
 
     def load_mol(self, data=None):

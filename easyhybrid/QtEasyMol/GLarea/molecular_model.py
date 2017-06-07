@@ -376,7 +376,7 @@ class Vobject:
         self.trajectory_coordinates  = []        
         self.trajectory_colors       = []        
         self.unique_colors_colors_id = [] 
-        
+        self.atom_unique_id_dic      = {}
         
         for atom in self.atoms:
             #if atom.dots:
@@ -401,7 +401,10 @@ class Vobject:
             self.unique_colors_colors_id.append(r/255.0)
             self.unique_colors_colors_id.append(g/255.0)
             self.unique_colors_colors_id.append(b/255.0)
-        
+            
+            pickedID = r + g * 256 + b * 256*256
+            self.atom_unique_id_dic[pickedID] = atom
+            
         self.trajectory_coordinates  = np.array(self.trajectory_coordinates , dtype=np.float32)
         self.trajectory_colors       = np.array(self.trajectory_colors      , dtype=np.float32)
         self.unique_colors_colors_id = np.array(self.unique_colors_colors_id, dtype=np.float32)
