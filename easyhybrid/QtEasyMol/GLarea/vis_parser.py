@@ -25,23 +25,28 @@
 import GLarea.molecular_model as mm
 import os
 import numpy as np
-#import atom_types as atypes
 from pprint import pprint
-import random
+import time
+import multiprocessing
 
 
-def new_parse_pdb (infile = None, counter = 0, atom_dic_id = None):
+def parse_pdb (infile = None, counter = 0, atom_dic_id = None, Vobject_id = None):
     """ Function doc """
+    
+    print ('\nstarting pdb parser')
+    initial          = time.time()
+    
     with open(infile, 'r') as pdb_file:
 
         label = os.path.basename(infile)
         Vobject = mm.Vobject(label = label)
-
-        atoms    = []
+        pdb_file_lines = pdb_file.readlines()
         
-        index = 1
-        frame        = []     
-        for line in pdb_file:
+        atoms = []
+        frame = []     
+        #for line in pdb_file:
+        
+        for line in pdb_file_lines:
             if line[:4] == 'ATOM' or line[:6] == 'HETATM':
                 at_name = line[12:16].strip()
                 #at_index = int(line[6:11])
@@ -50,19 +55,23 @@ def new_parse_pdb (infile = None, counter = 0, atom_dic_id = None):
                 at_res_n = line[17:20].strip()
                 at_ch    = line[21]             
                 
-		atm      = mm.Atom(name    =  at_name, 
-                              index        =  index, 
-                              pos          =  at_pos, 
-                              resi         =  at_res_i, 
-                              resn         =  at_res_n, 
-                              chain        =  at_ch, 
-                              atom_id      =  counter, 
-                              Vobject      =  Vobject,
-                              )
-                index   += 1
-		counter += 1
-		Vobject.atoms.append(atm)
+                atom      = mm.Atom(name    =  at_name, 
+                                  #index        =  index, 
+                                  pos          =  at_pos, 
+                                  resi         =  at_res_i, 
+                                  resn         =  at_res_n, 
+                                  chain        =  at_ch, 
+                                  #atom_id      =  counter, 
+                                  Vobject      =  Vobject,
+                                  )
+                Vobject.atoms.append(atom)
     
+            if 'ENDMDL' in line:
+                break
+                
+    atom_dic_id = Vobject.generate_chain_structure(counter = counter, atom_dic_id = atom_dic_id)
+    final = time.time() 
+    print ('ending pdb parser: ', final - initial, '\n')
     return Vobject, atom_dic_id
 
 
@@ -214,7 +223,7 @@ def parse_xyz(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         return Vobject, atom_dic_id
 
 
-def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None ):
+def parse_pdb_old (infile = None, counter = 0, atom_dic_id = None, Vobject_id = None ):
     """ Function doc """
     #frames = []
     with open(infile, 'r') as pdb_file:
@@ -241,6 +250,8 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         parser_resn  = None
         
         for line in pdb_file:
+            
+            
             if line[:4] == 'ATOM' or line[:6] == 'HETATM':
                 
 
@@ -330,24 +341,7 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
                 sum_y += atm.pos[1]
                 sum_z += atm.pos[2]
                     
-                    
-                #res.atoms[at_index] = atm
-                
-                #if not res.atoms.has_key(at_index):
-                #    res.atoms[at_index] = atm
-                #    atoms.append(atm)
-                
-                #elif line[:6] == 'ENDMDL':
-                #
-                #    Vobject.chains = chains_m
-                #    #frame.atoms = atoms
-                #    #frame.load_bonds()
-                #    #frame.load_ribbons()
-                #    #frames.append(frame)
-                #    #frame = mm.Frame()
-                #    #chains_m = {}
-                #    #atoms = []
-                ##print atoms
+
         
         # add a new frame to frames list
         Vobject.frames.append(frame)
@@ -373,7 +367,7 @@ def parse_pdb(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None 
         return Vobject, atom_dic_id
 
 
-def parse_pdb2(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None ):
+def parse_pdb2_old(infile = None, counter = 0, atom_dic_id = None, Vobject_id = None ):
     """ Function doc """
     import time
     

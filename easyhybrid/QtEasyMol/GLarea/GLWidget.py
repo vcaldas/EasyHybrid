@@ -24,6 +24,7 @@ import GLarea.operations as op
 import GLarea.representations as rep
 from GLarea.vector_math import Vector
 
+import multiprocessing
 
 class glMenu:
     """ Class doc """
@@ -1515,11 +1516,15 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
                     self.gl_sphere_list.append(gl_sp_li)
             return True    
     #'''
-    def draw_ball_and_stick (self, Vobject = None , selection = None):
+    
+    
+
+    
+    def draw_ball_and_stick_parallel (self, Vobject = None , selection = None):
         """ Draws all the elements for Ball-Stick representation.
         """
-        Vobject.list_ball_and_stick =[]
-        sphere_quality = 15
+        Vobject.list_ball_and_stick =[] 
+        
         for frame in Vobject.frames:
             glEnable(GL_LIGHT0)
             glEnable(GL_LIGHTING)
@@ -1529,9 +1534,109 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
             gl_bs_li = glGenLists(self.gl_lists_counter)
             glNewList(gl_bs_li, GL_COMPILE_AND_EXECUTE)
             
+            self.current_frame = frame
+            
+            #with multiprocessing.Pool(8) as p:
+            #    p.map(_create_atom_ball, Vobject.atoms)
+            
+            
             for atom in Vobject.atoms:
                 if atom.ball_and_stick:
-                    #self.PointSize =20
+                    #-------------------------------------------------------
+                    #                        B A L L 
+                    #-------------------------------------------------------
+                    glPushMatrix()                
+                    glPushName(atom.atom_id)
+                    coord1   = frame[atom.index-1]
+                    glTranslate(coord1[0],   coord1[1],   coord1[2])
+                    glColor3f(atom.color[0], atom.color[1], atom.color[2])
+                    glutSolidSphere(atom.radius *self.EMSession.gl_parameters['ball_and_sick_sphere_scale'], sphere_quality, sphere_quality)
+                    glPopMatrix()
+                    glPopName()
+            
+            
+            for bond in Vobject.index_bonds:
+                
+                atom1    = Vobject.atoms[bond[0]]
+                atom2    = Vobject.atoms[bond[1]]
+
+                if atom1.ball_and_stick  and atom2.ball_and_stick:
+                    coord1   = frame[bond[0]]
+                    coord2   = frame[bond[1]]
+
+                    midcoord = [
+                               (coord1[0] + coord2[0])/2,	   
+                               (coord1[1] + coord2[1])/2,
+                               (coord1[2] + coord2[2])/2,
+                               ]
+
+                    #-------------------------------------------------------
+                    #                        S T I C K S
+                    #-------------------------------------------------------
+                    #rep.draw_stick_bond(atom1 = atom1, atom2 = atom2, radius = 2)
+                    
+                    v = Vector()
+                    #base of cylinder is at the origin, the top is in the positive z axis
+                    radius = 0.07
+                    a = coord1
+                    b = coord2
+                    
+                    axis_start = [0, 0, .1]
+                    axis_end = v.subtract(a, b)
+
+                    #find angle between the starting and ending axis
+                    angle = v.angle(axis_start, axis_end)
+                    
+                    # determina the axis of rotation of the angle
+                    axis_rotation = v.crossproduct (axis_start, axis_end)
+
+                    #calculate the distance from a to b
+                    length = v.mag(axis_end)
+                    glColor3f(0.9, 0.9, 0.9)
+
+                    # set the bottom  and the top radius to be the same thing
+                    radius_bottom = radius
+                    radius_top    = radius
+
+                    # draw the bond ( use glTranslate beofre using glRotate)
+                    cyl = gluNewQuadric()
+                    glPushMatrix()
+                    glTranslate(b[0], b[1], b[2])
+                    glRotate(angle, axis_rotation[0], axis_rotation[1], axis_rotation[2])
+                    
+                    gluCylinder(cyl, radius_bottom *self.EMSession.gl_parameters['stick_scale'], 
+                                     radius_top*self.EMSession.gl_parameters['stick_scale'], 
+                                     length, 15, 15)
+                    glPopMatrix()
+                    #-------------------------------------------------------
+
+            glEndList()
+            Vobject.list_ball_and_stick.append(gl_bs_li)
+            self.gl_lists_counter += 1 
+        return True
+
+        
+        
+    
+    def draw_ball_and_stick (self, Vobject = None , selection = None):
+        """ Draws all the elements for Ball-Stick representation.
+        """
+        Vobject.list_ball_and_stick =[] 
+        sphere_quality = 15
+        
+        for frame in Vobject.frames:
+            glEnable(GL_LIGHT0)
+            glEnable(GL_LIGHTING)
+            glEnable(GL_COLOR_MATERIAL)
+            glEnable(GL_DEPTH_TEST)
+           
+            gl_bs_li = glGenLists(self.gl_lists_counter)
+            glNewList(gl_bs_li, GL_COMPILE_AND_EXECUTE)
+            
+            self.current_frame = frame
+            
+            for atom in Vobject.atoms:
+                if atom.ball_and_stick:
                     #-------------------------------------------------------
                     #                        B A L L 
                     #-------------------------------------------------------
@@ -1715,8 +1820,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
 
 
 
-
-
+        
 
 
 

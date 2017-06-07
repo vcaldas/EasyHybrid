@@ -28,9 +28,10 @@
 import numpy as np
 import time
 
-from multiprocessing import Pool
+#from multiprocessing import Pool
 import GLarea.atom_types as at
 import GLarea.cfunctions as cfunctions
+import multiprocessing
 
 
 
@@ -40,7 +41,7 @@ class Vobject:
     
     def __init__ (self, chains=None, bonds=None, mass_center=None, label = None):
         """ Class initialiser """
-        
+        #print( 'label:', label)
         self.actived           = True       
         
         """   D O T S   """
@@ -95,11 +96,19 @@ class Vobject:
 
         self.Type  = 'molecule'
         
+        
+      
+        
         if label:
             self.label = self._get_label(label)
+            self.name = self._get_label(label)
         else:
-            label = 'unkown'
+            self.label = 'unkown'
+            self.name  = 'unkown'
 
+        
+        
+        
         self.chains       = {}
 
         self.bonds        = []
@@ -108,19 +117,106 @@ class Vobject:
         self.mass_center  = np.array([0.0, 0.0, 0.0])
 
         self.frames       = []
+        self.frame_energy = [] 
+        
         self.atoms        = []
         self.residues     = []
 
         #self.coords       = []
         pass  
 
+    
+
+    
+    def generate_chain_structure (self, counter = 0, atom_dic_id = None):
+        """ Function doc """
+        print ('\ngenerate_chain_structure starting')
+        initial          = time.time()
+        
+        parser_resi  = None
+        parser_resn  = None
+        chains_m     = {}
+
+        sum_x   = 0
+        sum_y   = 0
+        sum_z   = 0
+        frame   = []
+        
+        index   = 1
+        
+        for atom in self.atoms:
+        
+            #self.atoms[self.atoms.index(atom)].index   = index
+            #self.atoms[self.atoms.index(atom)].atom_id = counter
+            #print  (self.atoms[self.atoms.index(atom)].atom_id)
+            atom.index   = index
+            atom.atom_id = counter
+            
+            if atom.chain in self.chains.keys():
+                ch = self.chains[atom.chain]
+                #print 'existe'
+            
+            else:
+                ch = Chain(name = atom.chain, label = 'UNK')
+                self.chains[atom.chain] = ch
+                #print 'n existe'
+
+            if atom.resi == parser_resi:# and at_res_n == parser_resn:
+                atom.residue = ch.residues[-1]
+                ch.residues[-1].atoms.append(atom)
+                frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
+
+            else:
+                residue = Residue(name=atom.resn, index=atom.resi, chain=atom.chain)
+                atom.residue     = residue
+                residue.atoms.append(atom)
+                
+                ch.residues.append(residue)
+                frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
+                parser_resi  = atom.resi
+                parser_resn  = atom.resn
+
+
+            if atom.name == 'CA':
+                ch.backbone.append(atom)
+
+
+            if atom_dic_id is not None:
+                atom_dic_id[counter] = atom
+
+            sum_x += atom.pos[0]
+            sum_y += atom.pos[1]
+            sum_z += atom.pos[2]
+            index   +=1
+            counter +=1
+            
+        self.frames.append(frame)
+        total = len(self.atoms)
+        self.list_atom_lines          = [True] *total
+        self.list_atom_ribbons        = [False]*total
+        self.list_atom_dots           = [False]*total
+        self.list_atom_sticks         = [False]*total
+        self.list_atom_spheres        = [False]*total
+        self.list_atom_surface        = [False]*total
+        self.list_atom_ball_and_stick = [False]*total
+
+
+        self.mass_center[0] = sum_x / total
+        self.mass_center[1] = sum_y / total
+        self.mass_center[2] = sum_z / total
+        #print ('generate_chain_structure -> label:', self.label, self.name)
+        final = time.time() 
+        print ('generate_chain_structure end -  total time: ', final - initial, '\n')
+        return atom_dic_id
 
     def _get_label (self, label):
         """ Function doc """
+        #print( 'label:', label)
         self.label  = label.split('.')
         self.label  = self.label[0]
+        #print( 'label:', self.label)
 
-    def generete_atom_list (self):
+    def generate_atom_list (self):
         """ Function doc """
         bonds = []
         NDIM = 3 # number of dimensions
@@ -154,13 +250,12 @@ class Vobject:
     #'''
     def generate_bonds (self):
         """ Function doc """
-        print ('start')
+        print ('\ngenerate_bonds starting')
         initial          = time.time()
         self.index_bonds = cfunctions.C_generate_bonds3 (self.atoms)
-        print ('end')
         final = time.time() 
-        print (final - initial)
-    
+        print ('generate_bonds end -  total time: ', final - initial, '\n')
+
     '''
     def generate_bonds (self):
         """ Function doc """
@@ -191,7 +286,7 @@ class Chain:
         
         self.backbone = []
         self.name     = ''
-        self.label    = None
+        #self.label    = None
 
         
 class Residue:
