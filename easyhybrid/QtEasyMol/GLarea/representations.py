@@ -147,29 +147,29 @@ def draw_bond_line(atom, pos_end):
     glDisable(GL_COLOR_MATERIAL)
     glDisable(GL_DEPTH_TEST)
 
-def draw_dot(atom, point):
+def draw_dot(atom, point, dot_size):
     """
     """
     glMatrixMode(GL_MODELVIEW)
-    glDisable(GL_LIGHT0)
-    glDisable(GL_LIGHT1)
-    glDisable(GL_LIGHT2)
-    glDisable(GL_LIGHTING)
-    glEnable(GL_COLOR_MATERIAL)
-    glEnable(GL_DEPTH_TEST)
+    #glDisable(GL_LIGHT0)
+    #glDisable(GL_LIGHT1)
+    #glDisable(GL_LIGHT2)
+    #glDisable(GL_LIGHTING)
+    #glEnable(GL_COLOR_MATERIAL)
+    #glEnable(GL_DEPTH_TEST)
     glPushMatrix()
-    glPushName(atom.index)
+    #glPushName(atom.index)
     glColor3f(atom.color[0], atom.color[1], atom.color[2])
-    glPointSize(2)
+    glPointSize(dot_size)
     glBegin(GL_POINTS)
     glVertex3f(point[0], point[1], point[2])
     glEnd()
-    glPopName()
+    #glPopName()
     glPopMatrix()
-    glDisable(GL_LIGHT0)
-    glDisable(GL_LIGHTING)
-    glDisable(GL_COLOR_MATERIAL)
-    glDisable(GL_DEPTH_TEST)
+    #glDisable(GL_LIGHT0)
+    #glDisable(GL_LIGHTING)
+    #glDisable(GL_COLOR_MATERIAL)
+    #glDisable(GL_DEPTH_TEST)
 
 def draw_point(atom):
     """
@@ -407,7 +407,7 @@ def draw_picked(atom, slices=4):
     glEnable(GL_COLOR_MATERIAL)
     glDisable(GL_BLEND)
 
-def draw_selected(atom, coord = None, color = [0, 1, 1]):
+def draw_selected(atom = None, coord = None, color = [0, 1, 1], dot_size = 2):
     """ Draw a selection marker to an atom.
     """
     glMatrixMode(GL_MODELVIEW)
@@ -415,33 +415,15 @@ def draw_selected(atom, coord = None, color = [0, 1, 1]):
     glDisable(GL_LIGHTING)
     glDisable(GL_COLOR_MATERIAL)
     glDisable(GL_DEPTH_TEST)
+    
     glPushMatrix()
-    glPushName(atom.atom_id)
-    glPointSize(15)
-    #glColor3f(0, 1,1)
+    glPointSize(dot_size)
     glColor3f(color[0], color[1], color[2])
-
-    #glColor3ub(0, 100,100)
     glBegin(GL_POINTS)
     glVertex3f(coord[0], coord[1], coord[2])
     glEnd()
-    #glPointSize(15)
-    #glColor3ub(0, 222, 164)
-    #glBegin(GL_POINTS)
-    #glVertex3f(atom.pos[0], atom.pos[1], atom.pos[2])
-    #glEnd()
-    #glPointSize(10)
-    #glColor3ub(212, 23, 235)
-    #glBegin(GL_POINTS)
-    #glVertex3f(atom.pos[0], atom.pos[1], atom.pos[2])
-    #glEnd()
-    glPopName()
     glPopMatrix()
-    glFlush()
-    glEnable(GL_LIGHT0)
-    glEnable(GL_LIGHTING)
-    glEnable(GL_COLOR_MATERIAL)
-    glEnable(GL_DEPTH_TEST)
+
 
 def draw_numbers(atom, number, coord):
     """ Draw the number of the selected atom.
@@ -454,8 +436,8 @@ def draw_numbers(atom, number, coord):
     glDisable(GL_DEPTH_TEST)
     glEnable(GL_LINE_SMOOTH)
     glColor3f(sel_col_font[0], sel_col_font[1], sel_col_font[2])
-    glLineWidth(2)
-    glPointSize(2)
+    glLineWidth(4)
+    glPointSize(4)
     #glTranslate(float(atom.pos[0]), float(atom.pos[1]), float(atom.pos[2]))
     #glScalef(0.006, 0.006, 0.006)
     #glRotate(0, 0, 1, 0)

@@ -3,7 +3,7 @@
 #from libc.stdlib cimport malloc, free
 import cython 
 from cython.parallel import prange, parallel
-import multiprocessing as mp
+#import multiprocessing as mp
 import numpy as np
 
 '''

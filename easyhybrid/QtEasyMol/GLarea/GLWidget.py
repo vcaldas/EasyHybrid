@@ -654,10 +654,11 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         self.scroll = 0.5
         self.pick_radius = [10, 10]
         #self.pos_mouse = [None, None]
-        self.gl_backgrd = [0.0, 0.0, 0.0, 0.0]
-        self.gl_backgrd = [1.0, 1.0, 1.0, 1.0]
-        self.gl_backgrd = [0.5, 0.5, 0.5, 0.5]
-        self.gl_backgrd = [0.3, 0.3, 0.3, 0.3]
+        
+        #self.gl_backgrd = [0.0, 0.0, 0.0, 0.0]
+        #self.gl_backgrd = [1.0, 1.0, 1.0, 1.0]
+        #self.gl_backgrd = [0.5, 0.5, 0.5, 0.5]
+        #self.gl_backgrd = [0.3, 0.3, 0.3, 0.3]
 
         self.zrp          = np.array([0, 0, 0])
         
@@ -677,53 +678,92 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         #self.sel_resid = self.sel_chain = self.sel_mol = False
         
         self.gl_lists_counter = 1
-        self.EMSession = EMSession
+        self.EMSession  = EMSession
+        self.gl_backgrd = self.EMSession.gl_parameters['bg_color']
         self.generate_gL_actions()
 
         #self.gl_menu   = glMenu(glwidget = self, EMSession = EMSession)
         self.selected_atom_on_click = None
-    
-        #n = 0
-        #self.vertices =[]
-        #x =  100
-        #for h in range(-x,x):
-        #    for k in range(-x,x):
-        #        for l in range(-x,x):
-        #        
-        #            self.vertices.append(h)
-        #            self.vertices.append(k)
-        #            self.vertices.append(l)
-        #            #self.vertices.append(1)
-        #            #self.vertices.append(1)
-        #            #self.vertices.append(1)
-        #            n+=1
-        #print ('total number of points:', n)
-        #'''
-        #self.vertices =  [1.513671  ,   2.233656 , -0.529123, 1.0, 1.0, 0.0,
-        #                  2.636168  ,   3.754886 ,  0.238105, 1.0, 1.0, 0.0,
-        #                  1.574142  ,   2.556799 , -2.583256, 1.0, 1.0, 1.0,
-        #                  2.785456  ,  -0.239995 ,  0.457314, 1.0, 1.0, 1.0,
-        #                  2.713647  ,  -0.236216 ,  2.469872, 1.0, 1.0, 0.0,
-        #                  4.777228  ,  -0.257003 , -0.173855, 1.0, 1.0, 0.0,
-        #                  1.165961  ,  -2.494438 , -0.389284, 1.0, 1.0, 0.0,
-        #                  1.976654  ,  -4.223538 ,  0.179524, 1.0, 1.0, 0.0,
-        #                  1.379500  ,  -2.724985 , -2.371606, 1.0, 1.0, 1.0,
-        #                  -1.564693 ,  -2.254443 ,  0.393063, 1.0, 1.0, 1.0,
-        #                  -1.583591 ,  -2.577586 ,  2.324363, 1.0, 1.0, 0.0,
-        #                  -2.772228 ,  -3.762445 , -0.200311, 1.0, 1.0, 0.0,
-        #                  -2.660734 ,   0.232436 , -0.447865, 1.0, 1.0, 0.0,
-        #                  -4.484320 ,   0.402512 ,  0.285349, 1.0, 1.0, 0.0,
-        #                  -2.823251 ,   0.173855 , -2.473652, 1.0, 1.0, 1.0,
-        #                  -1.245330 ,   2.520895 ,  0.506447, 1.0, 1.0, 1.0,
-        #                  -1.152733 ,   2.700419 ,  2.473652, 1.0, 1.0, 0.0,
-        #                  -2.197751 ,   4.234876 , -0.073699, 1.0, 1.0, 0.0,]
-        #'''
-        #self.vertices = np.array(self.vertices, dtype=np.float32)
-        #self.VBOID    = GLuint(1)
+        
+        
+        
+        self.sphere = np.array(
+	  [ 0.850650787354,  0.525731086731,  0.000000000000,
+	   -0.850650787354,  0.525731086731,  0.000000000000,
+	   -0.850650787354, -0.525731086731,  0.000000000000,
+	    0.850650787354, -0.525731086731,  0.000000000000,
+	    0.525731086731,  0.000000000000,  0.850650787354,
+	    0.525731086731,  0.000000000000, -0.850650787354,
+	   -0.525731086731,  0.000000000000, -0.850650787354,
+	   -0.525731086731,  0.000000000000,  0.850650787354,
+	    0.000000000000,  0.850650787354,  0.525731086731,
+	    0.000000000000, -0.850650787354,  0.525731086731,
+	    0.000000000000, -0.850650787354, -0.525731086731,
+	    0.000000000000,  0.850650787354, -0.525731086731],dtype=np.float32)
+        
+        self.sphere_index = np.array(
+          [ 4,     8,     7,     4,     7,     9,     5,     6,    11,     5,
+           10,     6,     0,     4,     3,     0,     3,     5,     2,     7,
+            1,     2,     1,     6,     8,     0,    11,     8,    11,     1,
+            9,    10,     3,     9,     2,    10,     8,     4,     0,    11,
+            0,     5,     4,     9,     3,     5,     3,    10,     7,     8,
+            1,     6,     1,    11,     7,     2,     9,     6,    10,     2],dtype=np.uint16)
+        
+        
+        '''
+        #---------------------------------------------------------------
+        import random
+        self.element_list   = []
+        self.color_dot_list = []
 
-    
-    
-    
+        for i in range(0,3):
+            n = 0
+            self.vertices =[]
+
+            x =  10
+            for j in range(0,100000):
+                
+                h = random.uniform(-10,+10)
+                k = random.uniform(-10,+10)
+                l = random.uniform(-10,+10)
+
+                self.vertices.append(h)
+                self.vertices.append(k)
+                self.vertices.append(l)
+                
+                r = random.uniform(0,1)
+                g = random.uniform(0,1)
+                b = random.uniform(0,1)
+                
+                self.color_dot_list.append(r)
+                self.color_dot_list.append(g)
+                self.color_dot_list.append(b)
+
+                
+                
+                n+=1
+            
+            #for h in range(-x,x):
+            #    for k in range(-x,x):
+            #        for l in range(-x,x):
+            #            
+            #            h = random.uniform(10*i, )
+            #            self.vertices.append(h)
+            #            self.vertices.append(k)
+            #            self.vertices.append(l)
+            #            #self.vertices.append(1)
+            #            #self.vertices.append(1)
+            #            #self.vertices.append(1)
+            #            n+=1
+            print ('total number of points:', n)
+            self.vertices = np.array(self.vertices, dtype=np.float32)
+            self.VBOID    = GLuint(1)
+            self.element_list.append(self.vertices)
+        
+        self.color_dot_list = np.array(self.color_dot_list, dtype=np.float32)
+        print ('total number of lists:', len(self.element_list))
+        #'''
+        #---------------------------------------------------------------
     
         
     def initializeGL(self):
@@ -758,79 +798,113 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         """
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         glClearColor(self.gl_backgrd[0],self.gl_backgrd[1],self.gl_backgrd[2],self.gl_backgrd[3])
+        
+        
         frame = self.frame
         #glPointSize(self.scale_zoom)# *self.scale_zoom
         
         self.load_mol()
         
-        for Vobject in self.EMSession.Vobjects:    
-            if Vobject.actived:   
-                #-------------------------------------------------------
-                # Necessary, once trajectories have different sizes
-                #-------------------------------------------------------
-                input_frame = frame
-
-                if input_frame >= (len(Vobject.frames)-1):
-                    input_frame = len(Vobject.frames) -1
-                
-                glDisable(GL_LIGHT0)
-                glDisable(GL_LIGHTING)
-                glDisable(GL_COLOR_MATERIAL)
-                glEnable (GL_DEPTH_TEST)
-                glEnable (GL_LINE_SMOOTH)
-                if Vobject.show_dots    :
-                    glCallList(Vobject.GL_list_dots[input_frame], GL_COMPILE)
-                
-                if Vobject.show_lines   :
-                    glCallList(Vobject.list_lines[input_frame], GL_COMPILE)
-                
-                if Vobject.show_ribbons :
-                    glCallList(Vobject.list_ribbons[input_frame], GL_COMPILE)
-                
-                glEnable(GL_LIGHT0)
-                glEnable(GL_LIGHTING)
-                glEnable(GL_COLOR_MATERIAL)
-                glEnable(GL_DEPTH_TEST)
-                
-                if Vobject.show_sticks  :
-                    glCallList(Vobject.list_sticks        [input_frame], GL_COMPILE)
-                
-                if Vobject.show_ball_and_stick :
-                    glCallList(Vobject.list_ball_and_stick[input_frame], GL_COMPILE)
-                
-                if Vobject.show_spheres :
-                    glCallList(Vobject.list_spheres[input_frame], GL_COMPILE)
-                
-                if Vobject.show_surface :
-                    glCallList(Vobject.list_surface[input_frame], GL_COMPILE)
-                
-        glDisable(GL_LIGHT0)
-        glDisable(GL_LIGHTING)
-        glDisable(GL_COLOR_MATERIAL)
-        glDisable(GL_DEPTH_TEST)
+        #'''
+        #for Vobject in self.EMSession.Vobjects:    
+        #    if Vobject.actived:   
+        #        #-------------------------------------------------------
+        #        # Necessary, once trajectories have different sizes
+        #        #-------------------------------------------------------
+        #        input_frame = frame
+        #
+        #        if input_frame >= (len(Vobject.frames)-1):
+        #            input_frame = len(Vobject.frames) -1
+        #        
+        #        glDisable(GL_LIGHT0)
+        #        glDisable(GL_LIGHTING)
+        #        glDisable(GL_COLOR_MATERIAL)
+        #        glEnable (GL_DEPTH_TEST)
+        #        glEnable (GL_LINE_SMOOTH)
+        #        if Vobject.show_dots    :
+        #            glCallList(Vobject.GL_list_dots[input_frame], GL_COMPILE)
+        #        
+        #        if Vobject.show_lines   :
+        #            glCallList(Vobject.list_lines[input_frame], GL_COMPILE)
+        #        
+        #        if Vobject.show_ribbons :
+        #            glCallList(Vobject.list_ribbons[input_frame], GL_COMPILE)
+        #        
+        #        glEnable(GL_LIGHT0)
+        #        glEnable(GL_LIGHTING)
+        #        glEnable(GL_COLOR_MATERIAL)
+        #        glEnable(GL_DEPTH_TEST)
+        #        
+        #        if Vobject.show_sticks  :
+        #            glCallList(Vobject.list_sticks        [input_frame], GL_COMPILE)
+        #        
+        #        if Vobject.show_ball_and_stick :
+        #            glCallList(Vobject.list_ball_and_stick[input_frame], GL_COMPILE)
+        #        
+        #        if Vobject.show_spheres :
+        #            glCallList(Vobject.list_spheres[input_frame], GL_COMPILE)
+        #        
+        #        if Vobject.show_surface :
+        #            glCallList(Vobject.list_surface[input_frame], GL_COMPILE)
+        #        
+        #glDisable(GL_LIGHT0)
+        #glDisable(GL_LIGHTING)
+        #glDisable(GL_COLOR_MATERIAL)
+        #glDisable(GL_DEPTH_TEST)
+        #
         
         # S E L E C T E D    A T O M S     P I C K I N G    
         if self.EMSession._picking_selection_mode:
-            for i,atom in enumerate(self.EMSession.picking_selections):
+            #glDisable(GL_LIGHT0)
+            #glDisable(GL_LIGHTING)            
+            #glDisable(GL_COLOR_MATERIAL)            
+            #glDisable(GL_DEPTH_TEST)   
+            
+            for i,atom in enumerate(self.EMSession.picking_selections.picking_selections):
+                
                 if atom is not None:
-                    #print (atom, atom.index, frame, atom.Vobject_id, self.EMSession.Vobjects[atom.Vobject_id].frames, self.EMSession.Vobjects[atom.Vobject_id].coords  )
-                    #rep.draw_picked(atom)
-                    coord = atom.Vobject.frames[frame][atom.index-1]
-                    #glVertex3f(coord1[0], coord1[1], coord1[2])
-                    rep.draw_selected(atom, coord, [0.83, 0.48, 1] )#coord = None, color = [0, 1, 1]
-                    rep.draw_numbers(atom, i+1, coord)
+                
+                    coord = [atom.Vobject.frames[frame][(atom.index-1)*3  ],
+                             atom.Vobject.frames[frame][(atom.index-1)*3+1],
+                             atom.Vobject.frames[frame][(atom.index-1)*3+2],]
+                    
+                    
+                    dot_size = 450/self.z_far
 
+                    rep.draw_selected(atom     = atom           , 
+                                      coord    = coord          , 
+                                      color    = [0.83, 0.48, 1], 
+                                      dot_size = dot_size       )
+                    
+                    rep.draw_numbers(atom, i+1, coord)
+        
+                
         
         # S E L E C T E D    A T O M S     V I E W I N G
         else:
-            for i,atom in enumerate(self.EMSession.viewing_selections):
-                #print (atom, atom.index, frame, atom.Vobject_id, self.EMSession.Vobjects[atom.Vobject_id].frames, self.EMSession.Vobjects[atom.Vobject_id].coords  )
-                #rep.draw_picked(atom)
-                coord = atom.Vobject.frames[frame][atom.index-1]
-                #glVertex3f(coord1[0], coord1[1], coord1[2])
-                rep.draw_selected(atom, coord)
+            #glEnable(GL_LIGHT0)
+            #glEnable(GL_LIGHTING)
+            #glEnable(GL_COLOR_MATERIAL)
+            #glEnable(GL_DEPTH_TEST)            
+            
+            #glDisable(GL_LIGHT0)
+            #glDisable(GL_LIGHTING)            
+            #glDisable(GL_COLOR_MATERIAL)            
+            #glDisable(GL_DEPTH_TEST)            
 
-    def draw_to_pick(self, frame = -1):
+            dot_size = 250/self.z_far
+            
+            #glPointSize(250/self.z_far)
+            
+            for i,atom in enumerate(self.EMSession.selections[self.EMSession.current_selection].viewing_selections):
+                coord = [atom.Vobject.frames[frame][(atom.index-1)*3  ],
+                         atom.Vobject.frames[frame][(atom.index-1)*3+1],
+                         atom.Vobject.frames[frame][(atom.index-1)*3+2],]           
+                rep.draw_selected(atom = atom , coord = coord, dot_size = dot_size)
+        #'''
+    
+    '''
+    def (self, frame = -1):
         """ Defines wich type of representations will be displayed for the pick
             function to work. The only difference with the draw method should be
             that in this function there is no drawing for the selected items.
@@ -868,6 +942,8 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
                     glCallList(Vobject.list_spheres[input_frame], GL_COMPILE)
                 if Vobject.show_surface :
                     glCallList(Vobject.list_surface[input_frame], GL_COMPILE)
+    '''
+    
     
     def mousePressEvent(self, event):
         """ 
@@ -876,14 +952,15 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         self.mouse_x = event.x()
         self.mouse_y = event.y()
         
-        
+        #'''
         pos = [self.mouse_x, self.height - self.mouse_y] 
         
         #color = glReadPixelsf(self.mouse_x, self.height - self.mouse_y, 1, 1, GL_RGB, GL_INT)
         #print ('aqui ohhh --------->',pos[0], pos[1], color,'<---------')
         
-        self.draw_dots_selection_test(pos)
-        
+        pickedID = self.draw_dots_selection_test(pos)
+        print (pickedID)
+        #'''
         
         if (event.button() == QtCore.Qt.LeftButton):
             self.mouse_rotate = True
@@ -895,15 +972,16 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
             self.dist_cam_zrp = op.get_euclidean(self.zrp, self.get_cam_pos())
             self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(event.x(), event.y())
             self.mouse_pan = True
-    
+        
     def mouseDoubleClickEvent(self, event):
         """ 
         """
-        if (event.button() == QtCore.Qt.LeftButton):
-            nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
-            selected = self.select(nearest, hits)
-            if selected is not None:
-                self.center_on_atom(selected.Vobject.frames[self.frame][selected.index-1]) # coord1   = frame[atom.index-1]
+        pass
+	#if (event.button() == QtCore.Qt.LeftButton):
+        #    nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
+        #    selected = self.select(nearest, hits)
+        #    if selected is not None:
+        #        self.center_on_atom(selected.Vobject.frames[self.frame][selected.index-1]) # coord1   = frame[atom.index-1]
     
     def mouseMoveEvent(self, event):
         """ 
@@ -1007,53 +1085,43 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         dx = event.x() - self.mouse_x
         dy = event.y() - self.mouse_y
         
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+        pos = [self.mouse_x, self.height - self.mouse_y]
+        pickedID = self.draw_dots_selection_test(pos)
+
         if dx == 0 and dy == 0:
             button = event.button()
+            ''' RightButton '''
             if button == QtCore.Qt.MouseButton.RightButton and not self.dragging:
-
-                nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
-                selected = self.select(nearest, hits)                    
-                #menu = QtGui.QMenu(self)
-                self.selected_atom_on_click = selected
-                if selected is None:
-                    self.open_gl_menu (_type = 'on_bg', selected = selected, event = event)
-                    #for item in self.glmenu['background']:
-                    #    menu.addAction(item)
-
-                else:
-                    if self.EMSession._picking_selection_mode:
-                        pass
-                    
-                    else:
-                        if selected not in self.EMSession.viewing_selections:
-                            self.open_gl_menu (_type = 'on_atom', selected = selected, event = event)
-                            ##               obj             /      chain      /       residue                  resi           /         atom                  index
-                            #label = selected.Vobject_name+' / '+selected.chain+' / '+str(selected.resn)+ ' ' +str(selected.resi)+' / '+str(selected.name)+' ' +str(selected.index)                    
-                            ##str(selected.index) + ' ' + str(selected.name) + ' ' + str(selected.resi)+ ' ' + str(selected.resn)
-                            #Action_label = QtGui.QAction(label, self)
-                            ##Action_delete.triggered.connect(self.delete_obj)                    
-                            #menu.addAction(Action_label)
-                            #menu.addSeparator()
-                        else:
-                            self.open_gl_menu (_type = 'on_selection', selected = selected, event = event)
-
-                            #label = 'Selection'
-                            #Action_label = QtGui.QAction(label, self)
-                            ##Action_delete.triggered.connect(self.delete_obj)                    
-                            #menu.addAction(Action_label)
-                            #menu.addSeparator()
+                print ('MouseButton.RightButton', pickedID)
                 
-                #menu.exec_(event.globalPos())
-            
-            if button == QtCore.Qt.MouseButton.LeftButton and not self.dragging:
-                #print('LeftButton')
-                if dx <= self.pick_radius[0] and dy <= self.pick_radius[1]:
-                    nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
-                    selected = self.select(nearest, hits)                    
-                    self.EMSession.selection_function(selected)
-                    self.updateGL()
+                #gl_menu
+                
+                #if pickedID is not None:
+                #    selected = self.EMSession.atom_dic_id[pickedID]
+                #    print (selected)
+                #    
+                #    if self.EMSession._picking_selection_mode:
+                #        pass
+                #    
+                #    else:
+                #        if selected not in self.EMSession.selections[self.EMSession.current_selection].viewing_selections:
+                #            self.open_gl_menu (_type = 'on_atom', selected = selected, event = event)
+                #
+                #        else:
+                #            self.open_gl_menu (_type = 'on_selection', selected = selected, event = event)                
+                #else:
+                #    pass
 
             
+            
+            
+            ''' LeftButton '''
+            if button == QtCore.Qt.MouseButton.LeftButton and not self.dragging:
+                self.EMSession.selection_function(pickedID)
+                self.updateGL()
+            
+            ''' MidButton '''
             if button == QtCore.Qt.MouseButton.MidButton:
                 if self.dragging:
                     glMatrixMode(GL_MODELVIEW)
@@ -1064,10 +1132,14 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
                     new_zrp = cam_pos + dir_vec
                     self.zrp = np.array([new_zrp[0], new_zrp[1], new_zrp[2]])
                 else:
-                    nearest, hits = self.pick(event.x(), self.height-1-event.y(), self.pick_radius[0], self.pick_radius[1])
-                    selected = self.select(nearest, hits)
-                    if selected is not None:
-                        self.center_on_atom(selected.Vobject.frames[self.frame][selected.index-1])
+                    
+                    if pickedID is not None:
+                        selected = self.EMSession.atom_dic_id[pickedID]
+                        coord = [selected.Vobject.frames[self.frame][(selected.index-1)*3  ],
+                                 selected.Vobject.frames[self.frame][(selected.index-1)*3+1],
+                                 selected.Vobject.frames[self.frame][(selected.index-1)*3+2],]
+                        self.center_on_atom(coord)
+        
         self.dragging = False
     
     def wheelEvent(self, event):
@@ -1181,7 +1253,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         glMultMatrixd(projection)
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
-        self.draw_to_pick()
+        #self.draw_to_pick()
         glPopMatrix()
         hits = glRenderMode(GL_RENDER)
         nearest = []
@@ -1222,42 +1294,66 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         """
         
         pass
+        
+        glClearColor(1,1,1,1)
         #'''
+       
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         glDisable(GL_LIGHT0)
         glDisable(GL_LIGHTING)
         glDisable(GL_COLOR_MATERIAL)
         glEnable (GL_DEPTH_TEST)
-        glEnable (GL_LINE_SMOOTH)
+        #glEnable (GL_LINE_SMOOTH)
         #glColor3f (255,0,0)
+        for Vobject in self.EMSession.Vobjects:
+            frame = self.frame
+         
+            if Vobject.actived:
+                glPointSize(20)
+                glEnableClientState(GL_VERTEX_ARRAY)
+                glEnableClientState(GL_COLOR_ARRAY)
+                
+                glVertexPointer(3, GL_FLOAT, 0 , Vobject.frames[frame])
+                glColorPointer (3, GL_FLOAT, 0 , Vobject.coordinates_color_ids)
+                glDrawArrays(GL_POINTS, 0, int((len(Vobject.frames[frame])/3)))
+                
+                glDisableClientState(GL_VERTEX_ARRAY)
+                glDisableClientState(GL_COLOR_ARRAY)
+                
+                glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+                #color = glReadPixelsf(pos[0], pos[1], 1, 1, GL_RGB, GL_FLOAT)
         
-        if self.EMSession.Vobjects[0]:
-            glPointSize(20)
-            glEnableClientState(GL_VERTEX_ARRAY)
-            glEnableClientState(GL_COLOR_ARRAY)
-            
-            glVertexPointer(3, GL_FLOAT, 0 , self.EMSession.Vobjects[0].trajectory_coordinates)
-            glColorPointer (3, GL_FLOAT, 0 , self.EMSession.Vobjects[0].unique_colors_colors_id)
-            glDrawArrays(GL_POINTS, 0, int((len(self.EMSession.Vobjects[0].trajectory_coordinates)/3)))
-            
-            glDisableClientState(GL_VERTEX_ARRAY)
-            glDisableClientState(GL_COLOR_ARRAY)
-            
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
-            #color = glReadPixelsf(pos[0], pos[1], 1, 1, GL_RGB, GL_FLOAT)
-            data = glReadPixels(pos[0], pos[1], 1, 1, GL_RGBA, GL_UNSIGNED_BYTE)
-            
-            pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
-            print ('aqui ohhh --------->',pos[0], pos[1], data, pickedID,'<---------')
-            
-            if pickedID == 5000268:
-                pass
-            else:
-                atom = self.EMSession.Vobjects[0].atom_unique_id_dic[pickedID]
-                print(atom.atom_id, atom.name, atom.index)
+        
+        data = glReadPixels(pos[0], pos[1], 1, 1, GL_RGBA, GL_UNSIGNED_BYTE)
+        pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
+
+        if pickedID == 16777215:
+            pass
+        else:
+
+            return pickedID
+        
+        #print ('aqui ohhh --------->',pos[0], pos[1], data, pickedID,'<---------')
+        #
+        #
+        #if pickedID == 16777215:
+        #    pass
+        #else:
+        #    atom = self.EMSession.atom_dic_id[pickedID]
+        #    #.atom_unique_id_dic[pickedID]
+        #    print(atom.atom_id, atom.name, atom.index)
+        #
+        
+        
+        #if pickedID == 1 + 1*255 + 255*255:
+        #    pass
+        #else:
+        #    atom = Vobject.atom_unique_id_dic[pickedID]
+        #    print(atom.atom_id, atom.name, atom.index)
+#'''
 
 
-    def load_mol(self, data=None):
+    def load_mol(self, Vobject=None):
         """
             !!!  This fuction is called only to test new GL features  !!!  
             
@@ -1265,523 +1361,533 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
             This is the core of the representations, and need to be more
             efficient.
         """
-        
-        pass
-        #'''
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         glDisable(GL_LIGHT0)
         glDisable(GL_LIGHTING)
-        glDisable(GL_COLOR_MATERIAL)
+        glEnable(GL_COLOR_MATERIAL)
+        
         glEnable (GL_DEPTH_TEST)
         glEnable (GL_LINE_SMOOTH)
-        
-        
-        if self.EMSession.Vobjects[0]:
-            glPointSize(250/self.z_far)
-            glEnableClientState(GL_VERTEX_ARRAY)
-            #glEnableClientState(GL_COLOR_ARRAY)
-            
-            glVertexPointer(3, GL_FLOAT, 0 , self.EMSession.Vobjects[0].trajectory_coordinates)
-            #glColorPointer (3, GL_FLOAT, 0 , self.EMSession.Vobjects[0].trajectory_colors)
-            glDrawArrays(GL_POINTS, 0, int((len(self.EMSession.Vobjects[0].trajectory_coordinates)/3)))
-            
-            glDisableClientState(GL_VERTEX_ARRAY)
-            #glDisableClientState(GL_COLOR_ARRAY)
-            
-            #lines
-            glLineWidth(100/self.z_far)
-            glEnableClientState(GL_VERTEX_ARRAY)
-            glEnableClientState(GL_COLOR_ARRAY)
-            
-            glVertexPointer(3, GL_FLOAT, 0 , self.EMSession.Vobjects[0].trajectory_bonds)
-            glColorPointer (3, GL_FLOAT, 0 , self.EMSession.Vobjects[0].bonds_trajectory_colors)
-            glDrawArrays(GL_LINES, 0, int((len(self.EMSession.Vobjects[0].trajectory_bonds)/3)))
-            
-            glDisableClientState(GL_VERTEX_ARRAY)
-            glDisableClientState(GL_COLOR_ARRAY)
-            
-            
-            #vertices = [-0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
-            #             0.5, -0.5, 0.0, 0.0, 1.0, 0.0,                    
-            #             0.0,  0.5, 0.0, 0.0, 0.0, 1.0,
-            #            -0.9, -0.2,  .0, 0.0, 0.0, 1.0,
-            #             0.2, -0.5,  .5, 0.0, 1.0, 0.0,
-            #            -0.3,  0.7, 0.0, 1.0, 0.0, 0.0,
-            #        ]        
-            
-            
-            
-            
-            
-            '''
-            #vertices = np.array(vertices, dtype=np.float32)
-            #VBOID    = GLuint(1)
-            #print (VBOID)
-
-            #glPointSize(100/self.z_far)
-            glEnableClientState(GL_VERTEX_ARRAY)
-            glEnableClientState(GL_COLOR_ARRAY)
-
-                        #   !            ^number of bytes
-            glVertexPointer(3, GL_FLOAT, 0 , self.vertices)
-            glColorPointer (3, GL_FLOAT, 0 , self.vertices)
-
-            #glDrawArrays(GL_POINTS, 0, 6)
-            glDrawArrays(GL_POINTS, 0, int((len(self.vertices)/3)))
-            #glDrawArrays(GL_LINE_STRIP, 0, int((len(self.vertices)/3)))
-
-            #glDrawArrays(GL_TRIANGLES, 0, 18)
-            #glDrawArrays(GL_LINE_STRIP, 0, 3)
-            
-            glDisableClientState(GL_VERTEX_ARRAY)
-            glDisableClientState(GL_COLOR_ARRAY)
-            
-            #glDisableClientState(GL_COLOR_ARRAY)
-            #glutSwapBuffers() #        
-            #'''
-            
+        glEnable (GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+	
+        ## D O T S
+        ##glPointSize(250/self.z_far)
+        #
+        ##gl
+        #glEnableClientState(GL_VERTEX_ARRAY)
+        ##glEnableClientState(GL_COLOR_ARRAY)
+        #
+        #glVertexPointer(3, GL_FLOAT, 0 , self.sphere)
+        ##glColorPointer (3, GL_FLOAT, 0 , Vobject.coordinates_colors)
+        #
+        #glDrawArrays(GL_POINTS, 0, int(len(self.sphere/3)))
+        ##glDrawArrays(GL_LINE_STRIP, 0, int(len(self.sphere/3)))
+        ##glDrawArrays(GL_TRIANGLE_FAN, 0, int(len(self.sphere/3)))
+        #glDisableClientState(GL_VERTEX_ARRAY)
+        ##glDisableClientState(GL_COLOR_ARRAY)
 
     
-    def draw_dots(self, Vobject = None, selection = True):
-        """ Change the representation to Dots.
-        """
-        Vobject.GL_list_dots =[]
-        for frame in Vobject.frames:
-            gl_dt_li = glGenLists(self.gl_lists_counter)
-            glNewList(gl_dt_li, GL_COMPILE_AND_EXECUTE)
-            for atom in Vobject.atoms:
-                if atom.dots:
-                    #-------------------------------------------------------
-                    #                        D O T S
-                    #-------------------------------------------------------
-                    glPushMatrix()
-                    glPushName(atom.atom_id)
-                    glColor3f(atom.color[0], atom.color[1], atom.color[2])
-                    glPointSize(self.EMSession.gl_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
-                    glBegin(GL_POINTS)
-                    coord1   = frame[atom.index-1]
-                    glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
-                    glEnd()
-                    glPopName()
-                    glPopMatrix()
-                
-                #for chain in  Vobject.chains:
-            #    for res in Vobject.chains[chain].residues:
-            #        for atom in Vobject.chains[chain].residues[res].atoms:
-            #            # checking if the selection is actived
-            #            if atom.dots:
-            #                #-------------------------------------------------------
-            #                #                        D O T S
-            #                #-------------------------------------------------------
-            #                glPushMatrix()
-            #                glPushName(atom.atom_id)
-            #                glColor3f(atom.color[0], atom.color[1], atom.color[2])
-            #                glPointSize(self.EMSession.gl_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
-            #                glBegin(GL_POINTS)
-            #                coord1   = frame[atom.index-1]
-            #                glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
-            #                glEnd()
-            #                glPopName()
-            #                glPopMatrix()
-            #            else:
-            #                pass
-            #                
-            glEndList()
-            Vobject.GL_list_dots.append(gl_dt_li) 
-            self.gl_lists_counter += 1
-        return True
-   
-    def draw_lines(self, Vobject = None , selection = None):
-        """ Change the representation to lines.
-            It is the default representation.
-        """
-        glDisable(GL_LIGHT0)
-        glDisable(GL_LIGHT1)
-        glDisable(GL_LIGHT2)
-        glDisable(GL_LIGHTING)
-        glEnable(GL_COLOR_MATERIAL)
-        glEnable(GL_DEPTH_TEST)
-        Vobject.list_lines =[]
-        for frame in Vobject.frames:
-            gl_ln_li = glGenLists(self.gl_lists_counter)
-            print ('rendering ',Vobject.frames.index(frame) )
-            glNewList(gl_ln_li,GL_COMPILE_AND_EXECUTE) #GL_COMPILE)
-            glLineWidth(self.EMSession.gl_parameters['line_width'])
 
-            for bond in Vobject.index_bonds:
-
-                atom1    = Vobject.atoms[bond[0]]
-                atom2    = Vobject.atoms[bond[1]]
-                # checking if the selection is actived
-                if  atom1.lines and atom2.lines:
-                
-                    coord1   = frame[bond[0]]
-                    coord2   = frame[bond[1]]
-
-                    midcoord = [
-                            (coord1[0] + coord2[0])/2,	   
-                            (coord1[1] + coord2[1])/2,
-                            (coord1[2] + coord2[2])/2,
-                            ]
-                    
-                    glPushMatrix()		
-                    glPushName(atom1.atom_id) 
-                    glColor3f(atom1.color[0], 
-                              atom1.color[1], 
-                          atom1.color[2])
-
-                    
-                    glBegin(GL_LINES)
-                    glVertex3f(coord1[0],coord1[1],coord1[2])
-                    glVertex3f(midcoord[0],midcoord[1],midcoord[2])
-                    glEnd()
-                    glPopName()
-                    glPopMatrix()
-                    
-                    
-                    glPushMatrix()		
-                    glPushName(atom2.atom_id) 
-                    glColor3f (atom2.color[0], 
-                               atom2.color[1], 
-                           atom2.color[2])
-
-                    glBegin(GL_LINES)
-                    glVertex3f(midcoord[0],midcoord[1],midcoord[2])
-                    glVertex3f(coord2[0],coord2[1],coord2[2])
-
-                    glEnd()
-                    glPopName()
-                    glPopMatrix()
-            glEndList()
-            Vobject.list_lines.append(gl_ln_li)
+        for Vobject in self.EMSession.Vobjects:
             
-            self.gl_lists_counter += 1
-        return True
-   
-        
-    def draw_lines2(self, Vobject = None , selection = None):
-        """ Change the representation to lines.
-            It is the default representation.
-        """
-        glDisable(GL_LIGHT0)
-        glDisable(GL_LIGHT1)
-        glDisable(GL_LIGHT2)
-        glDisable(GL_LIGHTING)
-        glEnable(GL_COLOR_MATERIAL)
-        glEnable(GL_DEPTH_TEST)
-        Vobject.list_lines =[]
-        for frame in Vobject.frames:
+            frame = self.frame
             
-            print ('rendering ',Vobject.frames.index(frame) )
-            gl_ln_li = glGenLists(self.gl_lists_counter)
-            
-            glNewList(gl_ln_li, GL_COMPILE_AND_EXECUTE) #GL_COMPILE)
-            glLineWidth(self.EMSession.gl_parameters['line_width'])
-
-            for bond in Vobject.index_bonds:
-
-                atom1    = Vobject.atoms[bond[0]]
-                atom2    = Vobject.atoms[bond[1]]
-                # checking if the selection is actived
-                if  atom1.lines and atom2.lines:
-                
-                    coord1   = frame[bond[0]]
-                    coord2   = frame[bond[1]]
-
-                    midcoord = [
-                            (coord1[0] + coord2[0])/2,	   
-                            (coord1[1] + coord2[1])/2,
-                            (coord1[2] + coord2[2])/2,
-                            ]
-                    
-                    glPushMatrix()		
-                    glPushName(atom1.atom_id) 
-                    glColor3f(atom1.color[0], 
-                              atom1.color[1], 
-                              atom1.color[2])
-
-                    
-                    glBegin(GL_LINES)
-                    glVertex3f(coord1[0],coord1[1],coord1[2])
-                    glVertex3f(midcoord[0],midcoord[1],midcoord[2])
-                    glEnd()
-                    glPopName()
-                    glPopMatrix()
-                    
-                    
-                    glPushMatrix()		
-                    glColor3f (atom2.color[0], 
-                               atom2.color[1], 
-                                atom2.color[2])
-
-                    glBegin(GL_LINES)
-                    glVertex3f(midcoord[0],midcoord[1],midcoord[2])
-                    glVertex3f(coord2[0],coord2[1],coord2[2])
-
-                    glEnd()
-                    glPopName()
-                    glPopMatrix()
-            glEndList()
-            Vobject.list_lines.append(gl_ln_li)
-            
-            self.gl_lists_counter += 1
-        return True
-
-    def draw_ribbon(self, Vobject = None , selection = None):
-        """ Change the representation to Ribbon.
-        """
-        Vobject.list_ribbons =[]
-
-        for frame in Vobject.frames:
-            glEnable(GL_COLOR_MATERIAL)
-            glEnable(GL_DEPTH_TEST)
-            
-            gl_rb_li = glGenLists(self.gl_lists_counter)
-            glNewList(gl_rb_li, GL_COMPILE_AND_EXECUTE)
-            #print 'aqui'
-            glLineWidth(7)
-
-            #'''
             if Vobject.actived:
-                for chain in  Vobject.chains:
-                    for i in range(0, len(Vobject.chains[chain].backbone) -1):
-                        ATOM1  = Vobject.chains[chain].backbone[i]
-                        ATOM2  = Vobject.chains[chain].backbone[i+1]
-                        if  ATOM1.ribbons and   ATOM2.ribbons:
-                            #if (ATOM1.resi - ATOM2.resi) == 1:	    
-                            coord1 = frame[ATOM1.index -1]
-                            coord2 = frame[ATOM2.index -1]
-                            #print coord1, coord2
-                            glPushMatrix()
-                            glColor3f(ATOM1.color[0],ATOM1.color[1], ATOM1.color[1])
-                            glBegin(GL_LINES)
-                            glVertex3f(coord1[0],coord1[1],coord1[2])
-                            glVertex3f(coord2[0],coord2[1],coord2[2])
-                            glEnd()
-                            glPopMatrix()
+                
+                input_frame = frame
+                
+                if input_frame >= (len(Vobject.frames)-1):
+                    input_frame = len(Vobject.frames) -1
+                
+                
+                # D O T S
+                glPointSize(250/self.z_far)
+                
+                glEnableClientState(GL_VERTEX_ARRAY)
+                glEnableClientState(GL_COLOR_ARRAY)
+                
+                glVertexPointer(3, GL_FLOAT, 0 , Vobject.frames[frame])
+                glColorPointer (3, GL_FLOAT, 0 , Vobject.coordinates_colors)
+                
+                glDrawArrays(GL_POINTS, 0, int((len(Vobject.frames[frame])/3)))
+                
+                glDisableClientState(GL_VERTEX_ARRAY)
+                glDisableClientState(GL_COLOR_ARRAY)
+                
+                # L I N E S
+                glLineWidth(100/self.z_far)
+                glEnableClientState(GL_VERTEX_ARRAY)
+                glEnableClientState(GL_COLOR_ARRAY)
+                
+                glVertexPointer(3, GL_FLOAT, 0 , Vobject.trajectory_bonds[frame])
+                glColorPointer (3, GL_FLOAT, 0 , Vobject.bond_colors)
+                glDrawArrays(GL_LINES, 0, int((len(Vobject.trajectory_bonds[frame])/3)))
+                
+                glDisableClientState(GL_VERTEX_ARRAY)
+                glDisableClientState(GL_COLOR_ARRAY)
+                
+                
 
-            glEndList()
-            #'''
-            Vobject.list_ribbons.append(gl_rb_li)
-            self.gl_lists_counter += 1
+                
+                
+                
+
+        #'''
+                
+        #vertices = [-0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
+        #             0.5, -0.5, 0.0, 0.0, 1.0, 0.0,                    
+        #             0.0,  0.5, 0.0, 0.0, 0.0, 1.0,
+        #            -0.9, -0.2,  .0, 0.0, 0.0, 1.0,
+        #             0.2, -0.5,  .5, 0.0, 1.0, 0.0,
+        #            -0.3,  0.7, 0.0, 1.0, 0.0, 0.0,
+        #        ]        
+        
+        
+        
+        
+        
+        '''
+        #vertices = np.array(vertices, dtype=np.float32)
+        #VBOID    = GLuint(1)
+        #print (VBOID)
+
+        #glPointSize(100/self.z_far)
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glEnableClientState(GL_COLOR_ARRAY)
+
+                    #   !            ^number of bytes
+        glVertexPointer(3, GL_FLOAT, 0 , self.vertices)
+        glColorPointer (3, GL_FLOAT, 0 , self.vertices)
+
+        #glDrawArrays(GL_POINTS, 0, 6)
+        glDrawArrays(GL_POINTS, 0, int((len(self.vertices)/3)))
+        #glDrawArrays(GL_LINE_STRIP, 0, int((len(self.vertices)/3)))
+
+        #glDrawArrays(GL_TRIANGLES, 0, 18)
+        #glDrawArrays(GL_LINE_STRIP, 0, 3)
+        
+        glDisableClientState(GL_VERTEX_ARRAY)
+        glDisableClientState(GL_COLOR_ARRAY)
+        
+        #glDisableClientState(GL_COLOR_ARRAY)
+        #glutSwapBuffers() #        
+        #'''
+                
+
     
+    #def draw_dots(self, Vobject = None, selection = True):
+    #    """ Change the representation to Dots.
+    #    """
+    #    Vobject.GL_list_dots =[]
+    #    for frame in Vobject.frames:
+    #        gl_dt_li = glGenLists(self.gl_lists_counter)
+    #        glNewList(gl_dt_li, GL_COMPILE_AND_EXECUTE)
+    #        for atom in Vobject.atoms:
+    #            if atom.dots:
+    #                #-------------------------------------------------------
+    #                #                        D O T S
+    #                #-------------------------------------------------------
+    #                glPushMatrix()
+    #                glPushName(atom.atom_id)
+    #                glColor3f(atom.color[0], atom.color[1], atom.color[2])
+    #                glPointSize(self.EMSession.gl_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
+    #                glBegin(GL_POINTS)
+    #                coord1   = frame[atom.index-1]
+    #                glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
+    #                glEnd()
+    #                glPopName()
+    #                glPopMatrix()
+    #            
+    #            #for chain in  Vobject.chains:
+    #        #    for res in Vobject.chains[chain].residues:
+    #        #        for atom in Vobject.chains[chain].residues[res].atoms:
+    #        #            # checking if the selection is actived
+    #        #            if atom.dots:
+    #        #                #-------------------------------------------------------
+    #        #                #                        D O T S
+    #        #                #-------------------------------------------------------
+    #        #                glPushMatrix()
+    #        #                glPushName(atom.atom_id)
+    #        #                glColor3f(atom.color[0], atom.color[1], atom.color[2])
+    #        #                glPointSize(self.EMSession.gl_parameters['dot_size']*atom.vdw_rad)# *self.scale_zoom
+    #        #                glBegin(GL_POINTS)
+    #        #                coord1   = frame[atom.index-1]
+    #        #                glVertex3f(float(coord1[0]),float( coord1[1]),float( coord1[2]))
+    #        #                glEnd()
+    #        #                glPopName()
+    #        #                glPopMatrix()
+    #        #            else:
+    #        #                pass
+    #        #                
+    #        glEndList()
+    #        Vobject.GL_list_dots.append(gl_dt_li) 
+    #        self.gl_lists_counter += 1
+    #    return True
+   
+    #def draw_lines(self, Vobject = None , selection = None):
+    #    """ Change the representation to lines.
+    #        It is the default representation.
+    #    """
+    #    glDisable(GL_LIGHT0)
+    #    glDisable(GL_LIGHT1)
+    #    glDisable(GL_LIGHT2)
+    #    glDisable(GL_LIGHTING)
+    #    glEnable(GL_COLOR_MATERIAL)
+    #    glEnable(GL_DEPTH_TEST)
+    #    Vobject.list_lines =[]
+    #    for frame in Vobject.frames:
+    #        gl_ln_li = glGenLists(self.gl_lists_counter)
+    #        print ('rendering ',Vobject.frames.index(frame) )
+    #        glNewList(gl_ln_li,GL_COMPILE_AND_EXECUTE) #GL_COMPILE)
+    #        glLineWidth(self.EMSession.gl_parameters['line_width'])
+    #
+    #        for bond in Vobject.index_bonds:
+    #
+    #            atom1    = Vobject.atoms[bond[0]]
+    #            atom2    = Vobject.atoms[bond[1]]
+    #            # checking if the selection is actived
+    #            if  atom1.lines and atom2.lines:
+    #            
+    #                coord1   = frame[bond[0]]
+    #                coord2   = frame[bond[1]]
+    #
+    #                midcoord = [
+    #                        (coord1[0] + coord2[0])/2,	   
+    #                        (coord1[1] + coord2[1])/2,
+    #                        (coord1[2] + coord2[2])/2,
+    #                        ]
+    #                
+    #                glPushMatrix()		
+    #                glPushName(atom1.atom_id) 
+    #                glColor3f(atom1.color[0], 
+    #                          atom1.color[1], 
+    #                      atom1.color[2])
+    #
+    #                
+    #                glBegin(GL_LINES)
+    #                glVertex3f(coord1[0],coord1[1],coord1[2])
+    #                glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+    #                glEnd()
+    #                glPopName()
+    #                glPopMatrix()
+    #                
+    #                
+    #                glPushMatrix()		
+    #                glPushName(atom2.atom_id) 
+    #                glColor3f (atom2.color[0], 
+    #                           atom2.color[1], 
+    #                       atom2.color[2])
+    #
+    #                glBegin(GL_LINES)
+    #                glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+    #                glVertex3f(coord2[0],coord2[1],coord2[2])
+    #
+    #                glEnd()
+    #                glPopName()
+    #                glPopMatrix()
+    #        glEndList()
+    #        Vobject.list_lines.append(gl_ln_li)
+    #        
+    #        self.gl_lists_counter += 1
+    #    return True
+    #
+    #    
+    #def draw_lines2(self, Vobject = None , selection = None):
+    #    """ Change the representation to lines.
+    #        It is the default representation.
+    #    """
+    #    glDisable(GL_LIGHT0)
+    #    glDisable(GL_LIGHT1)
+    #    glDisable(GL_LIGHT2)
+    #    glDisable(GL_LIGHTING)
+    #    glEnable(GL_COLOR_MATERIAL)
+    #    glEnable(GL_DEPTH_TEST)
+    #    Vobject.list_lines =[]
+    #    for frame in Vobject.frames:
+    #        
+    #        print ('rendering ',Vobject.frames.index(frame) )
+    #        gl_ln_li = glGenLists(self.gl_lists_counter)
+    #        
+    #        glNewList(gl_ln_li, GL_COMPILE_AND_EXECUTE) #GL_COMPILE)
+    #        glLineWidth(self.EMSession.gl_parameters['line_width'])
+    #
+    #        for bond in Vobject.index_bonds:
+    #
+    #            atom1    = Vobject.atoms[bond[0]]
+    #            atom2    = Vobject.atoms[bond[1]]
+    #            # checking if the selection is actived
+    #            if  atom1.lines and atom2.lines:
+    #            
+    #                coord1   = frame[bond[0]]
+    #                coord2   = frame[bond[1]]
+    #
+    #                midcoord = [
+    #                        (coord1[0] + coord2[0])/2,	   
+    #                        (coord1[1] + coord2[1])/2,
+    #                        (coord1[2] + coord2[2])/2,
+    #                        ]
+    #                
+    #                glPushMatrix()		
+    #                glPushName(atom1.atom_id) 
+    #                glColor3f(atom1.color[0], 
+    #                          atom1.color[1], 
+    #                          atom1.color[2])
+    #
+    #                
+    #                glBegin(GL_LINES)
+    #                glVertex3f(coord1[0],coord1[1],coord1[2])
+    #                glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+    #                glEnd()
+    #                glPopName()
+    #                glPopMatrix()
+    #                
+    #                
+    #                glPushMatrix()		
+    #                glColor3f (atom2.color[0], 
+    #                           atom2.color[1], 
+    #                            atom2.color[2])
+    #
+    #                glBegin(GL_LINES)
+    #                glVertex3f(midcoord[0],midcoord[1],midcoord[2])
+    #                glVertex3f(coord2[0],coord2[1],coord2[2])
+    #
+    #                glEnd()
+    #                glPopName()
+    #                glPopMatrix()
+    #        glEndList()
+    #        Vobject.list_lines.append(gl_ln_li)
+    #        
+    #        self.gl_lists_counter += 1
+    #    return True
+    #
+    #def draw_ribbon(self, Vobject = None , selection = None):
+    #    """ Change the representation to Ribbon.
+    #    """
+    #    Vobject.list_ribbons =[]
+    #
+    #    for frame in Vobject.frames:
+    #        glEnable(GL_COLOR_MATERIAL)
+    #        glEnable(GL_DEPTH_TEST)
+    #        
+    #        gl_rb_li = glGenLists(self.gl_lists_counter)
+    #        glNewList(gl_rb_li, GL_COMPILE_AND_EXECUTE)
+    #        #print 'aqui'
+    #        glLineWidth(7)
+    #
+    #        #'''
+    #        if Vobject.actived:
+    #            for chain in  Vobject.chains:
+    #                for i in range(0, len(Vobject.chains[chain].backbone) -1):
+    #                    ATOM1  = Vobject.chains[chain].backbone[i]
+    #                    ATOM2  = Vobject.chains[chain].backbone[i+1]
+    #                    if  ATOM1.ribbons and   ATOM2.ribbons:
+    #                        #if (ATOM1.resi - ATOM2.resi) == 1:	    
+    #                        coord1 = frame[ATOM1.index -1]
+    #                        coord2 = frame[ATOM2.index -1]
+    #                        #print coord1, coord2
+    #                        glPushMatrix()
+    #                        glColor3f(ATOM1.color[0],ATOM1.color[1], ATOM1.color[1])
+    #                        glBegin(GL_LINES)
+    #                        glVertex3f(coord1[0],coord1[1],coord1[2])
+    #                        glVertex3f(coord2[0],coord2[1],coord2[2])
+    #                        glEnd()
+    #                        glPopMatrix()
+    #
+    #        glEndList()
+    #        #'''
+    #        Vobject.list_ribbons.append(gl_rb_li)
+    #        self.gl_lists_counter += 1
+    #    
+    #def draw_ball_and_stick_parallel (self, Vobject = None , selection = None):
+    #    """ Draws all the elements for Ball-Stick representation.
+    #    """
+    #    Vobject.list_ball_and_stick =[] 
+    #    
+    #    for frame in Vobject.frames:
+    #        glEnable(GL_LIGHT0)
+    #        glEnable(GL_LIGHTING)
+    #        glEnable(GL_COLOR_MATERIAL)
+    #        glEnable(GL_DEPTH_TEST)
+    #       
+    #        gl_bs_li = glGenLists(self.gl_lists_counter)
+    #        glNewList(gl_bs_li, GL_COMPILE_AND_EXECUTE)
+    #        
+    #        self.current_frame = frame
+    #        
+    #        #with multiprocessing.Pool(8) as p:
+    #        #    p.map(_create_atom_ball, Vobject.atoms)
+    #        
+    #        
+    #        for atom in Vobject.atoms:
+    #            if atom.ball_and_stick:
+    #                #-------------------------------------------------------
+    #                #                        B A L L 
+    #                #-------------------------------------------------------
+    #                glPushMatrix()                
+    #                glPushName(atom.atom_id)
+    #                coord1   = frame[atom.index-1]
+    #                glTranslate(coord1[0],   coord1[1],   coord1[2])
+    #                glColor3f(atom.color[0], atom.color[1], atom.color[2])
+    #                glutSolidSphere(atom.radius *self.EMSession.gl_parameters['ball_and_sick_sphere_scale'], sphere_quality, sphere_quality)
+    #                glPopMatrix()
+    #                glPopName()
+    #        
+    #        
+    #        for bond in Vobject.index_bonds:
+    #            
+    #            atom1    = Vobject.atoms[bond[0]]
+    #            atom2    = Vobject.atoms[bond[1]]
+    #
+    #            if atom1.ball_and_stick  and atom2.ball_and_stick:
+    #                coord1   = frame[bond[0]]
+    #                coord2   = frame[bond[1]]
+    #
+    #                midcoord = [
+    #                           (coord1[0] + coord2[0])/2,	   
+    #                           (coord1[1] + coord2[1])/2,
+    #                           (coord1[2] + coord2[2])/2,
+    #                           ]
+    #
+    #                #-------------------------------------------------------
+    #                #                        S T I C K S
+    #                #-------------------------------------------------------
+    #                #rep.draw_stick_bond(atom1 = atom1, atom2 = atom2, radius = 2)
+    #                
+    #                v = Vector()
+    #                #base of cylinder is at the origin, the top is in the positive z axis
+    #                radius = 0.07
+    #                a = coord1
+    #                b = coord2
+    #                
+    #                axis_start = [0, 0, .1]
+    #                axis_end = v.subtract(a, b)
+    #
+    #                #find angle between the starting and ending axis
+    #                angle = v.angle(axis_start, axis_end)
+    #                
+    #                # determina the axis of rotation of the angle
+    #                axis_rotation = v.crossproduct (axis_start, axis_end)
+    #
+    #                #calculate the distance from a to b
+    #                length = v.mag(axis_end)
+    #                glColor3f(0.9, 0.9, 0.9)
+    #
+    #                # set the bottom  and the top radius to be the same thing
+    #                radius_bottom = radius
+    #                radius_top    = radius
+    #
+    #                # draw the bond ( use glTranslate beofre using glRotate)
+    #                cyl = gluNewQuadric()
+    #                glPushMatrix()
+    #                glTranslate(b[0], b[1], b[2])
+    #                glRotate(angle, axis_rotation[0], axis_rotation[1], axis_rotation[2])
+    #                
+    #                gluCylinder(cyl, radius_bottom *self.EMSession.gl_parameters['stick_scale'], 
+    #                                 radius_top*self.EMSession.gl_parameters['stick_scale'], 
+    #                                 length, 15, 15)
+    #                glPopMatrix()
+    #                #-------------------------------------------------------
+    #
+    #        glEndList()
+    #        Vobject.list_ball_and_stick.append(gl_bs_li)
+    #        self.gl_lists_counter += 1 
+    #    return True
+    #
+    #def draw_ball_and_stick (self, Vobject = None , selection = None):
+    #    """ Draws all the elements for Ball-Stick representation.
+    #    """
+    #    Vobject.list_ball_and_stick =[] 
+    #    sphere_quality = 15
+    #    
+    #    for frame in Vobject.frames:
+    #        glEnable(GL_LIGHT0)
+    #        glEnable(GL_LIGHTING)
+    #        glEnable(GL_COLOR_MATERIAL)
+    #        glEnable(GL_DEPTH_TEST)
+    #       
+    #        gl_bs_li = glGenLists(self.gl_lists_counter)
+    #        glNewList(gl_bs_li, GL_COMPILE_AND_EXECUTE)
+    #        
+    #        self.current_frame = frame
+    #        
+    #        for atom in Vobject.atoms:
+    #            if atom.ball_and_stick:
+    #                #-------------------------------------------------------
+    #                #                        B A L L 
+    #                #-------------------------------------------------------
+    #                glPushMatrix()                
+    #                glPushName(atom.atom_id)
+    #                coord1   = frame[atom.index-1]
+    #                glTranslate(coord1[0],   coord1[1],   coord1[2])
+    #                glColor3f(atom.color[0], atom.color[1], atom.color[2])
+    #                glutSolidSphere(atom.radius *self.EMSession.gl_parameters['ball_and_sick_sphere_scale'], sphere_quality, sphere_quality)
+    #                glPopMatrix()
+    #                glPopName()
+    #        
+    #        
+    #        for bond in Vobject.index_bonds:
+    #            
+    #            atom1    = Vobject.atoms[bond[0]]
+    #            atom2    = Vobject.atoms[bond[1]]
+    #
+    #            if atom1.ball_and_stick  and atom2.ball_and_stick:
+    #                coord1   = frame[bond[0]]
+    #                coord2   = frame[bond[1]]
+    #
+    #                midcoord = [
+    #                           (coord1[0] + coord2[0])/2,	   
+    #                           (coord1[1] + coord2[1])/2,
+    #                           (coord1[2] + coord2[2])/2,
+    #                           ]
+    #
+    #                #-------------------------------------------------------
+    #                #                        S T I C K S
+    #                #-------------------------------------------------------
+    #                #rep.draw_stick_bond(atom1 = atom1, atom2 = atom2, radius = 2)
+    #                
+    #                v = Vector()
+    #                #base of cylinder is at the origin, the top is in the positive z axis
+    #                radius = 0.07
+    #                a = coord1
+    #                b = coord2
+    #                
+    #                axis_start = [0, 0, .1]
+    #                axis_end = v.subtract(a, b)
+    #
+    #                #find angle between the starting and ending axis
+    #                angle = v.angle(axis_start, axis_end)
+    #                
+    #                # determina the axis of rotation of the angle
+    #                axis_rotation = v.crossproduct (axis_start, axis_end)
+    #
+    #                #calculate the distance from a to b
+    #                length = v.mag(axis_end)
+    #                glColor3f(0.9, 0.9, 0.9)
+    #
+    #                # set the bottom  and the top radius to be the same thing
+    #                radius_bottom = radius
+    #                radius_top    = radius
+    #
+    #                # draw the bond ( use glTranslate beofre using glRotate)
+    #                cyl = gluNewQuadric()
+    #                glPushMatrix()
+    #                glTranslate(b[0], b[1], b[2])
+    #                glRotate(angle, axis_rotation[0], axis_rotation[1], axis_rotation[2])
+    #                
+    #                gluCylinder(cyl, radius_bottom *self.EMSession.gl_parameters['stick_scale'], 
+    #                                 radius_top*self.EMSession.gl_parameters['stick_scale'], 
+    #                                 length, 15, 15)
+    #                glPopMatrix()
+    #                #-------------------------------------------------------
+    #
+    #        glEndList()
+    #        Vobject.list_ball_and_stick.append(gl_bs_li)
+    #        self.gl_lists_counter += 1 
+    #    return True
+    #
+    #
     '''
-    def draw_spheres(self):
-        """ Change the representation to Spheres.
-        """
-        #print('Spheres Representation')
-        # Sphere representation of the atoms, the difference between the ball
-        # representation is that sphere uses the covalent radius and ball the
-        # atomic radius.
-        for frame in Vobject.frames:
-            if self.gl_sphere_list == None or self.MODIFIED:
-                self.gl_sphere_list = []
-                for i in range(len(self.data)):
-                    self.frame_i = i
-                    self.load_mol()
-                    gl_sp_li = glGenLists(1)
-                    glNewList(gl_sp_li, GL_COMPILE)
-                    for atom in self.sphere_list:
-                        rep.draw_sphere(atom)
-                    glEndList()
-                    self.gl_sphere_list.append(gl_sp_li)
-            return True    
-    #'''
-    
-    
-
-    
-    def draw_ball_and_stick_parallel (self, Vobject = None , selection = None):
-        """ Draws all the elements for Ball-Stick representation.
-        """
-        Vobject.list_ball_and_stick =[] 
-        
-        for frame in Vobject.frames:
-            glEnable(GL_LIGHT0)
-            glEnable(GL_LIGHTING)
-            glEnable(GL_COLOR_MATERIAL)
-            glEnable(GL_DEPTH_TEST)
-           
-            gl_bs_li = glGenLists(self.gl_lists_counter)
-            glNewList(gl_bs_li, GL_COMPILE_AND_EXECUTE)
-            
-            self.current_frame = frame
-            
-            #with multiprocessing.Pool(8) as p:
-            #    p.map(_create_atom_ball, Vobject.atoms)
-            
-            
-            for atom in Vobject.atoms:
-                if atom.ball_and_stick:
-                    #-------------------------------------------------------
-                    #                        B A L L 
-                    #-------------------------------------------------------
-                    glPushMatrix()                
-                    glPushName(atom.atom_id)
-                    coord1   = frame[atom.index-1]
-                    glTranslate(coord1[0],   coord1[1],   coord1[2])
-                    glColor3f(atom.color[0], atom.color[1], atom.color[2])
-                    glutSolidSphere(atom.radius *self.EMSession.gl_parameters['ball_and_sick_sphere_scale'], sphere_quality, sphere_quality)
-                    glPopMatrix()
-                    glPopName()
-            
-            
-            for bond in Vobject.index_bonds:
-                
-                atom1    = Vobject.atoms[bond[0]]
-                atom2    = Vobject.atoms[bond[1]]
-
-                if atom1.ball_and_stick  and atom2.ball_and_stick:
-                    coord1   = frame[bond[0]]
-                    coord2   = frame[bond[1]]
-
-                    midcoord = [
-                               (coord1[0] + coord2[0])/2,	   
-                               (coord1[1] + coord2[1])/2,
-                               (coord1[2] + coord2[2])/2,
-                               ]
-
-                    #-------------------------------------------------------
-                    #                        S T I C K S
-                    #-------------------------------------------------------
-                    #rep.draw_stick_bond(atom1 = atom1, atom2 = atom2, radius = 2)
-                    
-                    v = Vector()
-                    #base of cylinder is at the origin, the top is in the positive z axis
-                    radius = 0.07
-                    a = coord1
-                    b = coord2
-                    
-                    axis_start = [0, 0, .1]
-                    axis_end = v.subtract(a, b)
-
-                    #find angle between the starting and ending axis
-                    angle = v.angle(axis_start, axis_end)
-                    
-                    # determina the axis of rotation of the angle
-                    axis_rotation = v.crossproduct (axis_start, axis_end)
-
-                    #calculate the distance from a to b
-                    length = v.mag(axis_end)
-                    glColor3f(0.9, 0.9, 0.9)
-
-                    # set the bottom  and the top radius to be the same thing
-                    radius_bottom = radius
-                    radius_top    = radius
-
-                    # draw the bond ( use glTranslate beofre using glRotate)
-                    cyl = gluNewQuadric()
-                    glPushMatrix()
-                    glTranslate(b[0], b[1], b[2])
-                    glRotate(angle, axis_rotation[0], axis_rotation[1], axis_rotation[2])
-                    
-                    gluCylinder(cyl, radius_bottom *self.EMSession.gl_parameters['stick_scale'], 
-                                     radius_top*self.EMSession.gl_parameters['stick_scale'], 
-                                     length, 15, 15)
-                    glPopMatrix()
-                    #-------------------------------------------------------
-
-            glEndList()
-            Vobject.list_ball_and_stick.append(gl_bs_li)
-            self.gl_lists_counter += 1 
-        return True
-
-        
-        
-    
-    def draw_ball_and_stick (self, Vobject = None , selection = None):
-        """ Draws all the elements for Ball-Stick representation.
-        """
-        Vobject.list_ball_and_stick =[] 
-        sphere_quality = 15
-        
-        for frame in Vobject.frames:
-            glEnable(GL_LIGHT0)
-            glEnable(GL_LIGHTING)
-            glEnable(GL_COLOR_MATERIAL)
-            glEnable(GL_DEPTH_TEST)
-           
-            gl_bs_li = glGenLists(self.gl_lists_counter)
-            glNewList(gl_bs_li, GL_COMPILE_AND_EXECUTE)
-            
-            self.current_frame = frame
-            
-            for atom in Vobject.atoms:
-                if atom.ball_and_stick:
-                    #-------------------------------------------------------
-                    #                        B A L L 
-                    #-------------------------------------------------------
-                    glPushMatrix()                
-                    glPushName(atom.atom_id)
-                    coord1   = frame[atom.index-1]
-                    glTranslate(coord1[0],   coord1[1],   coord1[2])
-                    glColor3f(atom.color[0], atom.color[1], atom.color[2])
-                    glutSolidSphere(atom.radius *self.EMSession.gl_parameters['ball_and_sick_sphere_scale'], sphere_quality, sphere_quality)
-                    glPopMatrix()
-                    glPopName()
-            
-            
-            for bond in Vobject.index_bonds:
-                
-                atom1    = Vobject.atoms[bond[0]]
-                atom2    = Vobject.atoms[bond[1]]
-
-                if atom1.ball_and_stick  and atom2.ball_and_stick:
-                    coord1   = frame[bond[0]]
-                    coord2   = frame[bond[1]]
-
-                    midcoord = [
-                               (coord1[0] + coord2[0])/2,	   
-                               (coord1[1] + coord2[1])/2,
-                               (coord1[2] + coord2[2])/2,
-                               ]
-
-                    #-------------------------------------------------------
-                    #                        S T I C K S
-                    #-------------------------------------------------------
-                    #rep.draw_stick_bond(atom1 = atom1, atom2 = atom2, radius = 2)
-                    
-                    v = Vector()
-                    #base of cylinder is at the origin, the top is in the positive z axis
-                    radius = 0.07
-                    a = coord1
-                    b = coord2
-                    
-                    axis_start = [0, 0, .1]
-                    axis_end = v.subtract(a, b)
-
-                    #find angle between the starting and ending axis
-                    angle = v.angle(axis_start, axis_end)
-                    
-                    # determina the axis of rotation of the angle
-                    axis_rotation = v.crossproduct (axis_start, axis_end)
-
-                    #calculate the distance from a to b
-                    length = v.mag(axis_end)
-                    glColor3f(0.9, 0.9, 0.9)
-
-                    # set the bottom  and the top radius to be the same thing
-                    radius_bottom = radius
-                    radius_top    = radius
-
-                    # draw the bond ( use glTranslate beofre using glRotate)
-                    cyl = gluNewQuadric()
-                    glPushMatrix()
-                    glTranslate(b[0], b[1], b[2])
-                    glRotate(angle, axis_rotation[0], axis_rotation[1], axis_rotation[2])
-                    
-                    gluCylinder(cyl, radius_bottom *self.EMSession.gl_parameters['stick_scale'], 
-                                     radius_top*self.EMSession.gl_parameters['stick_scale'], 
-                                     length, 15, 15)
-                    glPopMatrix()
-                    #-------------------------------------------------------
-
-            glEndList()
-            Vobject.list_ball_and_stick.append(gl_bs_li)
-            self.gl_lists_counter += 1 
-        return True
-
-    #'''
     def draw_spheres (self, Vobject = None , selection = None):
         """ Draws all the elements for Ball-Stick representation.
         """
@@ -1802,13 +1908,13 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
                 #-------------------------------------------------------
                 if atom.spheres:
                     glPushMatrix()                
-                    glPushName(atom.atom_id)
+                    #glPushName(atom.atom_id)
                     coord1 = frame[atom.index-1]
                     glTranslate(float(coord1[0]),float( coord1[1]),float( coord1[2]))
                     glColor3f(atom.color[0],   atom.color[1], atom.color[2])
                     glutSolidSphere(atom.vdw_rad*self.EMSession.gl_parameters['sphere_scale'], sphere_quality, sphere_quality)
                     glPopMatrix()
-                    glPopName()
+                   # glPopName()
             
             #for chain in  Vobject.chains:
             #    for res in Vobject.chains[chain].residues:
@@ -1844,6 +1950,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         self.draw()
         self.updateGL()
     
+    '''
     def selection_mode(self, mode):
         """ Defines the selection mode used. This modifies the behavior of the
             draw method for selected objects.
@@ -1875,6 +1982,8 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         else:
             self.sel_atom = self.sel_resid = self.sel_chain = self.sel_mol = False
         return True
+    
+    #'''
     
     def keyPressEvent(self, event):
         """ The keyPressEvent function serves, as the names states, to catch
