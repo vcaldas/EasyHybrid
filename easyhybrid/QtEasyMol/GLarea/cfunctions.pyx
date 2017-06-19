@@ -2,129 +2,12 @@
 #cimport openmp
 #from libc.stdlib cimport malloc, free
 import cython 
-from cython.parallel import prange, parallel
-#import multiprocessing as mp
+#from cython.parallel import prange, parallel
 import numpy as np
 
-'''
-#cpdef C_np_generate_bonds(list coords):
-#    bonds = []
-#    NDIM = 3 # number of dimensions
-#    a = np.array(coords)
-#    a.shape = a.size / NDIM, NDIM
-#
-#    for i  in  range(0, len(coords), 3): 
-#        
-#        point = np.array ([coords[i], coords[i+1], coords[i+2]])
-#        
-#        d = ((a-point)**2).sum(axis=1)  # compute distances
-#        ndx = d.argsort() # indirect sort 
-#        
-#        #
-#        for  index in ndx:
-#            if d[index] >= 2.84:
-#                break
-#        
-#            
-#            else:
-#                if d[index] == 0.0:
-#                    pass
-#                else:
-#                    pass
-#                    #print index, d[index]
-#                    #print point, a[index], d[index]
-#                    bonds.append(point[0])
-#                    bonds.append(point[1])
-#                    bonds.append(point[2])
-#                    bonds.append(a[index][0]) 
-#                    bonds.append(a[index][1])
-#                    bonds.append(a[index][2])
-#        #
-#    return bonds 
-#    
-#cpdef C_generate_bonds2(list coords):
-#    
-#    #cdef double bonds[len(coords)]
-#    bonds = []
-#    cdef int i
-#    cdef int j
-#    cdef int num_threads
-#
-#
-#
-#    for i in range (0, len(coords),3):
-#       
-#        for j in range (i+3, len(coords),3):    
-#            
-#            
-#            if coords[i] - coords[j] >= 2.0  or coords[i+1] - coords[j+1] >= 2.0 or coords[i+2] - coords[j+2] >= 2.0:
-#                pass
-#                #print coords[i], coords[j]
-#            
-#            
-#            else:
-#                dist =  [coords[i]  - coords[j]  ,
-#                        coords[i+1] - coords[j+1],
-#                        coords[i+2] - coords[j+2]]
-#                #print dist
-#                dist2 = dist[0]**2 + dist[1]**2 + dist[2]**2
-#
-#                if dist2 <= 2.89:
-#                    #print coords[i], coords[i+1], coords[i+2] ,coords[j] , coords[j+1], coords[j+2], dist2
-#                    bonds.append(coords[i])
-#                    bonds.append(coords[i+1])
-#                    bonds.append(coords[i+2])
-#
-#                    bonds.append(coords[j])
-#                    bonds.append(coords[j+1])
-#                    bonds.append(coords[j+2])
-#    #print bonds
-#    return bonds
-#
-#cpdef C_generate_bonds(list coords):
-#    
-#    #cdef double bonds[len(coords)]
-#    bonds = []
-#    cdef int i
-#    cdef int j
-#    cdef int num_threads
-#
-#
-#
-#    for i in range (0, len(coords),3):
-#       
-#        for j in range (i+3, len(coords),3):    
-#            
-#            if coords[i] - coords[j] >= 2.0  or coords[i+1] - coords[j+1] >= 2.0 or coords[i+2] - coords[j+2] >= 2.0:
-#                pass
-#                #print coords[i], coords[j]
-#            
-#            
-#            else:
-#                dist =  [coords[i]  - coords[j]  ,
-#                        coords[i+1] - coords[j+1],
-#                        coords[i+2] - coords[j+2]]
-#                #print dist
-#                dist2 = dist[0]**2 + dist[1]**2 + dist[2]**2
-#
-#                if dist2 <= 2.89:
-#                    #print coords[i], coords[i+1], coords[i+2] ,coords[j] , coords[j+1], coords[j+2], dist2
-#                    bonds.append(coords[i])
-#                    bonds.append(coords[i+1])
-#                    bonds.append(coords[i+2])
-#
-#                    bonds.append(coords[j])
-#                    bonds.append(coords[j+1])
-#                    bonds.append(coords[j+2])
-#    #print bonds
-#    return bonds
-#
-'''
 
-
-cpdef C_generate_bonds3(atoms, _limit = 50):
+cpdef C_generate_bonds(atoms, _limit = 50):
     
-    #cdef double bonds[len(coords)]
     bonds       = []
     index_bonds = []
     arr1  = np.array([0,0,1])
@@ -162,16 +45,11 @@ cpdef C_generate_bonds3(atoms, _limit = 50):
                 
                 
                 if dist2 <= ((atoms[i].cov_rad + atoms[j].cov_rad)**2) *1.1:
-                #if dist2 <= 2.89:
-                    
+
                     distance = dist2**0.5
                     midpoint = [(atoms[i].pos[0] + atoms[j].pos[0])/2.0,
                                 (atoms[i].pos[1] + atoms[j].pos[1])/2.0,
                                 (atoms[i].pos[2] + atoms[j].pos[2])/2.0]
-                    
-                    #arr2  = unit_vector(v_dist)
-                    #angle = get_angle(arr1, arr2)
-                    #vec_o = np.cross(arr1, arr2)
                     
                     angle = 0
                     vec_o = 0
@@ -179,15 +57,56 @@ cpdef C_generate_bonds3(atoms, _limit = 50):
                     index_bonds.append([i, j])
                     atoms[i].connected.append(atoms[j])
                     atoms[j].connected.append(atoms[i])
-
-                    #bonds.append((atoms[i], distance , angle    , vec_o, midpoint))
-                    #bonds.append((atoms[j], distance , angle+180, vec_o, midpoint))                
+              
                 else:
                     pass
-    #return #bonds#, index_bonds
-    #print index_bonds
-    #return bonds, index_bonds
+
     return index_bonds
+
+
+
+
+cpdef generate_bond (item ):
+    frame          = item[0]
+    index_bonds    = item[1]
+    show_hide_list = item[2]
+    frame_bonds    = [] 
+
+    for bond in index_bonds:
+        
+        if show_hide_list[bond[0]] and show_hide_list[bond[1]]:
+            
+            x1 = frame[(bond[0]*3)    ]
+            y1 = frame[(bond[0]*3 + 1)]
+            z1 = frame[(bond[0]*3 + 2)]
+            x2 = frame[(bond[1]*3)    ]
+            y2 = frame[(bond[1]*3 + 1)]
+            z2 = frame[(bond[1]*3 + 2)]
+            
+            xm = (x1 + x2)/2.0
+            ym = (y1 + y2)/2.0
+            zm = (z1 + z2)/2.0
+            
+            frame_bonds.append(x1)
+            frame_bonds.append(y1)
+            frame_bonds.append(z1)
+            
+            frame_bonds.append(xm)
+            frame_bonds.append(ym)
+            frame_bonds.append(zm)
+            
+            frame_bonds.append(xm)
+            frame_bonds.append(ym)
+            frame_bonds.append(zm)
+            
+            frame_bonds.append(x2)
+            frame_bonds.append(y2)
+            frame_bonds.append(z2)
+
+    frame_bonds = np.array(frame_bonds, dtype=np.float32)
+    return frame_bonds
+
+
 
 
 

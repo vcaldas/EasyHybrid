@@ -211,8 +211,6 @@ class EasyMolFunctions:
 
 
 
-
-
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow, EasyMolFunctions):
     
     def __init__(self):

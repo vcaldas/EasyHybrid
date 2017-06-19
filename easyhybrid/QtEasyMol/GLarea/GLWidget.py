@@ -85,7 +85,7 @@ class glMenu:
             #label = selected.Vobject_name+' / '+selected.chain+' / '+str(selected.resn)+ ' ' +str(selected.resi)+' / '+str(selected.name)+' ' +str(selected.index)                    
             atom   = sel
             selection_list = [atom]
-            print('atom: ',atom.chain, atom.resi, atom.resn, atom.index, atom.name)    
+            print('atom: ', atom.chain, atom.resi, atom.resn, atom.index, atom.name)    
             if show:
                 if _type == 'dots':
                     atom.dots = True
@@ -474,7 +474,7 @@ class glMenu:
                 menu.addAction(item)
         else:
             if _type == 'on_atom':
-                if selected not in self.EMSession.viewing_selections:
+                if selected not in self.EMSession.selections[self.EMSession.current_selection].viewing_selections:
                     #               obj             /      chain      /       residue                  resi           /         atom                  index
                     label = selected.Vobject.label+' / '+selected.chain+' / '+str(selected.resn)+ ' ' +str(selected.resi)+' / '+str(selected.name)+' ' +str(selected.index)                    
                     #str(selected.index) + ' ' + str(selected.name) + ' ' + str(selected.resi)+ ' ' + str(selected.resn)
@@ -892,7 +892,7 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
             #glDisable(GL_COLOR_MATERIAL)            
             #glDisable(GL_DEPTH_TEST)            
 
-            dot_size = 250/self.z_far
+            dot_size = 550/self.z_far
             
             #glPointSize(250/self.z_far)
             
@@ -1097,21 +1097,23 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
                 
                 #gl_menu
                 
-                #if pickedID is not None:
-                #    selected = self.EMSession.atom_dic_id[pickedID]
-                #    print (selected)
-                #    
-                #    if self.EMSession._picking_selection_mode:
-                #        pass
-                #    
-                #    else:
-                #        if selected not in self.EMSession.selections[self.EMSession.current_selection].viewing_selections:
-                #            self.open_gl_menu (_type = 'on_atom', selected = selected, event = event)
-                #
-                #        else:
-                #            self.open_gl_menu (_type = 'on_selection', selected = selected, event = event)                
-                #else:
-                #    pass
+                if pickedID is not None:
+                    selected = self.EMSession.atom_dic_id[pickedID]
+                    print (selected)
+                    
+                    if self.EMSession._picking_selection_mode:
+                        pass
+                    
+                    else:
+                        if selected not in self.EMSession.selections[self.EMSession.current_selection].viewing_selections:
+                            self.selected_atom_on_click = selected
+                            self.open_gl_menu (_type = 'on_atom', selected = selected, event = event)
+                
+                        else:
+                            #self.selected_atom_on_click = selected
+                            self.open_gl_menu (_type = 'on_selection', selected = selected, event = event)                
+                else:
+                    pass
 
             
             
@@ -1302,9 +1304,9 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         glDisable(GL_LIGHT0)
         glDisable(GL_LIGHTING)
         glDisable(GL_COLOR_MATERIAL)
+        glDisable(GL_FOG)
         glEnable (GL_DEPTH_TEST)
-        #glEnable (GL_LINE_SMOOTH)
-        #glColor3f (255,0,0)
+
         for Vobject in self.EMSession.Vobjects:
             frame = self.frame
          
@@ -1326,32 +1328,12 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         
         data = glReadPixels(pos[0], pos[1], 1, 1, GL_RGBA, GL_UNSIGNED_BYTE)
         pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
-
+        glEnable(GL_FOG)
         if pickedID == 16777215:
             pass
         else:
 
             return pickedID
-        
-        #print ('aqui ohhh --------->',pos[0], pos[1], data, pickedID,'<---------')
-        #
-        #
-        #if pickedID == 16777215:
-        #    pass
-        #else:
-        #    atom = self.EMSession.atom_dic_id[pickedID]
-        #    #.atom_unique_id_dic[pickedID]
-        #    print(atom.atom_id, atom.name, atom.index)
-        #
-        
-        
-        #if pickedID == 1 + 1*255 + 255*255:
-        #    pass
-        #else:
-        #    atom = Vobject.atom_unique_id_dic[pickedID]
-        #    print(atom.atom_id, atom.name, atom.index)
-#'''
-
 
     def load_mol(self, Vobject=None):
         """
@@ -1371,22 +1353,28 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
         glEnable (GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 	
-        ## D O T S
-        ##glPointSize(250/self.z_far)
-        #
-        ##gl
-        #glEnableClientState(GL_VERTEX_ARRAY)
-        ##glEnableClientState(GL_COLOR_ARRAY)
-        #
-        #glVertexPointer(3, GL_FLOAT, 0 , self.sphere)
-        ##glColorPointer (3, GL_FLOAT, 0 , Vobject.coordinates_colors)
-        #
-        #glDrawArrays(GL_POINTS, 0, int(len(self.sphere/3)))
-        ##glDrawArrays(GL_LINE_STRIP, 0, int(len(self.sphere/3)))
-        ##glDrawArrays(GL_TRIANGLE_FAN, 0, int(len(self.sphere/3)))
-        #glDisableClientState(GL_VERTEX_ARRAY)
-        ##glDisableClientState(GL_COLOR_ARRAY)
-
+        # D O T S
+        
+        '''
+        #glPointSize(250/self.z_far)
+        
+        glEnableClientState(GL_VERTEX_ARRAY)
+        #glEnableClientState(GL_COLOR_ARRAY)
+        
+        glVertexPointer(3, GL_FLOAT, 0 , self.sphere)
+        
+        #glColorPointer (3, GL_FLOAT, 0 , Vobject.coordinates_colors)
+        #glDrawArrays(GL_PATCHES, 0, int(len(self.sphere/3)))
+        
+        glDrawArrays(GL_POINTS, 0, int(len(self.sphere/3)))
+        
+        #glDrawArrays(GL_LINE_STRIP, 0, int(len(self.sphere/3)))
+        
+        #glDrawArrays(GL_TRIANGLE_FAN, 0, int(len(self.sphere/3)))
+        glDisableClientState(GL_VERTEX_ARRAY)
+        
+        #glDisableClientState(GL_COLOR_ARRAY)
+        '''
     
 
         for Vobject in self.EMSession.Vobjects:
@@ -1401,31 +1389,37 @@ class GLWidget(QtOpenGL.QGLWidget, glMenu):
                     input_frame = len(Vobject.frames) -1
                 
                 
-                # D O T S
-                glPointSize(250/self.z_far)
+                if Vobject.flat_sphere_representation.actived:
+                    # D O T S
+                    glPointSize(350/self.z_far)
+                    glEnableClientState(GL_VERTEX_ARRAY)
+                    
+                    glEnableClientState(GL_COLOR_ARRAY)
+                    
+                    glVertexPointer(3, GL_FLOAT, 0 , Vobject.flat_sphere_representation.trajectory[frame])
+                    glColorPointer (3, GL_FLOAT, 0 , Vobject.flat_sphere_representation.colors)
+                    
+                    glDrawArrays(GL_POINTS, 0, int((len(Vobject.flat_sphere_representation.trajectory[frame])/3)))
+                    
+                    glDisableClientState(GL_VERTEX_ARRAY)
+                    glDisableClientState(GL_COLOR_ARRAY)
                 
-                glEnableClientState(GL_VERTEX_ARRAY)
-                glEnableClientState(GL_COLOR_ARRAY)
                 
-                glVertexPointer(3, GL_FLOAT, 0 , Vobject.frames[frame])
-                glColorPointer (3, GL_FLOAT, 0 , Vobject.coordinates_colors)
-                
-                glDrawArrays(GL_POINTS, 0, int((len(Vobject.frames[frame])/3)))
-                
-                glDisableClientState(GL_VERTEX_ARRAY)
-                glDisableClientState(GL_COLOR_ARRAY)
-                
-                # L I N E S
-                glLineWidth(100/self.z_far)
-                glEnableClientState(GL_VERTEX_ARRAY)
-                glEnableClientState(GL_COLOR_ARRAY)
-                
-                glVertexPointer(3, GL_FLOAT, 0 , Vobject.trajectory_bonds[frame])
-                glColorPointer (3, GL_FLOAT, 0 , Vobject.bond_colors)
-                glDrawArrays(GL_LINES, 0, int((len(Vobject.trajectory_bonds[frame])/3)))
-                
-                glDisableClientState(GL_VERTEX_ARRAY)
-                glDisableClientState(GL_COLOR_ARRAY)
+                if Vobject.line_representation.actived:
+                    # L I N E S
+                    glLineWidth(50/self.z_far)
+                    glEnableClientState(GL_VERTEX_ARRAY)
+                    glEnableClientState(GL_COLOR_ARRAY)
+                    
+                    glVertexPointer(3, GL_FLOAT, 0 , Vobject.line_representation.trajectory_bonds[frame])
+                    #glVertexPointer(3, GL_FLOAT, 0 , Vobject.trajectory_bonds[frame])
+                    glColorPointer (3, GL_FLOAT, 0 , Vobject.line_representation.color_bonds)
+                    #glColorPointer (3, GL_FLOAT, 0 , Vobject.bond_colors)
+                    glDrawArrays(GL_LINES, 0, int((len(Vobject.line_representation.trajectory_bonds[frame])/3)))
+                    #glDrawArrays(GL_LINES, 0, int((len(Vobject.trajectory_bonds[frame])/3)))
+                    
+                    glDisableClientState(GL_VERTEX_ARRAY)
+                    glDisableClientState(GL_COLOR_ARRAY)
                 
                 
 

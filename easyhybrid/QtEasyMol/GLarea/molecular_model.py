@@ -36,10 +36,203 @@ try:
 except:
     import atom_types as at
     import cfunctions as cfunctions
+
+import multiprocessing as mp
+
+
+
+class FlatSphereRepresentation:
+    """ Class doc """
     
-import multiprocessing
+    def __init__ (self, Vobject):
+        """ Class initialiser """
+        
+        """  F L A T   S P H E R E S   """
+        self.actived                  = False
+        self.modified                 = False
+        self.Vobject                  = Vobject
+        #self.show_hide_atoms          = []
+        
+        self.trajectory               = []
+        self.colors                   = []
+        self.COMPILED_LIST_trajectory = []
+        
+    def _generate_trajectory (self):
+        """ Function doc """
+        self.trajectory               = []
+        
+        for frame in self.Vobject.frames:
+            
+            frame_coordinates = []
+            
+            for atom in self.Vobject.atoms:
+                
+                if atom.dots:                   
+                    #----------------------------------
+                    #           D O T S
+                    #----------------------------------
+                    x1 = frame[ ( (atom.index -1)*3     ) ]
+                    y1 = frame[ ( (atom.index -1)*3 + 1 ) ]
+                    z1 = frame[ ( (atom.index -1)*3 + 2 ) ]                
+                    
+                    frame_coordinates.append(x1)
+                    frame_coordinates.append(y1)
+                    frame_coordinates.append(z1)
+ 
+            frame_coordinates = np.array (frame_coordinates , dtype=np.float32)  
+            self.trajectory.append(frame_coordinates) 
+        
+        
+        #self.trajectory = []
+        #
+        #for index in selection:
+        #
+        #    frame_coordinates = []
+        #    
+        #    for frame in self.Vobject.frames:
+        #    
+        #        #----------------------------------
+        #        #           D O T S
+        #        #----------------------------------
+        #        x1 = frame[ ( (index-1)*3     ) ]
+        #        y1 = frame[ ( (index-1)*3 + 1 ) ]
+        #        z1 = frame[ ( (index-1)*3 + 2 ) ]                
+        #        
+        #        frame_coordinates.append(x1)
+        #        frame_coordinates.append(y1)
+        #        frame_coordinates.append(z1)
+        #        
+        #        frame_coordinates = np.array (frame_coordinates , dtype=np.float32)          
+        #        
+        #    self.trajectory.append(frame_coordinates)
+        
+        
+        
+        
+        '''
+        if selection is None:
+            for frame in self.Vobject.frames:
+                frame_coordinates = []
+                for atom in self.Vobject.atoms:
+                    #-------------------------------------------------------
+                    #                        D O T S
+                    #-------------------------------------------------------
+                    x1 = frame[((atom.index-1)*3)    ]
+                    y1 = frame[((atom.index-1)*3 + 1)]
+                    z1 = frame[((atom.index-1)*3 + 2)]                
+                    
+                    frame_coordinates.append(x1)
+                    frame_coordinates.append(y1)
+                    frame_coordinates.append(z1)
+                frame_coordinates  = np.array(frame_coordinates , dtype=np.float32)          
+                self.trajectory.append(frame_coordinates)
+        '''
 
 
+    def _generate_colors  (self):
+        """ Function doc """
+        
+        self.colors = []        
+        
+        for atom in self.Vobject.atoms:
+            if atom.dots:                   
+                #-------------------------------------------------------
+                #                        D O T S
+                #-------------------------------------------------------
+                self.colors.append(atom.color[0])        
+                self.colors.append(atom.color[1])        
+                self.colors.append(atom.color[2])   
+                #self.colors.append(atom.color[3])   
+        self.colors  = np.array(self.colors, dtype=np.float32)
+
+
+    def update (self, selection = None):
+        """ Function doc """
+        print ('\nFlatSphereRepresentation starting')
+        initial          = time.time()
+        
+        self._generate_trajectory()
+        self._generate_colors()
+        
+        final = time.time() 
+        print ('FlatSphereRepresentation end -  total time: ', final - initial, '\n')
+
+class LineRepresentation:
+    """ Class doc """
+    
+    def __init__ (self, Vobject):
+        """ Class initialiser """
+        
+        """   L I N E S   """
+        self.actived                  = True
+        self.modified                 = False
+        self.Vobject                  = Vobject
+        #self.show_hide_atoms          = []
+        
+        self.trajectory_bonds         = []
+        self.color_bonds              = []
+        self.COMPILED_LIST_trajectory = []
+        
+    
+    def generate_bond_colors (self):
+        
+        """ Function doc """
+        self.line_color_bonds             = []
+
+        for bond in self.Vobject.index_bonds:
+            atom1    = self.Vobject.atoms[bond[0]]
+            atom2    = self.Vobject.atoms[bond[1]]
+            
+            if atom1.lines and atom2.lines:
+                self.line_color_bonds.append(atom1.color[0])        
+                self.line_color_bonds.append(atom1.color[1])        
+                self.line_color_bonds.append(atom1.color[2])  
+                
+                self.line_color_bonds.append(atom1.color[0])        
+                self.line_color_bonds.append(atom1.color[1])        
+                self.line_color_bonds.append(atom1.color[2])
+                
+                self.line_color_bonds.append(atom2.color[0])        
+                self.line_color_bonds.append(atom2.color[1])        
+                self.line_color_bonds.append(atom2.color[2])
+                
+                self.line_color_bonds.append(atom2.color[0])        
+                self.line_color_bonds.append(atom2.color[1])        
+                self.line_color_bonds.append(atom2.color[2])
+        
+        self.color_bonds  = np.array(self.line_color_bonds, dtype=np.float32)
+    
+    def generate_trajectory_line_representation (self):
+        
+        """ Function doc """
+        #return None
+        print ('\ngenerate_trajectory_bonds starting')
+        initial     = time.time()
+        
+        n_processor      = mp.cpu_count()
+        pool             = mp.Pool(n_processor)
+        
+        pool_list = [] 
+        
+        show_hide_list = []
+        for atom in self.Vobject.atoms:
+            show_hide_list.append(atom.lines)
+        
+        for frame in self.Vobject.frames:
+            pool_list.append([frame, self.Vobject.index_bonds, show_hide_list] )
+        
+        self.trajectory_bonds = pool.map(cfunctions.generate_bond, pool_list)
+
+        
+        final = time.time() 
+        
+        print ('ngenerate_trajectory_bonds finished -  total time: ', final - initial, '\n')
+    
+
+    def update(self):
+        """ Function doc """
+        self.generate_bond_colors()
+        self.generate_trajectory_line_representation()
 
 
 class Vobject:
@@ -47,7 +240,6 @@ class Vobject:
     
     def __init__ (self, atoms = [] , label = None, EMSession = None, trajectory = None):
         """ Class initialiser """
-        #print( 'label:', label)
         self.EMSession = EMSession
         self.actived   = False       
         self.Type      = 'molecule'
@@ -61,89 +253,35 @@ class Vobject:
             self.name  = 'unkown'
 
         
-        self.atoms        = atoms
-        self.residues     = []
-        self.chains       = {}
-                          
-        self.bonds        = []
-        self.frames       = trajectory
-        self.mass_center  = np.array([0.0, 0.0, 0.0])
+        self.atoms              = atoms
+        self.residues           = []
+        self.chains             = {}
+                                
+        self.bonds              = []
+        self.frames             = trajectory
+        self.mass_center        = np.array([0.0, 0.0, 0.0])
 
-
-        self.trajectory_bonds       = []
-        self.trajectory_coordinates = []        
-
-        #self.trajectory_coordinates_color_ids  = [] 
-        
-        self.bond_colors            = []
-        self.coordinates_colors     = []        
-        self.coordinates_color_ids  = []        
-
-        self.atom_unique_id_dic     = {}
-
-        print(self.EMSession.atom_dic_id)
-        self.generate_chain_structure()
-        self.generate_atom_unique_color_id()
-        self.generate_bonds()
-        self.generate_colors()
-        #self.index_bonds  = []
-
-
-        
-        #self.frame_energy = [] 
+        self.atom_unique_id_dic = {}
+        self.index_bonds        = None
        
-        """   D O T S   """
-        self.show_dots         = False
-        self.list_dots         = []    # GL list -  GPU compiled 
-        self.modified_dots     = False
-        #self.list_atom_dots    = []    # <-- True/False lista containg all atoms 
+        self._generate_chain_structure()
+        self._generate_atom_unique_color_id()
+        self._generate_bonds()
+        self._generate_colors()
         
         """   L I N E S   """
-        self.show_lines        = True
-        self.list_lines        = []
-        self.modified_lines    = False
-        
+        self.line_representation = LineRepresentation(self)
+        self.line_representation.update()
+
+        """   F L A T   S P H E R E   """
+        self.flat_sphere_representation = FlatSphereRepresentation(self)
+        #self.flat_sphere_representation.actived = True
+        #self.flat_sphere_representation.update()
         
         print ('frames:     ', len(self.frames))
         print ('frame size: ', len(self.frames[0]))
 
-        #'''
-        #self.list_atom_lines   = []    # <-- True/False lista containg all atoms 
-        
-        """   R I B B O N S   """
-        self.show_ribbons      = False
-        self.list_ribbons      = []
-        self.modified_ribbons  = False
-
-        #self.list_atom_ribbons = []    # <-- True/False lista containg all atoms 
-        
-        """   S T I C K S   """
-        self.show_sticks       = False
-        self.list_sticks       = []
-        self.modified_sticks   = False
-
-        #self.list_atom_sticks  = []   # <-- True/False lista containg all atoms 
-        
-        """   S P H E R E S   """
-        self.show_spheres      = False
-        self.list_spheres      = []
-        self.modified_spheres  = False
-
-        #self.list_atom_spheres = []   # <-- True/False lista containg all atoms 
-        
-        """   S U R F A C E   """
-        self.show_surface      = False
-        self.list_surface      = []
-        self.modified_surface  = False
-
-        #self.list_atom_surface = []
-        
-        """   B A L L  A N D  S T I C K   """   
-        self.show_ball_and_stick      = False
-        self.list_ball_and_stick      = []
-        self.modified_ball_and_stick  = False
-
-    def generate_chain_structure (self):
+    def _generate_chain_structure (self):
         """ Function doc """
         print ('\ngenerate_chain_structure starting')
         initial          = time.time()
@@ -224,53 +362,16 @@ class Vobject:
         #print( 'label:', label)
         self.label  = label.split('.')
         self.label  = self.label[0]
-
-    def generate_atom_list (self):
-        """ Function doc """
-        bonds = []
-        NDIM = 3 # number of dimensions
-
-        a = np.array(self.coords)
-        a.shape = a.size / NDIM, NDIM
-        for i  in  range(0, len(self.coords), 3): 
-            point = np.array ([self.coords[i], self.coords[i+1], self.coords[i+2]])
-            d = ((a-point)**2).sum(axis=1)  # compute distances
-            ndx = d.argsort() # indirect sort 
-            
-            #'''
-            for  index in ndx:
-                if d[index] >= 2.84:
-                    break
-
-                else:
-                    if d[index] == 0.0:
-                        pass
-                    else:
-                        pass
-                        bonds.append(point[0])
-                        bonds.append(point[1])
-                        bonds.append(point[2])
-                        bonds.append(a[index][0]) 
-                        bonds.append(a[index][1])
-                        bonds.append(a[index][2])
-            #'''
-        return bonds 
-
-    #'''
-    def generate_bonds (self):
+    
+    def _generate_bonds (self):
         """ Function doc """
         print ('\ngenerate_bonds starting')
         initial          = time.time()
-        self.index_bonds = cfunctions.C_generate_bonds3 (self.atoms)
+        self.index_bonds = cfunctions.C_generate_bonds(self.atoms)
         final = time.time() 
         print ('generate_bonds end -  total time: ', final - initial, '\n')
 
-        self.generate_trajectory_bonds()
-        self.generate_bond_colors()
-        #self.generate_trajectory_coordinates()
-
-
-    def generate_atom_unique_color_id (self):
+    def _generate_atom_unique_color_id (self):
         self.coordinates_color_ids  = []        
 #        self.atom_unique_id_dic     = {}
 
@@ -291,7 +392,7 @@ class Vobject:
             #self.atom_unique_id_dic[pickedID] = atom
         self.coordinates_color_ids = np.array(self.coordinates_color_ids, dtype=np.float32)
         
-    def generate_colors  (self):
+    def _generate_colors  (self):
         """ Function doc """
         #self.bond_colors           = []
         #for bond in self.index_bonds:
@@ -332,545 +433,6 @@ class Vobject:
 
         self.coordinates_colors  = np.array(self.coordinates_colors, dtype=np.float32)
     
-    def generate_bond_colors (self):
-        """ Function doc """
-        self.bond_colors           = []
-        for bond in self.index_bonds:
-            atom1    = self.atoms[bond[0]]
-            atom2    = self.atoms[bond[1]]
-            # checking if the selection is actived
-
-            self.bond_colors.append(atom1.color[0])        
-            self.bond_colors.append(atom1.color[1])        
-            self.bond_colors.append(atom1.color[2])  
-            
-            self.bond_colors.append(atom1.color[0])        
-            self.bond_colors.append(atom1.color[1])        
-            self.bond_colors.append(atom1.color[2])
-            
-            self.bond_colors.append(atom2.color[0])        
-            self.bond_colors.append(atom2.color[1])        
-            self.bond_colors.append(atom2.color[2])
-            
-            self.bond_colors.append(atom2.color[0])        
-            self.bond_colors.append(atom2.color[1])        
-            self.bond_colors.append(atom2.color[2])
-        self.bond_colors  = np.array(self.bond_colors, dtype=np.float32)
-    
-    
-    
-    
-    def generate_bond (self, frame):
-        """ Function doc """
-        frame_bonds        = [] 
-        for bond in self.index_bonds:
-            atom1    = self.atoms[bond[0]]
-            atom2    = self.atoms[bond[1]]
-            # checking if the selection is actived
-            
-            x1 = frame[(bond[0]*3)    ]
-            y1 = frame[(bond[0]*3 + 1)]
-            z1 = frame[(bond[0]*3 + 2)]
-            x2 = frame[(bond[1]*3)    ]
-            y2 = frame[(bond[1]*3 + 1)]
-            z2 = frame[(bond[1]*3 + 2)]
-         
-            xm = (x1 + x2)/2.0
-            ym = (y1 + y2)/2.0
-            zm = (z1 + z2)/2.0
-            
-            frame_bonds.append(x1)
-            frame_bonds.append(y1)
-            frame_bonds.append(z1)
-            
-            frame_bonds.append(xm)
-            frame_bonds.append(ym)
-            frame_bonds.append(zm)
-            
-            frame_bonds.append(xm)
-            frame_bonds.append(ym)
-            frame_bonds.append(zm)
-            
-            frame_bonds.append(x2)
-            frame_bonds.append(y2)
-            frame_bonds.append(z2)
-        
-        frame_bonds       = np.array(frame_bonds,        dtype=np.float32)
-        return frame_bonds
-        #return None
-        #self.trajectory_bonds.append(frame_bonds)
-    
-    def generate_trajectory_bonds (self):
-        """ Function doc """
-        #return None
-        print ('\ngenerate_trajectory_bonds starting')
-        initial          = time.time()
-        
-        #n_processor           = multiprocessing.cpu_count()
-        #pool                  = multiprocessing.Pool(n_processor)
-        #self.trajectory_bonds = pool.map(self.generate_bond, self.frames)
-        
-
-        #'''
-        for frame in self.frames:
-            frame_bonds        = [] 
-            for bond in self.index_bonds:
-            
-                atom1    = self.atoms[bond[0]]
-                atom2    = self.atoms[bond[1]]
-                # checking if the selection is actived
-                
-                x1 = frame[(bond[0]*3)    ]
-                y1 = frame[(bond[0]*3 + 1)]
-                z1 = frame[(bond[0]*3 + 2)]
-                x2 = frame[(bond[1]*3)    ]
-                y2 = frame[(bond[1]*3 + 1)]
-                z2 = frame[(bond[1]*3 + 2)]
-                
-                #print((bond[0]*3)    , x1)
-                #print((bond[0]*3 + 1), y1)
-                #print((bond[0]*3 + 2), z1)
-                #print((bond[1]*3)    , x2)
-                #print((bond[1]*3 + 1), y2)
-                #print((bond[1]*3 + 2), z2)
-                
-                xm = (x1 + x2)/2.0
-                ym = (y1 + y2)/2.0
-                zm = (z1 + z2)/2.0
-                
-                frame_bonds.append(x1)
-                frame_bonds.append(y1)
-                frame_bonds.append(z1)
-                
-                frame_bonds.append(xm)
-                frame_bonds.append(ym)
-                frame_bonds.append(zm)
-                
-                frame_bonds.append(xm)
-                frame_bonds.append(ym)
-                frame_bonds.append(zm)
-                
-                frame_bonds.append(x2)
-                frame_bonds.append(y2)
-                frame_bonds.append(z2)
-   
-            frame_bonds       = np.array(frame_bonds,        dtype=np.float32)
-            self.trajectory_bonds.append(frame_bonds)
-        #self.frame_bonds_test = frame_bonds
-        #'''
-        final = time.time() 
-        print ('ngenerate_trajectory_bonds finished -  total time: ', final - initial, '\n')
-    
-    '''
-    def generate_trajectory_coordinates (self):
-        """ Function doc """
-        
-        frame_coordinates = []
-       
-        for frame in self.frames:
-            for atom in self.atoms:
-                #if atom.dots:
-                #-------------------------------------------------------
-                #                        D O T S
-                #-------------------------------------------------------
-                coord1   = self.frames[0][atom.index-1]
-                frame_coordinates.append(float(coord1[0]))
-                frame_coordinates.append(float(coord1[1]))
-                frame_coordinates.append(float(coord1[2]))
-
-                #self.frame_colors.append(atom.color[0])        
-                #self.frame_colors.append(atom.color[1])        
-                #self.frame_colors.append(atom.color[2])        
-                
-                #i = atom.atom_id
-                #r = (i & 0x000000FF) >>  0
-                #g = (i & 0x0000FF00) >>  8
-                #b = (i & 0x00FF0000) >> 16
-                #
-                #
-                #self.unique_colors_colors_id.append(r/255.0)
-                #self.unique_colors_colors_id.append(g/255.0)
-                #self.unique_colors_colors_id.append(b/255.0)
-                
-                #pickedID = r + g * 256 + b * 256*256
-                #self.atom_unique_id_dic[pickedID] = atom
-            frame_coordinates  = np.array(frame_coordinates , dtype=np.float32)
-        self.trajectory_coordinates.append(frame_coordinates)
-        self.frame_coordinates_test = frame_coordinates
-        #self.trajectory_colors       = np.array(self.trajectory_colors      , dtype=np.float32)
-        #self.unique_colors_colors_id = np.array(self.unique_colors_colors_id, dtype=np.float32)
-        
-   '''
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class Vobject_old:
-    """ Class doc """
-    
-    def __init__ (self, chains=None, bonds=None, mass_center=None, label = None):
-        """ Class initialiser """
-        #print( 'label:', label)
-        self.actived           = True       
-        
-        """   D O T S   """
-        self.show_dots         = False
-        self.GL_list_dots      = []    # GL list -  GPU compiled 
-        self.modified_dots     = False
-        #self.list_atom_dots    = []    # <-- True/False lista containg all atoms 
-        
-        """   L I N E S   """
-        self.show_lines        = True
-        self.list_lines        = []
-        self.modified_lines    = False
-
-        #self.list_atom_lines   = []    # <-- True/False lista containg all atoms 
-        
-        """   R I B B O N S   """
-        self.show_ribbons      = False
-        self.list_ribbons      = []
-        self.modified_ribbons  = False
-
-        #self.list_atom_ribbons = []    # <-- True/False lista containg all atoms 
-        
-        """   S T I C K S   """
-        self.show_sticks       = False
-        self.list_sticks       = []
-        self.modified_sticks   = False
-
-        #self.list_atom_sticks  = []   # <-- True/False lista containg all atoms 
-        
-        """   S P H E R E S   """
-        self.show_spheres      = False
-        self.list_spheres      = []
-        self.modified_spheres  = False
-
-        #self.list_atom_spheres = []   # <-- True/False lista containg all atoms 
-        
-        """   S U R F A C E   """
-        self.show_surface      = False
-        self.list_surface      = []
-        self.modified_surface  = False
-
-        #self.list_atom_surface = []
-        
-        """   B A L L  A N D  S T I C K   """   
-        self.show_ball_and_stick      = False
-        self.list_ball_and_stick      = []
-        self.modified_ball_and_stick  = False
-
-        #self.list_atom_ball_and_stick = []
-
-
-
-        self.Type  = 'molecule'
-        
-        
-      
-        
-        if label:
-            self.label = self._get_label(label)
-            self.name = self._get_label(label)
-        else:
-            self.label = 'unkown'
-            self.name  = 'unkown'
-
-        
-        
-        
-        self.chains       = {}
-
-        self.bonds        = []
-        self.index_bonds  = []
-
-        self.mass_center  = np.array([0.0, 0.0, 0.0])
-
-        self.frames       = []
-        self.frame_energy = [] 
-        
-        self.atoms        = []
-        self.residues     = []
-
-        #self.coords       = []
-        pass  
-
-    
-
-    
-    def generate_chain_structure (self, counter = 0, atom_dic_id = None):
-        """ Function doc """
-        print ('\ngenerate_chain_structure starting')
-        initial          = time.time()
-        
-        parser_resi  = None
-        parser_resn  = None
-        chains_m     = {}
-
-        sum_x   = 0
-        sum_y   = 0
-        sum_z   = 0
-        frame   = []
-        
-        index   = 1
-        
-        for atom in self.atoms:
-        
-            #self.atoms[self.atoms.index(atom)].index   = index
-            #self.atoms[self.atoms.index(atom)].atom_id = counter
-            #print  (self.atoms[self.atoms.index(atom)].atom_id)
-            atom.index   = index
-            atom.atom_id = counter
-            
-            if atom.chain in self.chains.keys():
-                ch = self.chains[atom.chain]
-                #print 'existe'
-            
-            else:
-                ch = Chain(name = atom.chain, label = 'UNK')
-                self.chains[atom.chain] = ch
-                #print 'n existe'
-
-            if atom.resi == parser_resi:# and at_res_n == parser_resn:
-                atom.residue = ch.residues[-1]
-                ch.residues[-1].atoms.append(atom)
-                frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
-
-            else:
-                residue = Residue(name=atom.resn, index=atom.resi, chain=atom.chain)
-                atom.residue     = residue
-                residue.atoms.append(atom)
-                
-                ch.residues.append(residue)
-                frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
-                parser_resi  = atom.resi
-                parser_resn  = atom.resn
-
-
-            if atom.name == 'CA':
-                ch.backbone.append(atom)
-
-
-            if atom_dic_id is not None:
-                atom_dic_id[counter] = atom
-
-            sum_x += atom.pos[0]
-            sum_y += atom.pos[1]
-            sum_z += atom.pos[2]
-            index   +=1
-            counter +=1
-            
-        self.frames.append(frame)
-        total = len(self.atoms)
-        self.list_atom_lines          = [True] *total
-        self.list_atom_ribbons        = [False]*total
-        self.list_atom_dots           = [False]*total
-        self.list_atom_sticks         = [False]*total
-        self.list_atom_spheres        = [False]*total
-        self.list_atom_surface        = [False]*total
-        self.list_atom_ball_and_stick = [False]*total
-
-
-        self.mass_center[0] = sum_x / total
-        self.mass_center[1] = sum_y / total
-        self.mass_center[2] = sum_z / total
-        #print ('generate_chain_structure -> label:', self.label, self.name)
-        final = time.time() 
-        print ('generate_chain_structure end -  total time: ', final - initial, '\n')
-        return atom_dic_id
-
-    def _get_label (self, label):
-        """ Function doc """
-        #print( 'label:', label)
-        self.label  = label.split('.')
-        self.label  = self.label[0]
-        #print( 'label:', self.label)
-
-    def generate_atom_list (self):
-        """ Function doc """
-        bonds = []
-        NDIM = 3 # number of dimensions
-
-        a = np.array(self.coords)
-        a.shape = a.size / NDIM, NDIM
-        for i  in  range(0, len(self.coords), 3): 
-            point = np.array ([self.coords[i], self.coords[i+1], self.coords[i+2]])
-            d = ((a-point)**2).sum(axis=1)  # compute distances
-            ndx = d.argsort() # indirect sort 
-            
-            #'''
-            for  index in ndx:
-                if d[index] >= 2.84:
-                    break
-
-                else:
-                    if d[index] == 0.0:
-                        pass
-                    else:
-                        pass
-                        bonds.append(point[0])
-                        bonds.append(point[1])
-                        bonds.append(point[2])
-                        bonds.append(a[index][0]) 
-                        bonds.append(a[index][1])
-                        bonds.append(a[index][2])
-            #'''
-        return bonds 
-
-    #'''
-    def generate_bonds (self):
-        """ Function doc """
-        print ('\ngenerate_bonds starting')
-        initial          = time.time()
-        self.index_bonds = cfunctions.C_generate_bonds3 (self.atoms)
-        final = time.time() 
-        print ('generate_bonds end -  total time: ', final - initial, '\n')
-
-        #self.generate_trajectory_bonds()
-        #self.generate_trajectory_coordinates()
-    '''
-    def generate_bonds (self):
-        """ Function doc """
-        print ('start')
-        initial = time.time()
-        #self.bonds = self.generete_atom_list()
-        #self.bonds = cfunctions.C_generate_bonds (self.coords)
-        #self.bonds, self.index_bonds = cfunctions.C_generate_bonds3 (self.atoms)
-        for chain in self.chains:
-            for residue in self.chains[chain].residues:
-                
-        self.index_bonds = cfunctions.C_generate_bonds3 (self.atoms)
-        #self.bonds = cfunctions.C_np_generate_bonds (self.coords)
-        #self.bonds = self.distances_from_point()
-        print ('end')
-        final = time.time() 
-        print (final - initial)
-    #'''
-
-    
-    def generate_trajectory_bonds (self):
-        """ Function doc """
-        self.trajectory_bonds       = []
-        self.trajectory_bond_colors = []
-
-        for frame in self.frames:
-            for bond in self.index_bonds:
-                atom1    = self.atoms[bond[0]]
-                atom2    = self.atoms[bond[1]]
-                # checking if the selection is actived
-                if  atom1.lines and atom2.lines:
-                    coord1   = self.frames[0][bond[0]]
-                    coord2   = self.frames[0][bond[1]]
-                    
-                    midcoord = [
-                               (coord1[0] + coord2[0])/2,	   
-                               (coord1[1] + coord2[1])/2,
-                               (coord1[2] + coord2[2])/2,
-                               ]
-                    
-                    self.trajectory_bonds.append(float(coord1[0]))
-                    self.trajectory_bonds.append(float(coord1[1]))
-                    self.trajectory_bonds.append(float(coord1[2]))
-                    
-                    self.trajectory_bonds.append(float(midcoord[0]))
-                    self.trajectory_bonds.append(float(midcoord[1]))
-                    self.trajectory_bonds.append(float(midcoord[2]))
-                    
-                    self.trajectory_bonds.append(float(midcoord[0]))
-                    self.trajectory_bonds.append(float(midcoord[1]))
-                    self.trajectory_bonds.append(float(midcoord[2]))
-                    
-                    self.trajectory_bonds.append(float(coord2[0]))
-                    self.trajectory_bonds.append(float(coord2[1]))
-                    self.trajectory_bonds.append(float(coord2[2]))
-                    
-                    
-                    
-                    
-                    self.trajectory_bond_colors.append(atom1.color[0])        
-                    self.trajectory_bond_colors.append(atom1.color[1])        
-                    self.trajectory_bond_colors.append(atom1.color[2])  
-                    
-                    self.trajectory_bond_colors.append(atom1.color[0])        
-                    self.trajectory_bond_colors.append(atom1.color[1])        
-                    self.trajectory_bond_colors.append(atom1.color[2])
-                    
-                    self.trajectory_bond_colors.append(atom2.color[0])        
-                    self.trajectory_bond_colors.append(atom2.color[1])        
-                    self.trajectory_bond_colors.append(atom2.color[2])
-                    
-                    self.trajectory_bond_colors.append(atom2.color[0])        
-                    self.trajectory_bond_colors.append(atom2.color[1])        
-                    self.trajectory_bond_colors.append(atom2.color[2])
-                
-        self.trajectory_bonds       = np.array(self.trajectory_bonds,        dtype=np.float32)
-        self.trajectory_bond_colors = np.array(self.trajectory_bond_colors, dtype=np.float32)
-        #self.VBOID    = GLuint(1)
-
-    def generate_trajectory_coordinates (self):
-        """ Function doc """
-        self.trajectory_coordinates  = []        
-        self.trajectory_colors       = []        
-        self.unique_colors_colors_id = [] 
-        self.atom_unique_id_dic      = {}
-        
-        for atom in self.atoms:
-            #if atom.dots:
-            #-------------------------------------------------------
-            #                        D O T S
-            #-------------------------------------------------------
-            coord1   = self.frames[0][atom.index-1]
-            self.trajectory_coordinates.append(float(coord1[0]))
-            self.trajectory_coordinates.append(float(coord1[1]))
-            self.trajectory_coordinates.append(float(coord1[2]))
-            
-            self.trajectory_colors.append(atom.color[0])        
-            self.trajectory_colors.append(atom.color[1])        
-            self.trajectory_colors.append(atom.color[2])        
-            
-            i = atom.atom_id
-            r = (i & 0x000000FF) >>  0
-            g = (i & 0x0000FF00) >>  8
-            b = (i & 0x00FF0000) >> 16
-            
-            
-            self.unique_colors_colors_id.append(r/255.0)
-            self.unique_colors_colors_id.append(g/255.0)
-            self.unique_colors_colors_id.append(b/255.0)
-            
-            pickedID = r + g * 256 + b * 256*256
-            self.atom_unique_id_dic[pickedID] = atom
-            
-        #self.trajectory_coordinates  = np.array(self.trajectory_coordinates , dtype=np.float32)
-        self.trajectory_colors       = np.array(self.trajectory_colors      , dtype=np.float32)
-        self.unique_colors_colors_id = np.array(self.unique_colors_colors_id, dtype=np.float32)
-
-        #self.VBOID    = GLuint(1)
-
 
 class Chain:
     """ Class doc """
