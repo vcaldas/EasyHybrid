@@ -36,8 +36,8 @@ class Atom:
         self.atom_id      = atom_id               # An unique number
 
         self.color        = at.get_color    (name)
-        self.color.append(0.0)  
-	     
+        #self.color.append(0.0)  
+            
         self.col_rgb      = at.get_color_rgb(name)
         self.radius       = at.get_radius   (name)
         self.vdw_rad      = at.get_vdw_rad  (name)

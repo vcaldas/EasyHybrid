@@ -24,6 +24,9 @@
 
 import numpy as np
 import math, copy
+import ctypes
+from OpenGL import GL
+
 import VISMOL.glCore.sphere_data as sphd
 import VISMOL.glCore.cylinder_data as cyd
 import VISMOL.glCore.matrix_operations as mop
@@ -142,9 +145,105 @@ def get_cylinder(pos, color, angle, vec_dir, length, stacks, radius=0.5, level='
                 indices[k+(i-1)*int(len(inds))] += (i-1)*to_add_ind
     return vertices, indices, colors, normals
 
+def make_gl_dots(program, atom_list, vao_list, bckgrnd_color=[0.0,0.0,0.0,1.0]):
+    """ Function doc
+    """
+    coords = []
+    colors = []
+    dot_sizes = []
+    for atom in atom_list:
+        coords = np.hstack((coords, atom.pos))
+        colors = np.hstack((colors, atom.color))
+        dot_sizes.append(atom.vdw_rad)
+    coords = np.array(coords, dtype=np.float32)
+    colors = np.array(colors, dtype=np.float32)
+    dot_sizes = np.array(dot_sizes, dtype=np.float32)
+    dot_qtty = int(len(coords)/3)
+    bckgrnd_color = [bckgrnd_color[0],bckgrnd_color[1],
+                     bckgrnd_color[2],bckgrnd_color[3]]*dot_qtty
+    bckgrnd_color = np.array(bckgrnd_color, dtype=np.float32)
+    
+    vao = GL.glGenVertexArrays(1)
+    GL.glBindVertexArray(vao)
+    
+    coord_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, coord_vbo)
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.itemsize*int(len(coords)), coords, GL.GL_STATIC_DRAW)
+    att_position = GL.glGetAttribLocation(program, 'vert_coord')
+    GL.glEnableVertexAttribArray(att_position)
+    GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*coords.itemsize, ctypes.c_void_p(0))
+    
+    col_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*int(len(colors)), colors, GL.GL_STATIC_DRAW)
+    att_colors = GL.glGetAttribLocation(program, 'vert_color')
+    GL.glEnableVertexAttribArray(att_colors)
+    GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+    
+    dot_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, dot_vbo)
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, dot_sizes.itemsize*len(dot_sizes), dot_sizes, GL.GL_STATIC_DRAW)
+    att_size = GL.glGetAttribLocation(program, 'vert_dot_size')
+    GL.glEnableVertexAttribArray(att_size)
+    GL.glVertexAttribPointer(att_size, 1, GL.GL_FLOAT, GL.GL_FALSE, dot_sizes.itemsize, ctypes.c_void_p(0))
+    
+    bckgrnd_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, bckgrnd_vbo)
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, bckgrnd_color.itemsize*len(bckgrnd_color), bckgrnd_color, GL.GL_STATIC_DRAW)
+    att_bck_color = GL.glGetAttribLocation(program, 'bckgrnd_color')
+    GL.glEnableVertexAttribArray(att_bck_color)
+    GL.glVertexAttribPointer(att_bck_color, 4, GL.GL_FLOAT, GL.GL_FALSE, 4*bckgrnd_color.itemsize, ctypes.c_void_p(0))
+    
+    vao_list.append(vao)
+    GL.glBindVertexArray(0)
+    GL.glDisableVertexAttribArray(att_position)
+    GL.glDisableVertexAttribArray(att_colors)
+    GL.glDisableVertexAttribArray(att_size)
+    GL.glDisableVertexAttribArray(att_bck_color)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+    
+    return True
 
-
-
+def make_gl_lines(program, bond_list, atom_list, vao_list):
+    """ Function doc
+    """
+    coords = []
+    colors = []
+    for bond in bond_list:
+        coords = np.hstack((coords, atom_list[bond[0]].pos))
+        coords = np.hstack((coords, atom_list[bond[1]].pos))
+        colors = np.hstack((colors, atom_list[bond[0]].color))
+        colors = np.hstack((colors, atom_list[bond[1]].color))
+    
+    coords = np.array(coords, dtype=np.float32)
+    colors = np.array(colors, dtype=np.float32)
+    
+    vao = GL.glGenVertexArrays(1)
+    GL.glBindVertexArray(vao)
+    
+    coord_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, coord_vbo)
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.itemsize*int(len(coords)), coords, GL.GL_STATIC_DRAW)
+    att_position = GL.glGetAttribLocation(program, 'vert_coord')
+    GL.glEnableVertexAttribArray(att_position)
+    GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*coords.itemsize, ctypes.c_void_p(0))
+    
+    col_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*int(len(colors)), colors, GL.GL_STATIC_DRAW)
+    att_colors = GL.glGetAttribLocation(program, 'vert_color')
+    GL.glEnableVertexAttribArray(att_colors)
+    GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+    
+    vao_list.append(vao)
+    GL.glBindVertexArray(0)
+    GL.glDisableVertexAttribArray(att_position)
+    GL.glDisableVertexAttribArray(att_colors)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+    
+    return True
 
 
 

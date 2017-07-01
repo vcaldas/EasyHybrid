@@ -41,6 +41,7 @@ class GTKGUI ():
         print (filename)
         
         self.vismolSession.load(filename)
+        
         #
         liststore = self.builder.get_object('liststore1')
         model = liststore  

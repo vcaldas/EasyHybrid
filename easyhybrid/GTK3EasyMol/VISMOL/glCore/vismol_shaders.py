@@ -3,7 +3,7 @@
 #
 #  vismol_shaders.py
 #  
-#  Copyright 2016 Labio <labio@labio-XPS-8300>
+#  Copyright 2016 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,147 @@
 #  MA 02110-1301, USA.
 #  
 #  
+
+vertex_shader_dots = """
+#version 330
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 projection_mat;
+uniform mat3 normal_mat;
+uniform float vert_ext_linewidth;
+uniform float vert_int_antialias;
+uniform float vert_dot_factor;
+
+in vec3 vert_coord;
+in vec3 vert_color;
+in float vert_dot_size;
+attribute vec4  bckgrnd_color;
+
+varying float frag_dot_size;
+varying float frag_ext_linewidth;
+varying float frag_int_antialias;
+varying vec4 frag_dot_color;
+varying vec4 frag_bckgrnd_color;
+
+void main(){
+   frag_dot_size = vert_dot_size * vert_dot_factor;
+   frag_ext_linewidth = vert_ext_linewidth;
+   frag_int_antialias = vert_int_antialias;
+   frag_dot_color = vec4(vert_color, 1.0);
+   frag_bckgrnd_color  = bckgrnd_color;
+   gl_Position = projection_mat * view_mat * model_mat * vec4(vert_coord, 1);
+   gl_PointSize = vert_dot_size + 2*(vert_ext_linewidth + 1.5*vert_int_antialias);
+}
+"""
+fragment_shader_dots = """
+#version 330
+
+out vec4 final_color;
+
+varying vec4 frag_bckgrnd_color;
+varying vec4 frag_dot_color;
+varying float frag_dot_size;
+varying float frag_ext_linewidth;
+varying float frag_int_antialias;
+
+float disc(vec2 P, float size)
+{
+    float r = length((P.xy - vec2(0.5,0.5))*size);
+    r -= frag_dot_size/2;
+    return r;
+}
+
+void main(){
+   float size = frag_dot_size +2*(frag_ext_linewidth + 1.5*frag_int_antialias);
+   float t = frag_ext_linewidth/2.0-frag_int_antialias;
+   
+   // gl_PointCoord is the pixel in the coordinate
+   float r = disc(gl_PointCoord, size);
+   float d = abs(r) - t;
+   
+   // This if else statement makes the circle ilusion
+   if( r > (frag_ext_linewidth/2.0+frag_int_antialias)){
+      discard;
+   }
+   else if( d < 0.0 ){
+      final_color = frag_bckgrnd_color;
+   }
+   else{
+      float alpha = d/frag_int_antialias;
+      alpha = exp(-alpha*alpha);
+      if (r > 0)
+         final_color = frag_bckgrnd_color;
+      else
+         final_color = mix(frag_dot_color, frag_bckgrnd_color, alpha);
+   }
+}
+"""
+
+vertex_shader_lines = """
+#version 330
+
+in vec3 vert_coord;
+in vec3 vert_color;
+
+out vec3 geom_color;
+
+void main(){
+   gl_Position = vec4(vert_coord, 1.0);
+   geom_color = vert_color;
+}
+"""
+geometry_shader_lines = """
+#version 330
+
+layout (lines) in;
+layout (line_strip, max_vertices = 4) out;
+
+in vec3 geom_color[];
+
+out vec3 frag_color;
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 projection_mat;
+
+void main(){
+   vec4 mid_coord = vec4((gl_in[1].gl_Position.xyz + gl_in[0].gl_Position.xyz)/2, 1.0);
+   gl_Position = projection_mat * view_mat * model_mat * gl_in[0].gl_Position;
+   frag_color = geom_color[0];
+   EmitVertex();
+   gl_Position = projection_mat * view_mat * model_mat * mid_coord;
+   frag_color = geom_color[0];
+   EmitVertex();
+   EndPrimitive();
+   gl_Position = projection_mat * view_mat * model_mat * mid_coord;
+   frag_color = geom_color[1];
+   EmitVertex();
+   gl_Position = projection_mat * view_mat * model_mat * gl_in[1].gl_Position;
+   frag_color = geom_color[1];
+   EmitVertex();
+   EndPrimitive();
+}
+"""
+fragment_shader_lines = """
+#version 330
+
+in vec3 frag_color;
+
+out vec4 final_color;
+
+void main(){
+   final_color = vec4(frag_color, 1.0);
+}
+"""
+
+
+
+
+
+
+'''
+################################################################################
 
 my_glLigth = """
 struct gl_LightSourceParameters {
@@ -622,9 +763,5 @@ void main(){
 }
 """
 
-
-
-
-
-
-
+################################################################################
+'''

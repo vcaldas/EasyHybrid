@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-#  VisMol.py
+#  gtk3.py
 #  
 #  Copyright 2016 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
 #  
@@ -29,6 +29,7 @@ import VISMOL.glCore.glcamera as cam
 import VISMOL.glCore.matrix_operations as mop
 import VISMOL.glCore.shapes as shapes
 import VISMOL.glCore.sphere_data as sph_d
+import VISMOL.glCore.vismol_shaders as vm_shader
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -96,30 +97,28 @@ class GtkGLWidget(Gtk.GLArea):
             print(self.get_error().domain)
             print(self.get_error().message)
             Gtk.main_quit()
-        self.model_mat = np.identity(4, dtype=np.float32)
-        self.normal_mat = np.identity(3, dtype=np.float32)
-        self.glcamera = cam.GLCamera()
-        self.set_has_depth_buffer(True)
-        self.set_has_alpha(True)
-        self.frame_i = 0
         aloc = self.get_allocation()
         w = np.float32(aloc.width)
         h = np.float32(aloc.height)
+        self.model_mat = np.identity(4, dtype=np.float32)
+        self.normal_mat = np.identity(3, dtype=np.float32)
+        self.glcamera = cam.GLCamera(25.0, 0.1, 15.0, float(w/h))
+        self.set_has_depth_buffer(True)
+        self.set_has_alpha(True)
+        self.frame_i = 0
         self.shader_flag = True
         self.modified_data = False
         self.scroll = 0.3
-        self.glcamera.field_of_view = 25.0
-        self.glcamera.z_near = 0.1
-        self.glcamera.z_far = 15
-        self.glcamera.viewport_aspect_ratio = float(w)/h
         self.right = float(w)/h
         self.left = -self.right
         self.top = 1
         self.bottom = -1
-        self.mouse_x = self.mouse_y = 0
-        self.mouse_rotate = self.mouse_zoom = self.mouse_pan = False
-        self.bckgrnd_color = np.array([0.0,0.0,0.0,1.0],dtype=np.float32)
-        #self.bckgrnd_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
+        self.mouse_x = 0
+        self.mouse_y = 0
+        self.mouse_rotate = False
+        self.mouse_zoom = False
+        self.mouse_pan = False
+        self.bckgrnd_color = [0.0,0.0,0.0,1.0]
         self.light_position = np.array([2.5,2.5,3.0],dtype=np.float32)
         self.light_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
         self.light_ambient_coef = 0.5
@@ -159,12 +158,8 @@ class GtkGLWidget(Gtk.GLArea):
     def create_gl_programs(self):
         """ Function doc
         """
-        import visual.vismol_shaders as vm_shader
-        self.sphere_program = self.load_shaders(vm_shader.vertex_shader_sphere, vm_shader.fragment_shader_sphere)
-        self.ribbon_program = self.load_shaders(vm_shader.vertex_shader_sphere, vm_shader.fragment_shader_sphere)
-        self.ball_stick_program = self.load_shaders(vm_shader.vertex_shader_sphere, vm_shader.fragment_shader_sphere)
-        self.crystal_program = self.load_shaders(vm_shader.vertex_shader_crystal, vm_shader.fragment_shader_crystal)
         self.dots_program = self.load_shaders(vm_shader.vertex_shader_dots, vm_shader.fragment_shader_dots)
+        self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
     
     def create_vaos(self):
         """ Function doc
@@ -177,9 +172,9 @@ class GtkGLWidget(Gtk.GLArea):
         # Covalent radius representation
         self.spheres_vao = []
         # Dots representation
-        self.dots_surf_vao = []
-        # Dotted surface representation
         self.dots_vao = []
+        # Dotted surface representation
+        self.dots_surf_vao = []
         # Lines representation
         self.lines_vao = []
         # Van der Waals representation
@@ -189,7 +184,7 @@ class GtkGLWidget(Gtk.GLArea):
         self.bond_cryst_vao = []
         self.outer_cryst_vao = []
     
-    def load_shaders(self, vertex, fragment):
+    def load_shaders(self, vertex, fragment, geometry=None):
         """ Here the shaders are loaded and compiled to an OpenGL program. By default
             the constructor shaders will be used, if you want to change the shaders
             use this function. The flag is used to create only one OpenGL program.
@@ -200,9 +195,13 @@ class GtkGLWidget(Gtk.GLArea):
         """
         my_vertex_shader = self.create_shader(vertex, GL.GL_VERTEX_SHADER)
         my_fragment_shader = self.create_shader(fragment, GL.GL_FRAGMENT_SHADER)
+        if geometry is not None:
+            my_geometry_shader = self.create_shader(geometry, GL.GL_GEOMETRY_SHADER)
         program = GL.glCreateProgram()
         GL.glAttachShader(program, my_vertex_shader)
         GL.glAttachShader(program, my_fragment_shader)
+        if geometry is not None:
+            GL.glAttachShader(program, my_geometry_shader)
         GL.glLinkProgram(program)
         #print 'OpenGL version: ',GL.glGetString(GL.GL_VERSION)
         #try:
@@ -235,11 +234,10 @@ class GtkGLWidget(Gtk.GLArea):
         """ This is the function that will be called everytime the window
             needs to be re-drawed.
         """
-        pass
         
-        #if self.shader_flag:
-        #    self.create_gl_programs()
-        #    self.shader_flag = False
+        if self.shader_flag:
+            self.create_gl_programs()
+            self.shader_flag = False
         
         if self.data is not None:
             if self.modified_data:
@@ -249,39 +247,19 @@ class GtkGLWidget(Gtk.GLArea):
                             self.bckgrnd_color[2],self.bckgrnd_color[3])
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
             
-            if self.CRYSTAL:
-                GL.glUseProgram(self.ball_stick_program)
-                self.load_matrices(self.ball_stick_program)
-                self.load_lights(self.ball_stick_program)
-                self.draw_ball_stick()
-                GL.glUseProgram(0)
-                GL.glUseProgram(self.crystal_program)
-                self.load_matrices(self.crystal_program)
-                self.load_lights(self.crystal_program)
-                self.draw_crystal()
-                GL.glUseProgram(0)
-            if self.BALL_STICK:
-                GL.glUseProgram(self.ball_stick_program)
-                self.load_matrices(self.ball_stick_program)
-                self.load_lights(self.ball_stick_program)
-                self.draw_ball_stick()
-                GL.glUseProgram(0)
-            if self.SPHERES:
-                GL.glUseProgram(self.sphere_program)
-                self.load_matrices(self.sphere_program)
-                self.load_lights(self.sphere_program)
-                self.draw_spheres()
-                GL.glUseProgram(0)
-            if self.RIBBON:
-                GL.glUseProgram(self.ribbon_program)
-                self.load_matrices(self.ribbon_program)
-                self.load_lights(self.ribbon_program)
-                self.draw_ribbons()
-                GL.glUseProgram(0)
-            if self.DOTS_SURFACE:
+            if self.DOTS:
                 GL.glUseProgram(self.dots_program)
+                GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
                 self.load_matrices(self.dots_program)
-                self.draw_dots_surface()
+                self.load_dot_params(self.dots_program)
+                self.draw_dots()
+                GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                GL.glUseProgram(0)
+            if self.LINES:
+                GL.glUseProgram(self.lines_program)
+                #GL.glLineWidth(50/self.glcamera.z_far)
+                self.load_matrices(self.lines_program)
+                self.draw_lines()
                 GL.glUseProgram(0)
             
         else:
@@ -325,15 +303,32 @@ class GtkGLWidget(Gtk.GLArea):
         GL.glUniform3fv(cam_pos, 1, self.glcamera.get_position())
         return True
     
-    def load_data(self, data=None):
+    def load_dot_params(self, program):
+        """ Function doc
+        """
+        # Extern line
+        linewidth = 2
+        # Intern line
+        antialias = 2
+        # Dot size factor
+        dot_factor = 500/self.glcamera.z_far
+        uni_vext_linewidth = GL.glGetUniformLocation(program, 'vert_ext_linewidth')
+        GL.glUniform1fv(uni_vext_linewidth, 1, linewidth)
+        uni_vint_antialias = GL.glGetUniformLocation(program, 'vert_int_antialias')
+        GL.glUniform1fv(uni_vint_antialias, 1, antialias)
+        uni_dot_size = GL.glGetUniformLocation(program, 'vert_dot_factor')
+        GL.glUniform1fv(uni_dot_size, 1, dot_factor)
+        return True
+    
+    def load_data(self):
         """ In this function you load the data to be displayed. Because of
             using the flag the program loads the data just once. Here you
             bind the coordinates data to the buffer array.
         """
-        assert(self.data is not None or data is not None)
+        #assert(self.data is not None or data is not None)
         
-        if data is not None:
-            self.data = data
+        #if data is not None:
+            #self.data = data
         self.dot_list         = []
         self.vdw_list         = []
         self.ball_stick_list  = []
@@ -343,32 +338,38 @@ class GtkGLWidget(Gtk.GLArea):
         self.pretty_vdw_list  = []
         self.dot_surface_list = []
         self.crystal_list = []
-        for chain in self.data[self.frame_i].chains.values():
-            for residue in chain.residues.values():
-                for atom in residue.atoms.values():
-                    if atom.dot:
-                        self.dot_list.append(atom)
-                    if atom.vdw:
-                        self.vdw_list.append(atom)
-                    if atom.ball:
-                        self.ball_stick_list.append(atom)
-                    if atom.sphere:
-                        self.sphere_list.append(atom)
-                    if atom.dot_surface:
-                        self.dot_surface_list.append(atom)
-                    if atom.crystal:
-                        print(atom.name)
-                        self.crystal_list.append(atom)
         
-        self.make_gl_sphere(self.ball_stick_program, self.ball_stick_list, self.inner_cryst_vao, False)
-        self.make_gl_cylinder(self.ball_stick_program, self.data[0].bonds, self.bond_cryst_vao, False)
-        self.make_gl_sphere(self.crystal_program, self.crystal_list, self.outer_cryst_vao)
-        self.make_gl_sphere(self.sphere_program, self.sphere_list, self.spheres_vao)
-        self.make_gl_dot_sphere(self.dots_program, self.dot_surface_list, self.dots_surf_vao)
-        self.make_gl_sphere(self.ball_stick_program, self.ball_stick_list, self.ball_stick_vao, False)
-        self.make_gl_cylinder(self.ball_stick_program, self.data[0].bonds, self.bond_stick_vao, False)
-        self.make_gl_cylinder(self.ribbon_program, self.data[0].ribbons, self.ribbons_vao)
+        for visObj in self.vismolSession.vismol_objects:
+            for atom in visObj.atoms:
+                self.dot_list.append(atom)
         
+        #for chain in self.data[self.frame_i].chains.values():
+            #for residue in chain.residues.values():
+                #for atom in residue.atoms.values():
+                    #if atom.dot:
+                        #self.dot_list.append(atom)
+                    #if atom.vdw:
+                        #self.vdw_list.append(atom)
+                    #if atom.ball:
+                        #self.ball_stick_list.append(atom)
+                    #if atom.sphere:
+                        #self.sphere_list.append(atom)
+                    #if atom.dot_surface:
+                        #self.dot_surface_list.append(atom)
+                    #if atom.crystal:
+                        #print(atom.name)
+                        #self.crystal_list.append(atom)
+        
+        shapes.make_gl_dots(self.dots_program, self.dot_list, self.dots_vao, self.bckgrnd_color)
+        shapes.make_gl_lines(self.lines_program, self.vismolSession.vismol_objects[0].index_bonds, self.vismolSession.vismol_objects[0].atoms, self.lines_vao)
+        #self.make_gl_sphere(self.ball_stick_program, self.ball_stick_list, self.inner_cryst_vao, False)
+        #self.make_gl_cylinder(self.ball_stick_program, self.data[0].bonds, self.bond_cryst_vao, False)
+        #self.make_gl_sphere(self.crystal_program, self.crystal_list, self.outer_cryst_vao)
+        #self.make_gl_sphere(self.sphere_program, self.sphere_list, self.spheres_vao)
+        #self.make_gl_dot_sphere(self.dots_program, self.dot_surface_list, self.dots_surf_vao)
+        #self.make_gl_sphere(self.ball_stick_program, self.ball_stick_list, self.ball_stick_vao, False)
+        #self.make_gl_cylinder(self.ball_stick_program, self.data[0].bonds, self.bond_stick_vao, False)
+        #self.make_gl_cylinder(self.ribbon_program, self.data[0].ribbons, self.ribbons_vao)
         self.modified_data = False
     
     def make_gl_dot_sphere(self, program, atom_list, vao_list):
@@ -502,6 +503,22 @@ class GtkGLWidget(Gtk.GLArea):
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
             GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
     
+    def draw_dots(self):
+        """ Function doc
+        """
+        assert(len(self.dots_vao)>0)
+        GL.glBindVertexArray(self.dots_vao[0])
+        GL.glDrawArrays(GL.GL_POINTS, 0, len(self.dot_list))
+        GL.glBindVertexArray(0)
+    
+    def draw_lines(self):
+        """ Function doc
+        """
+        assert(len(self.lines_vao)>0)
+        GL.glBindVertexArray(self.lines_vao[0])
+        GL.glDrawArrays(GL.GL_LINES, 0, len(self.vismolSession.vismol_objects[0].index_bonds)*2)
+        GL.glBindVertexArray(0)
+    
     def draw_dots_surface(self):
         """ Function doc
         """
@@ -576,53 +593,6 @@ class GtkGLWidget(Gtk.GLArea):
         if func:
             func()
         return True
-    
-    def pressed_Escape(self):
-        print('Exit!')
-        Gtk.main_quit()
-    
-    def pressed_d(self):
-        self.DOTS_SURFACE = not self.DOTS_SURFACE
-        self.queue_draw()
-    
-    def pressed_s(self):
-        self.SPHERES = not self.SPHERES
-        self.queue_draw()
-    
-    def pressed_b(self):
-        self.BALL_STICK = not self.BALL_STICK
-        self.queue_draw()
-    
-    def pressed_c(self):
-        self.CRYSTAL = not self.CRYSTAL
-        self.queue_draw()
-    
-    def pressed_r(self):
-        self.RIBBON = not self.RIBBON
-        self.queue_draw()
-    
-    def pressed_l(self):
-        self.modified_data = True
-        self.queue_draw()
-        print('Load data')
-    
-    def pressed_m(self):
-        temp = np.matrix(self.model_mat[:3,:3]).I * np.matrix([2.030,-1.227,-0.502]).T
-        temp = temp.A1
-        self.model_mat[3,:3] = -temp
-        self.queue_draw()
-        print('Load data')
-    
-    def pressed_n(self):
-        self.zero_pt_ref = np.array([2.030,-1.227,-0.502],dtype=np.float32)
-        self.model_mat = mop.my_glTranslatef(self.model_mat, self.zero_pt_ref)
-        self.queue_draw()
-        print('Load data')
-    
-    def pressed_p(self):
-        """ Function doc
-        """
-        print(self.model_mat, '<-- pos model_mat')
     
     def delete_vaos(self):
         """ Function doc
@@ -753,6 +723,14 @@ class GtkGLWidget(Gtk.GLArea):
         pz = self.glcamera.z_near
         return px, py, pz
     
-    def test_gl (self):
-        """ Function doc """
-        print ('gl area uhuuu')
+    def test_gl(self):
+        """ Function doc
+        """
+        print("Test function init")
+        self.data = self.vismolSession
+        self.modified_data = True
+        self.DOTS = not self.DOTS
+        self.LINES = not self.LINES
+        self.queue_draw()
+        print("Test function OK")
+        return True
