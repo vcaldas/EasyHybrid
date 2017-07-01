@@ -346,7 +346,7 @@ def soma_int (x):
 #parse_xyz(infile = '/home/fernando/programs/EasyHybrid/pdbs/1gab.xyz')
 
 
-sys = parse_pdb2('/home/carlos/Programs/EasyHybrid/pdbs/alanine.pdb')
+#sys = parse_pdb2('/home/carlos/Programs/EasyHybrid/pdbs/alanine.pdb')
 #
 #sys = parse_pdb('/home/fernando/programs/EasyHybrid/pdbs/1bx4.pdb')
 
