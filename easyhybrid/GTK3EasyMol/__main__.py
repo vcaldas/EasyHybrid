@@ -29,8 +29,9 @@ from gi.repository import Gtk, Gdk
 #from visual import vismol
 #from visual import vis_parser
 #from visual import vismol_shaders as vm_sh
+#from VISMOL  import vismol_core
 
-from VISMOL  import vismol_core
+from VISMOL.vCore.VismolSession  import VisMolSession
 from GTKGUI  import gtkgui
 #from easymol import * 
 #from EasyMol import vis_parser
@@ -39,7 +40,7 @@ def main():
     
     #frames = vis_parser.parse_pdb(sys.argv[1])
     
-    vismolSession  =  vismol_core.VisMolSession(glwidget = True, backend = 'gtk3')
+    vismolSession  =  VisMolSession(glwidget = True, backend = 'gtk3')
 
     #vism = vismol.MyGLProgram(frames, vm_sh.vertex_shader_point_light, vm_sh.fragment_shader_point_light)
     #vism  = vismol.MyGLProgram(frames)
