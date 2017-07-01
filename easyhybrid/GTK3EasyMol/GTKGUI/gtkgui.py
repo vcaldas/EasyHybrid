@@ -5,8 +5,11 @@ from gi.repository import Gtk, Gdk
 
 class GTKGUI ():
     """ Class doc """
-
-
+    
+    def test_gl (self, widget):
+        """ Function doc """
+        self.vismolSession.glwidget.test_gl()
+        
     def on_file_open_activate (self, widget, click=None):
 
         """ Function doc """

@@ -753,3 +753,6 @@ class GtkGLWidget(Gtk.GLArea):
         pz = self.glcamera.z_near
         return px, py, pz
     
+    def test_gl (self):
+        """ Function doc """
+        print ('gl area uhuuu')
