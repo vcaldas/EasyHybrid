@@ -40,6 +40,97 @@ from OpenGL import GLU
 from OpenGL import GL
 from OpenGL.GL import shaders
 
+
+class GLMenu:
+    """ Class doc """
+    def __init__ (self):
+        """ Class initialiser """
+        xml = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.18.3 -->
+<interface>
+  <requires lib="gtk+" version="3.12"/>
+  <object class="GtkMenu" id="menu1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkMenuItem" id="menuitem1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">menuitem1</property>
+        <property name="use_underline">True</property>
+        <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menuitem2">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">menuitem2</property>
+        <property name="use_underline">True</property>
+        <child type="submenu">
+          <object class="GtkMenu" id="menu2">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkMenuItem" id="menuitem5">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">menuitem5</property>
+                <property name="use_underline">True</property>
+                <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menuitem3">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">menuitem3</property>
+        <property name="use_underline">True</property>
+        <child type="submenu">
+          <object class="GtkMenu" id="menu3">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkMenuItem" id="menuitem4">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">menuitem4</property>
+                <property name="use_underline">True</property>
+                <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
+        '''
+
+        self.builder = Gtk.Builder()
+        self.builder.add_from_string(xml)
+        self.builder.connect_signals(self)
+    
+    def open_gl_menu (self, event = None):
+        """ Function doc """
+        
+        # Check if right mouse button was preseed
+        if event.button == 3:
+        #self.popup.popup(None, None, None, None, event.button, event.time)
+        #return True # event has been handled        
+            widget = self.builder.get_object('menu1')
+            widget.popup(None, None, None, None, event.button, event.time)        
+            pass
+    def menuItem_function (self, widget, data):
+        """ Function doc """
+        print ('Charlitos, seu lindo')
+
+
 class GtkGLWidget(Gtk.GLArea):
     """ Object that contains the GLArea from GTK3+.
         It needs a vertex and shader to be created, maybe later I'll
@@ -79,6 +170,7 @@ class GtkGLWidget(Gtk.GLArea):
         #for visObj in self.vismolSession.vismol_objects:
         #    for atom in visObj.atoms:
         #        print atom.name
+        self.glMenu = GLMenu()
         
         self.data = None
         
@@ -135,7 +227,8 @@ class GtkGLWidget(Gtk.GLArea):
         self.BALL_STICK = False
         self.create_vaos()
         self.zero_pt_ref = np.array([0.0, 0.0, 0.0],dtype=np.float32)
-    
+        #GL.glEnable(GL_LINE_SMOOTH)
+        #GL.glEnable(GL_MULTISAMPLE)
     def reshape(self, widget, width, height):
         """ Resizing function, takes the widht and height of the widget
             and modifies the view in the camera acording to the new values
@@ -650,7 +743,9 @@ class GtkGLWidget(Gtk.GLArea):
     def mouse_released(self, widget, event):
         pass
         self.mouse_rotate = self.mouse_zoom = self.mouse_pan = False
-    
+
+        self.glMenu.open_gl_menu(event = event)
+        
     def mouse_motion(self, widget, event):
         x = event.x
         y = event.y
