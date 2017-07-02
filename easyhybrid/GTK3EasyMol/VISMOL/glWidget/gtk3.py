@@ -400,9 +400,9 @@ class GtkGLWidget(Gtk.GLArea):
         """ Function doc
         """
         # Extern line
-        linewidth = 2
+        linewidth = 4
         # Intern line
-        antialias = 2
+        antialias = 5
         # Dot size factor
         dot_factor = 500/self.glcamera.z_far
         uni_vext_linewidth = GL.glGetUniformLocation(program, 'vert_ext_linewidth')
