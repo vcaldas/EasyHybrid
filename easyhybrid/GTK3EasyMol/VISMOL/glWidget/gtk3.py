@@ -217,6 +217,7 @@ class GtkGLWidget(Gtk.GLArea):
         self.light_shininess = 5.5
         self.light_intensity = np.array([0.6,0.6,0.6],dtype=np.float32)
         self.light_specular_color = np.array([1.0,1.0,1.0],dtype=np.float32)
+        self.dragging = False
         self.LINES = False
         self.SPHERES = False
         self.DOTS = False
@@ -739,12 +740,16 @@ class GtkGLWidget(Gtk.GLArea):
         x = self.mouse_x = event.x
         y = self.mouse_y = event.y
         self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(x, y)
+        self.dragging = False
     
     def mouse_released(self, widget, event):
         pass
         self.mouse_rotate = self.mouse_zoom = self.mouse_pan = False
-
-        self.glMenu.open_gl_menu(event = event)
+        if event.button==3:
+            if self.dragging:
+                self.dragging = False
+            else:
+                self.glMenu.open_gl_menu(event = event)
         
     def mouse_motion(self, widget, event):
         x = event.x
@@ -779,6 +784,7 @@ class GtkGLWidget(Gtk.GLArea):
             #self.model_mat = mop.my_glTranslatef(self.model_mat, -dy*delta*direction)
             self.glcamera.move_position(dy*delta*direction)
             changed = True
+        self.dragging = True
         if changed:
             self.queue_draw()
         
