@@ -108,6 +108,42 @@ class GLMenu:
         </child>
       </object>
     </child>
+    <child>
+      <object class="GtkMenuItem" id="menuitem6">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">menuitem6</property>
+        <property name="use_underline">True</property>
+        <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menuitem7">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">menuitem7</property>
+        <property name="use_underline">True</property>
+        <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menuitem8">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">menuitem8</property>
+        <property name="use_underline">True</property>
+        <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="menuitem9">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">El Diablo</property>
+        <property name="use_underline">True</property>
+        <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
+      </object>
+    </child>
   </object>
 </interface>
         '''
@@ -128,9 +164,29 @@ class GLMenu:
             pass
     def menuItem_function (self, widget, data):
         """ Function doc """
-        print ('Charlitos, seu lindo')
-
-
+        #print ('Charlitos, seu lindo')
+        if widget == self.builder.get_object('menuitem1'):
+            print ('Charlitos, seu lindo')
+        
+        if widget == self.builder.get_object('menuitem4'):
+        
+            print ('Charlitos, seu xoxoteiro')
+        if widget == self.builder.get_object('menuitem5'):
+        
+            print ('Charlitos, el diablo')
+        
+        if widget == self.builder.get_object('menuitem6'):
+            print ('Charlitos, el locotto del Andes')
+        
+        if widget == self.builder.get_object('menuitem7'):
+            print ('Charlitos, seu lindo2')
+        
+        if widget == self.builder.get_object('menuitem8'):
+            print ('Charlitos, seu lindo3')
+        
+        if widget == self.builder.get_object('menuitem9'):
+            print ('Charlitos, seu lindo4')
+            
 class GtkGLWidget(Gtk.GLArea):
     """ Object that contains the GLArea from GTK3+.
         It needs a vertex and shader to be created, maybe later I'll
@@ -211,6 +267,7 @@ class GtkGLWidget(Gtk.GLArea):
         self.mouse_zoom = False
         self.mouse_pan = False
         self.bckgrnd_color = [0.0,0.0,0.0,1.0]
+        #self.bckgrnd_color = [1.0,1.0,1.0,1.0]
         self.light_position = np.array([2.5,2.5,3.0],dtype=np.float32)
         self.light_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
         self.light_ambient_coef = 0.5
@@ -830,6 +887,7 @@ class GtkGLWidget(Gtk.GLArea):
         print("Test function init")
         self.data = self.vismolSession
         self.modified_data = True
+        #self.load_data()
         self.DOTS = not self.DOTS
         self.LINES = not self.LINES
         self.queue_draw()
