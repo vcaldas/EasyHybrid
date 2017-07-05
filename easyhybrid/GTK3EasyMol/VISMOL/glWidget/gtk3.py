@@ -43,7 +43,7 @@ from OpenGL.GL import shaders
 
 class GLMenu:
     """ Class doc """
-    def __init__ (self):
+    def __init__ (self, glWidget):
         """ Class initialiser """
         xml = '''
 <?xml version="1.0" encoding="UTF-8"?>
@@ -151,6 +151,7 @@ class GLMenu:
         self.builder = Gtk.Builder()
         self.builder.add_from_string(xml)
         self.builder.connect_signals(self)
+        self.glWidget = glWidget
     
     def open_gl_menu (self, event = None):
         """ Function doc """
@@ -226,7 +227,7 @@ class GtkGLWidget(Gtk.GLArea):
         #for visObj in self.vismolSession.vismol_objects:
         #    for atom in visObj.atoms:
         #        print atom.name
-        self.glMenu = GLMenu()
+        self.glMenu = GLMenu(self)
         
         self.data = None
         
