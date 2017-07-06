@@ -252,7 +252,7 @@ class GtkGLWidget(Gtk.GLArea):
         h = np.float32(aloc.height)
         self.model_mat = np.identity(4, dtype=np.float32)
         self.normal_mat = np.identity(3, dtype=np.float32)
-        self.glcamera = cam.GLCamera(25.0, 0.1, 15.0, float(w/h))
+        self.glcamera = cam.GLCamera(25.0, 0.1, 5.8, float(w/h), np.array([0,0,3],dtype=np.float32), 3.8, 5.8)
         self.set_has_depth_buffer(True)
         self.set_has_alpha(True)
         self.frame_i = 0
@@ -286,7 +286,8 @@ class GtkGLWidget(Gtk.GLArea):
         self.CRYSTAL = False
         self.RIBBON = False
         self.BALL_STICK = False
-        self.zero_pt_ref = np.array([0.0, 0.0, 0.0],dtype=np.float32)
+        self.zero_reference_point = np.array([0.0, 0.0, 0.0],dtype=np.float32)
+        self.dist_cam_zrp = np.linalg.norm(self.glcamera.get_position()-self.zero_reference_point)
         self.ctrl = False
         self.shift = False
         #GL.glEnable(GL_LINE_SMOOTH)
@@ -336,12 +337,12 @@ class GtkGLWidget(Gtk.GLArea):
         if geometry is not None:
             GL.glAttachShader(program, my_geometry_shader)
         GL.glLinkProgram(program)
-        #print 'OpenGL version: ',GL.glGetString(GL.GL_VERSION)
-        #try:
-            #print 'OpenGL major version: ',GL.glGetDoublev(GL.GL_MAJOR_VERSION)
-            #print 'OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION)
-        #except:
-            #print 'OpenGL major version not found'
+        print('OpenGL version: ',GL.glGetString(GL.GL_VERSION))
+        try:
+            print('OpenGL major version: ',GL.glGetDoublev(GL.GL_MAJOR_VERSION))
+            print('OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION))
+        except:
+            print('OpenGL major version not found')
         return program
         
     def create_shader(self, shader_prog, shader_type):
@@ -375,25 +376,31 @@ class GtkGLWidget(Gtk.GLArea):
         if self.data is not None:
             if self.modified_data:
                 #self.delete_vaos()
-                self.load_data()
+                self._load_data()
             GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
                             self.bckgrnd_color[2],self.bckgrnd_color[3])
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
             
+            if self.LINES:
+                GL.glEnable(GL.GL_DEPTH_TEST)
+                GL.glUseProgram(self.lines_program)
+                GL.glLineWidth(60/abs(self.dist_cam_zrp))
+                self.load_matrices(self.lines_program)
+                #self.load_fog(self.lines_program)
+                self.draw_lines()
+                GL.glUseProgram(0)
+                GL.glDisable(GL.GL_DEPTH_TEST)
             if self.DOTS:
+                GL.glEnable(GL.GL_DEPTH_TEST)
                 GL.glUseProgram(self.dots_program)
                 GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
                 self.load_matrices(self.dots_program)
+                #self.load_fog(self.dots_program)
                 self.load_dot_params(self.dots_program)
                 self.draw_dots()
                 GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
                 GL.glUseProgram(0)
-            if self.LINES:
-                GL.glUseProgram(self.lines_program)
-                #GL.glLineWidth(50/self.glcamera.z_far)
-                self.load_matrices(self.lines_program)
-                self.draw_lines()
-                GL.glUseProgram(0)
+                GL.glDisable(GL.GL_DEPTH_TEST)
             
         else:
             GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
@@ -417,6 +424,17 @@ class GtkGLWidget(Gtk.GLArea):
         GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
         norm = GL.glGetUniformLocation(program, 'normal_mat')
         GL.glUniformMatrix3fv(norm, 1, GL.GL_FALSE, self.normal_mat)
+        #return True
+    
+    #def load_fog(self, program):
+        #""" Function doc
+        #"""
+        fog_s = GL.glGetUniformLocation(program, 'fog_start')
+        GL.glUniform1fv(fog_s, 1, self.glcamera.fog_start)
+        fog_e = GL.glGetUniformLocation(program, 'fog_end')
+        GL.glUniform1fv(fog_e, 1, self.glcamera.fog_end)
+        fog_c = GL.glGetUniformLocation(program, 'fog_color')
+        GL.glUniform4fv(fog_c, 1, self.bckgrnd_color)
         return True
     
     def load_lights(self, program):
@@ -442,11 +460,17 @@ class GtkGLWidget(Gtk.GLArea):
         """ Function doc
         """
         # Extern line
-        linewidth = 4
+        linewidth = float(80/abs(self.dist_cam_zrp))
+        if linewidth > 3.73:
+            linewidth = 3.73
         # Intern line
-        antialias = 5
+        antialias = float(80/abs(self.dist_cam_zrp))
+        if antialias > 3.73:
+            antialias = 3.73
         # Dot size factor
-        dot_factor = 500/self.glcamera.z_far
+        dot_factor = float(500/abs(self.dist_cam_zrp))
+        if dot_factor > 150.0:
+            dot_factor = 150.0
         uni_vext_linewidth = GL.glGetUniformLocation(program, 'vert_ext_linewidth')
         GL.glUniform1fv(uni_vext_linewidth, 1, linewidth)
         uni_vint_antialias = GL.glGetUniformLocation(program, 'vert_int_antialias')
@@ -455,7 +479,7 @@ class GtkGLWidget(Gtk.GLArea):
         GL.glUniform1fv(uni_dot_size, 1, dot_factor)
         return True
     
-    def load_data(self):
+    def _load_data(self):
         """ In this function you load the data to be displayed. Because of
             using the flag the program loads the data just once. Here you
             bind the coordinates data to the buffer array.
@@ -730,6 +754,8 @@ class GtkGLWidget(Gtk.GLArea):
             
             self.glcamera.z_near += -move_z
             self.glcamera.z_far += -move_z
+            self.glcamera.fog_start += -move_z
+            self.glcamera.fog_end += -move_z
             if self.glcamera.z_near >= 0.1:
                 self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
                         self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
@@ -738,24 +764,40 @@ class GtkGLWidget(Gtk.GLArea):
                 self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
                         self.glcamera.viewport_aspect_ratio, 0.1, self.glcamera.z_far))
                 #gluPerspective(self.fovy, float(width)/float(height), 0.1, self.z_far)
-            
+            self.dist_cam_zrp += -move_z
             changed = True
         self.dragging = True
         if changed:
             self.queue_draw()
         
     def mouse_scroll(self, widget, event):
-        if event.direction == Gdk.ScrollDirection.UP:
-            self.glcamera.z_near -= self.scroll
-            self.glcamera.z_far += self.scroll
-        if event.direction == Gdk.ScrollDirection.DOWN:
-            self.glcamera.z_near += self.scroll
-            self.glcamera.z_far -= self.scroll
-        if self.glcamera.z_near < 0:
-            self.glcamera.z_near = 0.001
-        if self.glcamera.z_far < self.glcamera.z_near:
-            self.glcamera.z_near -= self.scroll
-            self.glcamera.z_far = self.glcamera.z_near + 0.05
+        """ Function doc
+        """
+        if self.ctrl:
+            if event.direction == Gdk.ScrollDirection.UP:
+                self.model_mat = mop.my_glTranslatef(self.model_mat, [0.0, 0.0, -self.scroll])
+            if event.direction == Gdk.ScrollDirection.DOWN:
+                self.model_mat = mop.my_glTranslatef(self.model_mat, [0.0, 0.0, self.scroll])
+        else:
+            if event.direction == Gdk.ScrollDirection.UP:
+                self.glcamera.z_near -= self.scroll
+                self.glcamera.z_far += self.scroll
+                self.glcamera.fog_start += self.scroll
+                self.glcamera.fog_end += self.scroll
+            if event.direction == Gdk.ScrollDirection.DOWN:
+                self.glcamera.z_near += self.scroll
+                self.glcamera.z_far -= self.scroll
+                self.glcamera.fog_start -= self.scroll
+                self.glcamera.fog_end -= self.scroll
+            if self.glcamera.z_near < 0:
+                self.glcamera.z_near = 0.001
+            if self.glcamera.z_far < self.glcamera.z_near:
+                self.glcamera.z_near -= self.scroll
+                self.glcamera.z_far = self.glcamera.z_near + 0.05
+                self.glcamera.fog_start = self.glcamera.z_near + 0.05
+                self.glcamera.fog_end = self.glcamera.z_near + 2.05
+        self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
+                        self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
         self.queue_draw()
     
     def update_normal_mat(self):

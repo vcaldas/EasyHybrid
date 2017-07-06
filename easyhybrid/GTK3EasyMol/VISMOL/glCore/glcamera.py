@@ -31,17 +31,19 @@ class GLCamera():
     """ Class doc
     """
     
-    def __init__ (self, fov=30.0, z_n=0.01, z_f=10.0, var=(4.0/3.0), pos=np.array([0,0,3],dtype=np.float32)):
+    def __init__ (self, fov=30.0, z_n=0.01, z_f=10.0, var=(4.0/3.0), pos=np.array([0,0,3],dtype=np.float32), fog_s=8.0, fog_e=10.0):
         """ Class initialiser
         """
-        self.max_vertical_angle = 85.0  # must be less than 90 to avoid gimbal lock
-        self.horizontal_angle = 0.0
-        self.vertical_angle = 0.0
-        self.position = pos
         self.field_of_view = fov
         self.z_near = z_n
         self.z_far = z_f
         self.viewport_aspect_ratio = var
+        self.position = pos
+        self.fog_start = fog_s
+        self.fog_end = fog_e
+        self.max_vertical_angle = 85.0  # must be less than 90 to avoid gimbal lock
+        self.horizontal_angle = 0.0
+        self.vertical_angle = 0.0
         self.view_matrix = self._get_view_matrix()
         self.projection_matrix = self._get_projection_matrix()
     
