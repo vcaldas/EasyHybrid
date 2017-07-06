@@ -84,7 +84,8 @@ class GTKGUI ():
         if self.vismolSession is not None:
             self.container = self.builder.get_object('paned1')
             self.container.add(self.vismolSession.glwidget)
-            self.window.connect("key-press-event", self.vismolSession.glwidget.key_press)
+            self.window.connect("key-press-event", self.vismolSession.glwidget.key_pressed)
+            self.window.connect("key-release-event", self.vismolSession.glwidget.key_released)
 
         self.window.connect("delete-event",    Gtk.main_quit)
         self.window.show_all()

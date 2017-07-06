@@ -98,6 +98,8 @@ def my_glTranslatef(orig_matrix, position):
     return my_glMultiplyMatricesf(orig_matrix, trans_matrix)
 
 def my_glMultiplyMatricesf(mat1, mat2):
+    """ Multiplication of matrices in the order [mat1] x [mat2]
+    """
     result = np.zeros((4,4), dtype=np.float32)
     result[0,0] = mat1[0,0]*mat2[0,0]+mat1[0,1]*mat2[1,0]+mat1[0,2]*mat2[2,0]+mat1[0,3]*mat2[3,0]
     result[1,0] = mat1[1,0]*mat2[0,0]+mat1[1,1]*mat2[1,0]+mat1[1,2]*mat2[2,0]+mat1[1,3]*mat2[3,0]

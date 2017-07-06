@@ -42,6 +42,8 @@ class GLCamera():
         self.z_near = z_n
         self.z_far = z_f
         self.viewport_aspect_ratio = var
+        self.view_matrix = self._get_view_matrix()
+        self.projection_matrix = self._get_projection_matrix()
     
     def get_position(self):
         """ Returns the x, y, z position of the camera in 
@@ -139,7 +141,7 @@ class GLCamera():
         return mop.my_glMultiplyMatricesf(self.get_projection_matrix(),
                                           self.get_view_matrix())
     
-    def get_projection_matrix(self):
+    def _get_projection_matrix(self):
         """ Function doc
         """
         assert(self.field_of_view>0.0 and self.field_of_view<180.0)
@@ -148,10 +150,21 @@ class GLCamera():
         assert(self.viewport_aspect_ratio>0.0)
         return mop.my_glPerspectivef(self.field_of_view,self.viewport_aspect_ratio,self.z_near,self.z_far)
     
-    def get_view_matrix(self):
+    def _get_view_matrix(self):
         """ Function doc
         """
-        orient = self.get_orientation()
         trans = mop.my_glTranslatef(np.identity(4,dtype=np.float32),-self.position)
+        orient = self.get_orientation()
         view = mop.my_glMultiplyMatricesf(trans, orient)
         return view
+    
+    def set_view_matrix(self, new_view_matrix):
+        """ Function doc
+        """
+        self.view_matrix = new_view_matrix
+    
+    def set_projection_matrix(self, new_proj_matrix):
+        """ Function doc
+        """
+        self.projection_matrix = new_proj_matrix
+    

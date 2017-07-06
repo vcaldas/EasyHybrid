@@ -167,11 +167,11 @@ class GLMenu:
         """ Function doc """
         #print ('Charlitos, seu lindo')
         if widget == self.builder.get_object('menuitem1'):
-            print ('Charlitos, seu lindo')
+            self.glWidget.test_hide()
         
         if widget == self.builder.get_object('menuitem4'):
+            self.glWidget.test_show()
         
-            print ('Charlitos, seu xoxoteiro')
         if widget == self.builder.get_object('menuitem5'):
         
             print ('Charlitos, el diablo')
@@ -209,7 +209,8 @@ class GtkGLWidget(Gtk.GLArea):
         self.connect("realize", self.initialize)
         self.connect("render", self.render)
         self.connect("resize", self.reshape)
-        self.connect("key-press-event", self.key_press)
+        self.connect("key-press-event", self.key_pressed)
+        self.connect("key-release-event", self.key_released)
         self.connect("button-press-event", self.mouse_pressed)
         self.connect("button-release-event", self.mouse_released)
         self.connect("motion-notify-event", self.mouse_motion)
@@ -257,6 +258,7 @@ class GtkGLWidget(Gtk.GLArea):
         self.frame_i = 0
         self.shader_flag = True
         self.modified_data = False
+        self.modified_view = False
         self.scroll = 0.3
         self.right = float(w)/h
         self.left = -self.right
@@ -284,10 +286,12 @@ class GtkGLWidget(Gtk.GLArea):
         self.CRYSTAL = False
         self.RIBBON = False
         self.BALL_STICK = False
-        self.create_vaos()
         self.zero_pt_ref = np.array([0.0, 0.0, 0.0],dtype=np.float32)
+        self.ctrl = False
+        self.shift = False
         #GL.glEnable(GL_LINE_SMOOTH)
         #GL.glEnable(GL_MULTISAMPLE)
+    
     def reshape(self, widget, width, height):
         """ Resizing function, takes the widht and height of the widget
             and modifies the view in the camera acording to the new values
@@ -312,29 +316,6 @@ class GtkGLWidget(Gtk.GLArea):
         """
         self.dots_program = self.load_shaders(vm_shader.vertex_shader_dots, vm_shader.fragment_shader_dots)
         self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
-    
-    def create_vaos(self):
-        """ Function doc
-        """
-        # Ball-Stick representation
-        self.ball_stick_vao = []
-        self.bond_stick_vao = []
-        # Ribbon representation
-        self.ribbons_vao = []
-        # Covalent radius representation
-        self.spheres_vao = []
-        # Dots representation
-        self.dots_vao = []
-        # Dotted surface representation
-        self.dots_surf_vao = []
-        # Lines representation
-        self.lines_vao = []
-        # Van der Waals representation
-        self.vdw_vao = []
-        # Transparent Representataion
-        self.inner_cryst_vao = []
-        self.bond_cryst_vao = []
-        self.outer_cryst_vao = []
     
     def load_shaders(self, vertex, fragment, geometry=None):
         """ Here the shaders are loaded and compiled to an OpenGL program. By default
@@ -393,7 +374,7 @@ class GtkGLWidget(Gtk.GLArea):
         
         if self.data is not None:
             if self.modified_data:
-                self.delete_vaos()
+                #self.delete_vaos()
                 self.load_data()
             GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
                             self.bckgrnd_color[2],self.bckgrnd_color[3])
@@ -429,9 +410,11 @@ class GtkGLWidget(Gtk.GLArea):
         model = GL.glGetUniformLocation(program, 'model_mat')
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
         view = GL.glGetUniformLocation(program, 'view_mat')
-        GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.get_view_matrix())
+        #GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.get_view_matrix())
+        GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.view_matrix)
         proj = GL.glGetUniformLocation(program, 'projection_mat')
-        GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.get_projection_matrix())
+        #GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.get_projection_matrix())
+        GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
         norm = GL.glGetUniformLocation(program, 'normal_mat')
         GL.glUniformMatrix3fv(norm, 1, GL.GL_FALSE, self.normal_mat)
         return True
@@ -477,199 +460,65 @@ class GtkGLWidget(Gtk.GLArea):
             using the flag the program loads the data just once. Here you
             bind the coordinates data to the buffer array.
         """
-        #assert(self.data is not None or data is not None)
         
-        #if data is not None:
-            #self.data = data
-        self.dot_list         = []
-        self.vdw_list         = []
-        self.ball_stick_list  = []
-        self.bonds_list       = []
-        self.wires_list       = []
-        self.sphere_list      = []
-        self.pretty_vdw_list  = []
-        self.dot_surface_list = []
-        self.crystal_list = []
+        #for visObj in self.vismolSession.vismol_objects:
+            #for atom in visObj.atoms:
+                #self.dot_list.append(atom)
         
         for visObj in self.vismolSession.vismol_objects:
-            for atom in visObj.atoms:
-                self.dot_list.append(atom)
+            visObj.dots_vao, visObj.dot_buffers = shapes.make_gl_dots(self.dots_program, visObj.atoms)
+            visObj.lines_vao, visObj.line_buffers = shapes.make_gl_lines(self.lines_program, visObj.index_bonds, visObj.atoms)
         
-        #for chain in self.data[self.frame_i].chains.values():
-            #for residue in chain.residues.values():
-                #for atom in residue.atoms.values():
-                    #if atom.dot:
-                        #self.dot_list.append(atom)
-                    #if atom.vdw:
-                        #self.vdw_list.append(atom)
-                    #if atom.ball:
-                        #self.ball_stick_list.append(atom)
-                    #if atom.sphere:
-                        #self.sphere_list.append(atom)
-                    #if atom.dot_surface:
-                        #self.dot_surface_list.append(atom)
-                    #if atom.crystal:
-                        #print(atom.name)
-                        #self.crystal_list.append(atom)
-        
-        shapes.make_gl_dots(self.dots_program, self.dot_list, self.dots_vao, self.bckgrnd_color)
-        shapes.make_gl_lines(self.lines_program, self.vismolSession.vismol_objects[0].index_bonds, self.vismolSession.vismol_objects[0].atoms, self.lines_vao)
-        #self.make_gl_sphere(self.ball_stick_program, self.ball_stick_list, self.inner_cryst_vao, False)
-        #self.make_gl_cylinder(self.ball_stick_program, self.data[0].bonds, self.bond_cryst_vao, False)
-        #self.make_gl_sphere(self.crystal_program, self.crystal_list, self.outer_cryst_vao)
-        #self.make_gl_sphere(self.sphere_program, self.sphere_list, self.spheres_vao)
-        #self.make_gl_dot_sphere(self.dots_program, self.dot_surface_list, self.dots_surf_vao)
-        #self.make_gl_sphere(self.ball_stick_program, self.ball_stick_list, self.ball_stick_vao, False)
-        #self.make_gl_cylinder(self.ball_stick_program, self.data[0].bonds, self.bond_stick_vao, False)
-        #self.make_gl_cylinder(self.ribbon_program, self.data[0].ribbons, self.ribbons_vao)
         self.modified_data = False
-    
-    def make_gl_dot_sphere(self, program, atom_list, vao_list):
-        """ Function doc
-        """
-        for atom in atom_list:
-            vertices, indexes, colors = shapes.get_sphere(atom.pos, atom.cov_rad, atom.color, level='level_2')
-            vao = GL.glGenVertexArrays(1)
-            GL.glBindVertexArray(vao)
-            atom.vertices = int(len(vertices)/3)
-            
-            vert_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.itemsize*int(len(vertices)), vertices, GL.GL_STATIC_DRAW)
-            
-            att_position = GL.glGetAttribLocation(program, 'coordinate')
-            GL.glEnableVertexAttribArray(att_position)
-            GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*vertices.itemsize, ctypes.c_void_p(0))
-            
-            col_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*int(len(colors)), colors, GL.GL_STATIC_DRAW)
-            
-            att_colors = GL.glGetAttribLocation(program, 'vert_color')
-            GL.glEnableVertexAttribArray(att_colors)
-            GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
-            
-            vao_list.append(vao)
-            GL.glBindVertexArray(0)
-            GL.glDisableVertexAttribArray(att_position)
-            GL.glDisableVertexAttribArray(att_colors)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-    
-    def make_gl_sphere(self, program, atom_list, vao_list, covalent=True):
-        """ Function doc
-        """
-        for atom in atom_list:
-            if covalent:
-                vertices, indexes, colors = shapes.get_sphere(atom.pos, atom.cov_rad, atom.color, level='level_2')
-            else:
-                vertices, indexes, colors = shapes.get_sphere(atom.pos, atom.ball_radius, atom.color, level='level_2')
-            centers = [atom.pos[0],atom.pos[1],atom.pos[2]]*int(len(indexes))
-            centers = np.array(centers,dtype=np.float32)
-            vao = GL.glGenVertexArrays(1)
-            GL.glBindVertexArray(vao)
-            atom.triangles = int(len(indexes))
-            
-            ind_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
-            GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), indexes, GL.GL_STATIC_DRAW)
-        
-            vert_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.itemsize*int(len(vertices)), vertices, GL.GL_STATIC_DRAW)
-            
-            att_position = GL.glGetAttribLocation(program, 'coordinate')
-            GL.glEnableVertexAttribArray(att_position)
-            GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*vertices.itemsize, ctypes.c_void_p(0))
-        
-            center_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, center_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, centers.itemsize*int(len(centers)), centers, GL.GL_STATIC_DRAW)
-            
-            att_center = GL.glGetAttribLocation(program, 'center')
-            GL.glEnableVertexAttribArray(att_center)
-            GL.glVertexAttribPointer(att_center, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*centers.itemsize, ctypes.c_void_p(0))
-            
-            col_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*int(len(colors)), colors, GL.GL_STATIC_DRAW)
-            
-            att_colors = GL.glGetAttribLocation(program, 'vert_color')
-            GL.glEnableVertexAttribArray(att_colors)
-            GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
-            
-            vao_list.append(vao)
-            GL.glBindVertexArray(0)
-            GL.glDisableVertexAttribArray(att_position)
-            GL.glDisableVertexAttribArray(att_colors)
-            GL.glDisableVertexAttribArray(att_center)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-    
-    def make_gl_cylinder(self, program, bond_list, vao_list, ribbon=True):
-        """ Function doc
-        """
-        for bond in bond_list:
-            if ribbon:
-                vertices, indexes, colors, normals = shapes.get_cylinder(bond[0].pos,bond[0].color,bond[2],bond[3],bond[1],10,radius=0.2,level='level_6')
-                self.ribbon_indexes = int(len(indexes))
-            else:
-                vertices, indexes, colors, normals = shapes.get_cylinder(bond[0].pos,bond[0].color,bond[2],bond[3],bond[1],10,radius=0.1,level='level_6')
-                self.stick_indexes = int(len(indexes))
-            vao = GL.glGenVertexArrays(1)
-            GL.glBindVertexArray(vao)
-            
-            ind_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
-            GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), indexes, GL.GL_STATIC_DRAW)
-            
-            vert_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.itemsize*int(len(vertices)), vertices, GL.GL_STATIC_DRAW)
-            
-            att_position = GL.glGetAttribLocation(program, 'coordinate')
-            GL.glEnableVertexAttribArray(att_position)
-            GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*vertices.itemsize, ctypes.c_void_p(0))
-            
-            center_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, center_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, normals.itemsize*int(len(normals)), normals, GL.GL_STATIC_DRAW)
-            
-            att_center = GL.glGetAttribLocation(program, 'center')
-            GL.glEnableVertexAttribArray(att_center)
-            GL.glVertexAttribPointer(att_center, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*normals.itemsize, ctypes.c_void_p(0))
-            
-            col_vbo = GL.glGenBuffers(1)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*int(len(colors)), colors, GL.GL_STATIC_DRAW)
-            
-            att_colors = GL.glGetAttribLocation(program, 'vert_color')
-            GL.glEnableVertexAttribArray(att_colors)
-            GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
-            
-            vao_list.append(vao)
-            GL.glBindVertexArray(0)
-            GL.glDisableVertexAttribArray(att_position)
-            GL.glDisableVertexAttribArray(att_colors)
-            GL.glDisableVertexAttribArray(att_center)
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
     
     def draw_dots(self):
         """ Function doc
         """
-        assert(len(self.dots_vao)>0)
-        GL.glBindVertexArray(self.dots_vao[0])
-        GL.glDrawArrays(GL.GL_POINTS, 0, len(self.dot_list))
-        GL.glBindVertexArray(0)
+        for visObj in self.vismolSession.vismol_objects:
+            if visObj.dots_vao is not None:
+                GL.glBindVertexArray(visObj.dots_vao)
+                if self.modified_view:
+                    pass
+                    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
+                    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_indexes.itemsize*int(len(visObj.dot_indexes)), visObj.dot_indexes, GL.GL_DYNAMIC_DRAW)
+                    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
+                    GL.glBindVertexArray(0)
+                    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+                    self.modified_view = False
+                else:
+                    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
+                GL.glBindVertexArray(0)
+        #assert(len(self.dots_vao)>0)
+        #teste = np.array([1,3,5,7],dtype=np.uint16)
+        #GL.glBindVertexArray(self.dots_vao[0])
+        #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.dot_buf[0])
+        #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, teste.itemsize*int(len(teste)), teste, GL.GL_DYNAMIC_DRAW)
+        ##GL.glDrawArrays(GL.GL_POINTS, 0, len(self.dot_list))
+        #GL.glDrawElements(GL.GL_POINTS, int(4), GL.GL_UNSIGNED_SHORT, None)
+        #GL.glBindVertexArray(0)
+        #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
     
     def draw_lines(self):
         """ Function doc
         """
-        assert(len(self.lines_vao)>0)
-        GL.glBindVertexArray(self.lines_vao[0])
-        GL.glDrawArrays(GL.GL_LINES, 0, len(self.vismolSession.vismol_objects[0].index_bonds)*2)
+        for visObj in self.vismolSession.vismol_objects:
+            if visObj.lines_vao is not None:
+                GL.glBindVertexArray(visObj.lines_vao)
+                if self.modified_view:
+                    pass
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[0])
+                    #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
+                    #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_SHORT, None)
+                    #GL.glBindVertexArray(0)
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+                    #self.modified_data = False
+                else:
+                    GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_SHORT, None)
         GL.glBindVertexArray(0)
+        #assert(len(self.lines_vao)>0)
+        #GL.glBindVertexArray(self.lines_vao[0])
+        #GL.glDrawArrays(GL.GL_LINES, 0, len(self.vismolSession.vismol_objects[0].index_bonds)*2)
+        #GL.glBindVertexArray(0)
     
     def draw_dots_surface(self):
         """ Function doc
@@ -730,7 +579,7 @@ class GtkGLWidget(Gtk.GLArea):
             GL.glDrawElements(GL.GL_TRIANGLES, self.ribbon_indexes, GL.GL_UNSIGNED_SHORT, None)
             GL.glBindVertexArray(0)
     
-    def key_press(self, widget, event):
+    def key_pressed(self, widget, event):
         """ The mouse_button function serves, as the names states, to catch
             events in the keyboard, e.g. letter 'l' pressed, 'backslash'
             pressed. Note that there is a difference between 'A' and 'a'.
@@ -740,10 +589,32 @@ class GtkGLWidget(Gtk.GLArea):
             using Ctrl+Z to undo an action.
         """
         k_name = Gdk.keyval_name(event.keyval)
-        func = getattr(self, 'pressed_' + k_name, None)
-        #print k_name, 'key Pressed'
+        func = getattr(self, '_pressed_' + k_name, None)
+        print(k_name, 'key Pressed')
         if func:
             func()
+        return True
+    
+    def key_released(self, widget, event):
+        """ Used to indicates a key has been released.
+        """
+        k_name = Gdk.keyval_name(event.keyval)
+        func = getattr(self, '_released_' + k_name, None)
+        print(k_name, 'key released')
+        if func:
+            func()
+        return True
+    
+    def _pressed_Control_L(self):
+        """ Function doc
+        """
+        self.ctrl = True
+        return True
+    
+    def _released_Control_L(self):
+        """ Function doc
+        """
+        self.ctrl = False
         return True
     
     def delete_vaos(self):
@@ -821,7 +692,19 @@ class GtkGLWidget(Gtk.GLArea):
         changed = False
         if self.mouse_rotate:
             angle = math.sqrt(dx**2+dy**2)/float(self.width+1)*180.0
-            self.model_mat = mop.my_glRotatef(self.model_mat, angle, [-dy, -dx, 0])
+            if self.ctrl:
+                if abs(dx) >= abs(dy):
+                    if (y-self.height/2) < 0:
+                        self.model_mat = mop.my_glRotatef(self.model_mat, angle, [0, 0, dx])
+                    else:
+                        self.model_mat = mop.my_glRotatef(self.model_mat, angle, [0, 0, -dx])
+                else:
+                    if (x-self.width/2) < 0:
+                        self.model_mat = mop.my_glRotatef(self.model_mat, angle, [0, 0, -dy])
+                    else:
+                        self.model_mat = mop.my_glRotatef(self.model_mat, angle, [0, 0, dy])
+            else:
+                self.model_mat = mop.my_glRotatef(self.model_mat, angle, [-dy, -dx, 0])
             self.update_normal_mat()
             changed = True
         elif self.mouse_pan:
@@ -837,10 +720,25 @@ class GtkGLWidget(Gtk.GLArea):
             self.drag_pos_z = pz
             changed = True
         elif self.mouse_zoom:
+            #delta = (((self.glcamera.z_far-self.glcamera.z_near)/2)+self.glcamera.z_near)/200
+            #direction = mop.my_glForwardVectorAbs(self.glcamera.get_view_matrix())
+            ##self.model_mat = mop.my_glTranslatef(self.model_mat, -dy*delta*direction)
+            #self.glcamera.move_position(dy*delta*direction)
             delta = (((self.glcamera.z_far-self.glcamera.z_near)/2)+self.glcamera.z_near)/200
-            direction = mop.my_glForwardVectorAbs(self.glcamera.get_view_matrix())
-            #self.model_mat = mop.my_glTranslatef(self.model_mat, -dy*delta*direction)
-            self.glcamera.move_position(dy*delta*direction)
+            move_z = dy * delta
+            self.glcamera.set_view_matrix(mop.my_glTranslatef(self.glcamera.view_matrix, [0.0, 0.0, move_z]))
+            
+            self.glcamera.z_near += -move_z
+            self.glcamera.z_far += -move_z
+            if self.glcamera.z_near >= 0.1:
+                self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
+                        self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
+                #gluPerspective(self.fovy, float(width)/float(height), self.z_near, self.z_far)
+            else:
+                self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
+                        self.glcamera.viewport_aspect_ratio, 0.1, self.glcamera.z_far))
+                #gluPerspective(self.fovy, float(width)/float(height), 0.1, self.z_far)
+            
             changed = True
         self.dragging = True
         if changed:
@@ -863,7 +761,8 @@ class GtkGLWidget(Gtk.GLArea):
     def update_normal_mat(self):
         """ Function doc
         """
-        modelview = mop.my_glMultiplyMatricesf(self.glcamera.get_view_matrix(), self.model_mat)
+        #modelview = mop.my_glMultiplyMatricesf(self.glcamera.get_view_matrix(), self.model_mat)
+        modelview = mop.my_glMultiplyMatricesf(self.glcamera.view_matrix, self.model_mat)
         normal_mat = np.matrix(modelview[:3,:3]).I.T
         self.normal_mat = np.array(normal_mat)
         #model = np.matrix(self.model_mat[:3,:3]).I.T
@@ -887,10 +786,29 @@ class GtkGLWidget(Gtk.GLArea):
         """
         print("Test function init")
         self.data = self.vismolSession
+        for visObj in self.vismolSession.vismol_objects:
+            visObj.generate_dot_indexes()
         self.modified_data = True
-        #self.load_data()
         self.DOTS = not self.DOTS
         self.LINES = not self.LINES
         self.queue_draw()
         print("Test function OK")
         return True
+    
+    def test_hide(self):
+        """ Function doc
+        """
+        self.modified_view = True
+        for visObj in self.vismolSession.vismol_objects:
+            visObj.dot_indexes = np.array([1,3,5,7,9], dtype=np.uint16)
+        self.queue_draw()
+        print("hiding")
+        
+    def test_show(self):
+        """ Function doc
+        """
+        self.modified_view = True
+        for visObj in self.vismolSession.vismol_objects:
+            visObj.dot_indexes = np.array([0,1,2,3,4,5,6,7,8,9], dtype=np.uint16)
+        self.queue_draw()
+        print("showing")

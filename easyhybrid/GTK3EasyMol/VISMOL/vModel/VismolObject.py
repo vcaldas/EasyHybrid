@@ -53,7 +53,24 @@ class VismolObject:
         #self.flat_sphere_representation = FlatSphereRepresentation(self)
         print ('frames:     ', len(self.frames))
         print ('frame size: ', len(self.frames[0]))
-
+        
+        # OpenGL attributes
+        self.dots_vao = None
+        self.lines_vao = None
+        self.spheres_vao = None
+        self.dot_buffers = None
+        self.line_buffers = None
+        self.sphere_buffers = None
+        self.dot_indexes = None
+    
+    def generate_dot_indexes(self):
+        """ Function doc
+        """
+        self.dot_indexes = []
+        for i in range(int(len(self.atoms))):
+            self.dot_indexes.append(i)
+        self.dot_indexes = np.array(self.dot_indexes, dtype=np.uint16)
+    
     def _generate_chain_structure (self):
         """ Function doc """
         print ('\ngenerate_chain_structure starting')
