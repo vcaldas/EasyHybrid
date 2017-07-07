@@ -62,6 +62,8 @@ class VismolObject:
         self.line_buffers = None
         self.sphere_buffers = None
         self.dot_indexes = None
+        self.model_mat = np.identity(4, dtype=np.float32)
+        self.normal_mat = np.identity(3, dtype=np.float32)
     
     def generate_dot_indexes(self):
         """ Function doc
