@@ -370,8 +370,7 @@ class GtkGLWidget(Gtk.GLArea):
         
         if self.shader_flag:
             self.create_gl_programs()
-            self.axis.make_axis_program()
-            self.axis.make_vaos()
+            self.axis.initialize_gl()
             self.shader_flag = False
         
         if self.data is not None:
@@ -411,7 +410,12 @@ class GtkGLWidget(Gtk.GLArea):
         if self.SHOW_AXIS:
             GL.glUseProgram(self.axis.gl_axis_program)
             self.axis.load_params()
-            self.draw_axis()
+            self.draw_axis(True)
+            GL.glUseProgram(0)
+            GL.glUseProgram(self.axis.gl_lines_program)
+            GL.glLineWidth(5)
+            self.axis.load_lines_params()
+            self.draw_axis(False)
             GL.glUseProgram(0)
     
     def load_matrices(self, program, model_mat, normal_mat):
@@ -530,18 +534,23 @@ class GtkGLWidget(Gtk.GLArea):
         #GL.glDrawArrays(GL.GL_LINES, 0, len(self.vismolSession.vismol_objects[0].index_bonds)*2)
         #GL.glBindVertexArray(0)
     
-    def draw_axis(self):
+    def draw_axis(self, flag):
         """ Function doc
         """
-        GL.glBindVertexArray(self.axis.x_vao)
-        GL.glDrawElements(GL.GL_TRIANGLES, int(len(self.axis.axis_indexes)), GL.GL_UNSIGNED_SHORT, None)
-        GL.glBindVertexArray(0)
-        GL.glBindVertexArray(self.axis.y_vao)
-        GL.glDrawElements(GL.GL_TRIANGLES, int(len(self.axis.axis_indexes)), GL.GL_UNSIGNED_SHORT, None)
-        GL.glBindVertexArray(0)
-        GL.glBindVertexArray(self.axis.z_vao)
-        GL.glDrawElements(GL.GL_TRIANGLES, int(len(self.axis.axis_indexes)), GL.GL_UNSIGNED_SHORT, None)
-        GL.glBindVertexArray(0)
+        if flag:
+            GL.glBindVertexArray(self.axis.x_vao)
+            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_SHORT, None)
+            GL.glBindVertexArray(0)
+            GL.glBindVertexArray(self.axis.y_vao)
+            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_SHORT, None)
+            GL.glBindVertexArray(0)
+            GL.glBindVertexArray(self.axis.z_vao)
+            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_SHORT, None)
+            GL.glBindVertexArray(0)
+        else:
+            GL.glBindVertexArray(self.axis.lines_vao)
+            GL.glDrawArrays(GL.GL_LINES, 0, len(self.axis.lines_vertices))
+            GL.glBindVertexArray(0)
     
     def draw_dots_surface(self):
         """ Function doc

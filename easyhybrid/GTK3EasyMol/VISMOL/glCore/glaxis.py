@@ -26,9 +26,7 @@ import ctypes
 import numpy as np
 import VISMOL.glCore.matrix_operations as mop
 
-import OpenGL
 from OpenGL import GL
-from OpenGL.GL import shaders
 
 class GLAxis:
     """ Class doc
@@ -67,6 +65,17 @@ class GLAxis:
          -0.95000000, -0.90000000, -0.05000000,
          -0.93535534, -0.86464466, -0.05000000,
          -0.90000000, -0.90000000, -0.12500000], dtype=np.float32)}
+        self.lines_vertices = np.array(
+            [-0.90000000, -0.90000000,  0.00000000,
+             -0.82500000, -0.90000000,  0.00000000,
+             -0.90000000, -0.90000000,  0.00000000,
+             -0.90000000, -0.82500000,  0.00000000,
+             -0.90000000, -0.90000000,  0.00000000,
+             -0.90000000, -0.90000000, -0.07500000], dtype=np.float32)
+        self.lines_colors = np.array(
+            [1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+             0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+             0.0, 0.0, 1.0, 0.0, 0.0, 1.0], dtype=np.float32)
         self.axis_indexes = np.array([0, 1, 8, 1, 2, 8, 2, 3, 8, 3, 4, 8,
                                       4, 5, 8, 5, 6, 8, 6, 7, 8, 7, 0, 8], dtype=np.uint16)
         self.axis_centers = {'x_axis' : [0.0, 0.0, 0.0],
@@ -78,9 +87,18 @@ class GLAxis:
         self.model_mat = np.identity(4, dtype=np.float32)
         self.normal_mat = np.identity(3, dtype=np.float32)
         self.gl_axis_program = None
+        self.gl_lines_program = None
         self.x_vao = None
         self.y_vao = None
         self.z_vao = None
+        self.lines_vao = None
+        self.zrp = np.array([-0.9, -0.9, 0.0],dtype=np.float32)
+        self.light_position = np.array([2.5,2.5,3.0],dtype=np.float32)
+        self.light_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
+        self.light_intensity = np.array([0.6,0.6,0.6],dtype=np.float32)
+        self.light_specular_color = np.array([1.0,1.0,1.0],dtype=np.float32)
+        self.light_ambient_coef = 0.5
+        self.light_shininess = 5.5
         self.vertex_shader_axis = """
 #version 330
 
@@ -147,23 +165,52 @@ void main(){
     final_color = vec4(ambient + diffuse + specular, 1.0);
 }
 """
-        self.zrp = np.array([-0.9, -0.9, 0.0],dtype=np.float32)
-        self.light_position = np.array([2.5,2.5,3.0],dtype=np.float32)
-        self.light_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
-        self.light_intensity = np.array([0.6,0.6,0.6],dtype=np.float32)
-        self.light_specular_color = np.array([1.0,1.0,1.0],dtype=np.float32)
-        self.light_ambient_coef = 0.5
-        self.light_shininess = 5.5
+        self.vertex_shader_lines = """
+#version 330
+
+uniform mat4 model_mat;
+
+in vec3 vert_coord;
+in vec3 vert_color;
+
+out vec3 frag_color;
+
+void main()
+{
+    gl_Position = model_mat * vec4(vert_coord, 1.0);
+    frag_color = vert_color;
+}
+"""
+        self.fragment_shader_lines = """
+#version 330
+
+in vec3 frag_color;
+
+out vec4 final_color;
+
+void main()
+{
+    final_color = vec4(frag_color, 1.0);
+}
+"""
     
-    def make_vaos(self):
+    def initialize_gl(self):
+        """ Function doc """
+        self._make_axis_program()
+        self._make_lines_program()
+        self._make_vaos()
+        return True
+    
+    def _make_vaos(self):
         """ Function doc
         """
         self.x_vao = self._get_vao('x_axis')
         self.y_vao = self._get_vao('y_axis')
         self.z_vao = self._get_vao('z_axis')
+        self.lines_vao = self._get_vao_lines()
         return True
-        
-    def make_axis_program(self):
+    
+    def _make_axis_program(self):
         """ Function doc
         """
         v_shader = GL.glCreateShader(GL.GL_VERTEX_SHADER)
@@ -177,7 +224,22 @@ void main(){
         GL.glAttachShader(self.gl_axis_program, f_shader)
         GL.glLinkProgram(self.gl_axis_program)
         return True
-        
+    
+    def _make_lines_program(self):
+        """ Function doc
+        """
+        v_shader = GL.glCreateShader(GL.GL_VERTEX_SHADER)
+        GL.glShaderSource(v_shader, self.vertex_shader_lines)
+        GL.glCompileShader(v_shader)
+        f_shader = GL.glCreateShader(GL.GL_FRAGMENT_SHADER)
+        GL.glShaderSource(f_shader, self.fragment_shader_lines)
+        GL.glCompileShader(f_shader)
+        self.gl_lines_program = GL.glCreateProgram()
+        GL.glAttachShader(self.gl_lines_program, v_shader)
+        GL.glAttachShader(self.gl_lines_program, f_shader)
+        GL.glLinkProgram(self.gl_lines_program)
+        return True
+    
     def _get_vao(self, axis):
         """ Function doc
         """
@@ -226,6 +288,35 @@ void main(){
         
         return vao
     
+    def _get_vao_lines(self):
+        """ Function doc
+        """
+        vao = GL.glGenVertexArrays(1)
+        GL.glBindVertexArray(vao)
+        
+        vert_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.lines_vertices.itemsize*int(len(self.lines_vertices)), self.lines_vertices, GL.GL_STATIC_DRAW)
+        
+        att_position = GL.glGetAttribLocation(self.gl_lines_program, 'vert_coord')
+        GL.glEnableVertexAttribArray(att_position)
+        GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.lines_vertices.itemsize, ctypes.c_void_p(0))
+        
+        col_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.lines_colors.itemsize*int(len(self.lines_colors)), self.lines_colors, GL.GL_STATIC_DRAW)
+        
+        att_colors = GL.glGetAttribLocation(self.gl_lines_program, 'vert_color')
+        GL.glEnableVertexAttribArray(att_colors)
+        GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.lines_colors.itemsize, ctypes.c_void_p(0))
+        
+        GL.glBindVertexArray(0)
+        GL.glDisableVertexAttribArray(att_position)
+        GL.glDisableVertexAttribArray(att_colors)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+        
+        return vao
+    
     def load_params(self):
         """ Function doc
         """
@@ -245,5 +336,12 @@ void main(){
         GL.glUniform3fv(intensity, 1, self.light_intensity)
         spec_col = GL.glGetUniformLocation(self.gl_axis_program, 'my_light.specular_color')
         GL.glUniform3fv(spec_col, 1, self.light_specular_color)
+        return True
     
+    def load_lines_params(self):
+        """ Function doc
+        """
+        model = GL.glGetUniformLocation(self.gl_axis_program, 'model_mat')
+        GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
+        return True
     
