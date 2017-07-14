@@ -52,7 +52,7 @@ class GTKGUI ():
         
         
         for vis_object in self.vismolSession.vismol_objects:
-            
+            print (vis_object.name)
             if vis_object.actived:
                 actived = True
             else:
@@ -66,8 +66,62 @@ class GTKGUI ():
             model.append(data)
             i +=1
             n = n + 1
-        
+        print ('load fuction finished')
         #self.EMSession.glarea.draw_lines(self.EMSession.Vobjects[-1])
+    
+    
+    def on_treeview_Objects_button_release_event(self, tree, event):
+        if event.button == 3:
+            selection     = tree.get_selection()
+            model         = tree.get_model()
+            (model, iter) = selection.get_selected()
+            if iter != None:
+                self.selectedID  = str(model.get_value(iter, 1))  # @+
+                self.selectedObj = str(model.get_value(iter, 2))
+    
+                self.builder.get_object('TreeViewObjLabel').set_label('- ' +self.selectedObj+' -' )
+
+                widget = self.builder.get_object('treeview_menu')
+                widget.popup(None, None, None, event.button, event.time)
+                print ('button == 3')
+
+
+        if event.button == 2:
+            selection     = tree.get_selection()
+            model         = tree.get_model()
+            (model, iter) = selection.get_selected()
+            pymol_object = model.get_value(iter, 0)
+            print ('button == 2', pymol_object)
+            
+            self.selectedID  = int(model.get_value(iter, 1))  # @+
+            self.vismolSession.center(Vobject_index = self.selectedID -1)
+
+        if event.button == 1:
+            selection     = tree.get_selection()
+            model         = tree.get_model()
+            (model, iter) = selection.get_selected()
+            print ('button == 1')
+
+            if iter != None:
+                #print model, iter
+                pymol_object  = model.get_value(iter, 2)  # @+
+                true_or_false = model.get_value(iter, 0)
+                obj_index     = model.get_value(iter, 1)
+                #print pymol_object
+                if true_or_false == False:
+                    self.vismolSession.enable_by_index(int(obj_index)-1)
+                    true_or_false = True
+                    model.set(iter, 0, true_or_false)
+                    # print true_or_false
+                    self.vismolSession.glwidget.queue_draw()
+                
+                else:
+                    self.vismolSession.disable_by_index(int(obj_index)-1)
+                    true_or_false = False
+                    model.set(iter, 0, true_or_false)
+                    self.vismolSession.glwidget.queue_draw()
+    
+    
     
     def __init__ (self, vismolSession = None):
         """ Class initialiser """

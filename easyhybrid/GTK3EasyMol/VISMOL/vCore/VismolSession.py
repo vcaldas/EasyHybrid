@@ -35,6 +35,10 @@ from VISMOL.vBabel import PDBFiles
 from VISMOL.vCore.VismolSelections  import VisMolPickingSelection as vPick
 from VISMOL.vCore.VismolSelections  import VisMolViewingSelection as vSele
 
+import VISMOL.glCore.shapes as shapes
+
+
+
 import os
 
 class ShowHideVisMol:
@@ -238,9 +242,16 @@ class VisMolSession (ShowHideVisMol):
         
         #self.atom_id_counter += len(Vobject.atoms)
         
+        
+        #if self.glwidget:
+        #    print ('starting _make_gl_lines') 
+        #    shapes._make_gl_lines(self.glwidget.lines_program, vismol_object = self.vismol_objects[-1])
+        #    print ('_make_gl_lines finished') 
+        #    self.glwidget.make_lines(vismol_object = self.vismol_objects[-1])
         self.vismol_objects[-1].actived = True
+        self.glwidget.queue_draw()
         #self.center_by_index (index =  -1)
-        #return True
+        return True
         
     def _load_pdb_file (self, infile):
         """ Function doc """
@@ -275,13 +286,13 @@ class VisMolSession (ShowHideVisMol):
     def disable_by_index (self, index = 0):
         self.vismol_objects[index].actived = False
         #self.glwidget.draw()
-        self.glwidget.updateGL()
+        self.glwidget.queue_draw()
             
     def enable_by_index (self, index = 0):
         """ Function doc """
         self.vismol_objects[index].actived = True
         #self.glwidget.draw()
-        self.glwidget.updateGL()
+        self.glwidget.queue_draw()
         
     def set_frame (self, frame = 0):
         """ Function doc """
