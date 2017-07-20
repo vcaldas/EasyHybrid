@@ -400,19 +400,21 @@ class GtkGLWidget(Gtk.GLArea):
                         GL.glUseProgram(0)
                         GL.glDisable(GL.GL_DEPTH_TEST)
                 
-                #if visObj.dots_actived:
-                #    if visObj.dots_vao is None:
-                #        shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
-                #    else:
-                #        GL.glEnable(GL.GL_DEPTH_TEST)
-                #        GL.glUseProgram(self.dots_program)
-                #        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                #        self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
-                #        self.load_dot_params(self.dots_program)
-                #        self._draw_dots(visObj = visObj)
-                #        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                #        GL.glUseProgram(0)
-                #        GL.glDisable(GL.GL_DEPTH_TEST)
+                if visObj.dots_actived:
+                    
+                    if visObj.dots_vao is None:
+                        #print ('_make_gl_dots')
+                        shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
+                    else:
+                        GL.glEnable(GL.GL_DEPTH_TEST)
+                        GL.glUseProgram(self.dots_program)
+                        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                        self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
+                        self.load_dot_params(self.dots_program)
+                        self._draw_dots(visObj = visObj)
+                        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                        GL.glUseProgram(0)
+                        GL.glDisable(GL.GL_DEPTH_TEST)
         
         if self.SHOW_AXIS:
             GL.glUseProgram(self.axis.gl_axis_program)
@@ -605,16 +607,16 @@ class GtkGLWidget(Gtk.GLArea):
         if visObj.dots_vao is not None:
             GL.glBindVertexArray(visObj.dots_vao)
             
-            #if self.modified_view:
-            #    pass
+            if self.modified_view:
+                pass
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
             #    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_indexes.itemsize*int(len(visObj.dot_indexes)), visObj.dot_indexes, GL.GL_DYNAMIC_DRAW)
             #    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
             #    GL.glBindVertexArray(0)
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
             #    self.modified_view = False
-            #else:
-                #GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
+            else:
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
         GL.glBindVertexArray(0)
 
 
@@ -632,6 +634,25 @@ class GtkGLWidget(Gtk.GLArea):
                 #GL.glBindVertexArray(0)
                 #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
                 #self.modified_data = False
+                
+                #- - - - -  SHOW HIDE - - - - -
+                #id self.modified_show:
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[0])
+                    #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
+                    #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_SHORT, None)
+                    #GL.glBindVertexArray(0)
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+                    #self.modified_data = False
+                
+                # - - - - - COLOR - - - - -
+                #if self.modified_color:
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[2])
+                    #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
+                    #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_SHORT, None)
+                    #GL.glBindVertexArray(0)
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+                    #self.modified_data = False
+           
             else:
                 GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_SHORT, None)
         GL.glBindVertexArray(0)
@@ -847,7 +868,8 @@ class GtkGLWidget(Gtk.GLArea):
     
         
         if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
-            print ('event.button == 1')
+            pass
+            #print ('event.button == 1')
             #nearest, hits = self.pick(x, self.get_allocation().height-1-y, self.pick_radius[0], self.pick_radius[1], event)
             #selected = self.select(event, nearest, hits)
             #if selected is not None:
@@ -855,10 +877,12 @@ class GtkGLWidget(Gtk.GLArea):
             #    self.zero_reference_point = selected.pos
             #    self.target_point = selected.pos
         if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
-            print ('event.button == 2')
+            pass
+            #print ('event.button == 2')
             #self.dist_cam_zpr = op.get_euclidean(self.zero_reference_point, self.get_cam_pos())
         if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
-            print ('event.button == 3')
+            pass
+            #print ('event.button == 3')
             #self.pos_mouse = [x, y]
     
     
@@ -870,7 +894,12 @@ class GtkGLWidget(Gtk.GLArea):
                 self.dragging = False
             else:
                 self.glMenu.open_gl_menu(event = event)
-        
+        if event.button==1:
+            if self.dragging:
+                self.dragging = False
+            else:
+                print('funcao de selecao')
+                
     def mouse_motion(self, widget, event):
         x = event.x
         y = event.y

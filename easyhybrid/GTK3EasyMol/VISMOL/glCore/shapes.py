@@ -356,23 +356,33 @@ def _make_gl_dots(program, vismol_object = None, bckgrnd_color= [0.0,0.0,0.0,1.0
 def _make_gl_lines(program, vismol_object = None):
     """ Function doc
     """
-    coords = []
-    colors = []
+    #coords = []
+    #colors = []
+    #
+    ##for bond in vismol_object.index_bonds[0]:
+    #
+    #for bond in vismol_object.index_bonds:
+    ###for bond in bond_list:
+    #    coords = np.hstack((coords, vismol_object.atoms[bond[0]].pos))
+    #    coords = np.hstack((coords, vismol_object.atoms[bond[1]].pos))
+    #    colors = np.hstack((colors, vismol_object.atoms[bond[0]].color))
+    #    colors = np.hstack((colors, vismol_object.atoms[bond[1]].color))
+    #
+    #coords = np.array(coords, dtype=np.float32)
+    #colors = np.array(colors, dtype=np.float32)
     
-    for bond in vismol_object.index_bonds:
-    #for bond in bond_list:
-        coords = np.hstack((coords, vismol_object.atoms[bond[0]].pos))
-        coords = np.hstack((coords, vismol_object.atoms[bond[1]].pos))
-        colors = np.hstack((colors, vismol_object.atoms[bond[0]].color))
-        colors = np.hstack((colors, vismol_object.atoms[bond[1]].color))
+    #coords = vismol_object.frames[0]
+    #colors = vismol_object.colors
     
-    coords = np.array(coords, dtype=np.float32)
-    colors = np.array(colors, dtype=np.float32)
     
-    indexes = []
-    for i in range(int(len(coords)/3)):
-        indexes.append(i)
-    indexes = np.array(indexes,dtype=np.uint16)
+    #indexes = []
+    #for i in range(int(len(coords)/3)):
+    #    indexes.append(i)
+    #indexes = np.array(indexes,dtype=np.uint16)
+    
+    indexes = np.array(vismol_object.index_bonds,dtype=np.uint16)
+    coords  = vismol_object.frames[0]
+    colors  = vismol_object.colors
     
     vao = GL.glGenVertexArrays(1)
     GL.glBindVertexArray(vao)
