@@ -51,7 +51,7 @@ class VismolObject:
         #self.line_representation.update()
 
         """   F L A T   S P H E R E   """
-        self.dots_actived =  False
+        self.dots_actived =  True
 
         #self.flat_sphere_representation = FlatSphereRepresentation(self)
         

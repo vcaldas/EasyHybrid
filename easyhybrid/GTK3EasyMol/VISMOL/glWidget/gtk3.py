@@ -399,17 +399,20 @@ class GtkGLWidget(Gtk.GLArea):
                         self._draw_lines(visObj = visObj)
                         GL.glUseProgram(0)
                         GL.glDisable(GL.GL_DEPTH_TEST)
-            
-            #if visObj.dots_actived:
-            #    GL.glEnable(GL.GL_DEPTH_TEST)
-            #    GL.glUseProgram(self.dots_program)
-            #    GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-            #    self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
-            #    self.load_dot_params(self.dots_program)
-            #    self.draw_dots()
-            #    GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-            #    GL.glUseProgram(0)
-            #    GL.glDisable(GL.GL_DEPTH_TEST)
+                
+                #if visObj.dots_actived:
+                #    if visObj.dots_vao is None:
+                #        shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
+                #    else:
+                #        GL.glEnable(GL.GL_DEPTH_TEST)
+                #        GL.glUseProgram(self.dots_program)
+                #        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                #        self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
+                #        self.load_dot_params(self.dots_program)
+                #        self._draw_dots(visObj = visObj)
+                #        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                #        GL.glUseProgram(0)
+                #        GL.glDisable(GL.GL_DEPTH_TEST)
         
         if self.SHOW_AXIS:
             GL.glUseProgram(self.axis.gl_axis_program)
@@ -420,7 +423,7 @@ class GtkGLWidget(Gtk.GLArea):
     
     
     
-    def _render(self, area, context):
+    def old_render(self, area, context):
         """ This is the function that will be called everytime the window
             needs to be re-drawed.
         """
@@ -594,7 +597,28 @@ class GtkGLWidget(Gtk.GLArea):
                     GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
                 GL.glBindVertexArray(0)
     
-    
+
+    def _draw_dots(self, visObj = None):
+        """ Function doc
+        """
+
+        if visObj.dots_vao is not None:
+            GL.glBindVertexArray(visObj.dots_vao)
+            
+            #if self.modified_view:
+            #    pass
+            #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
+            #    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_indexes.itemsize*int(len(visObj.dot_indexes)), visObj.dot_indexes, GL.GL_DYNAMIC_DRAW)
+            #    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
+            #    GL.glBindVertexArray(0)
+            #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+            #    self.modified_view = False
+            #else:
+                #GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
+        GL.glBindVertexArray(0)
+
+
+
     def _draw_lines(self, visObj = None):
         """ Function doc
         """
@@ -813,13 +837,30 @@ class GtkGLWidget(Gtk.GLArea):
         left   = event.button==1 and event.type==Gdk.EventType.BUTTON_PRESS
         middle = event.button==2 and event.type==Gdk.EventType.BUTTON_PRESS
         right  = event.button==3 and event.type==Gdk.EventType.BUTTON_PRESS
-        self.mouse_rotate = left and not (middle or right)
-        self.mouse_zoom   = right and not (middle or left)
-        self.mouse_pan    = middle and not (right or left)
+        self.mouse_rotate = left   and not (middle or right)
+        self.mouse_zoom   = right  and not (middle or left)
+        self.mouse_pan    = middle and not (right  or left)
         x = self.mouse_x = event.x
         y = self.mouse_y = event.y
         self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(x, y)
         self.dragging = False
+    
+        
+        if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
+            print ('event.button == 1')
+            #nearest, hits = self.pick(x, self.get_allocation().height-1-y, self.pick_radius[0], self.pick_radius[1], event)
+            #selected = self.select(event, nearest, hits)
+            #if selected is not None:
+            #    self.center_on_atom(selected.pos)
+            #    self.zero_reference_point = selected.pos
+            #    self.target_point = selected.pos
+        if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+            print ('event.button == 2')
+            #self.dist_cam_zpr = op.get_euclidean(self.zero_reference_point, self.get_cam_pos())
+        if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+            print ('event.button == 3')
+            #self.pos_mouse = [x, y]
+    
     
     def mouse_released(self, widget, event):
         pass
