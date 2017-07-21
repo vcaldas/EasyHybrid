@@ -54,7 +54,10 @@ cpdef C_generate_bonds(atoms, _limit = 50):
                     angle = 0
                     vec_o = 0
                     
-                    index_bonds.append([i, j])
+                    #index_bonds.append([i, j])
+                    index_bonds.append(i)
+                    index_bonds.append(j)
+                    
                     atoms[i].connected.append(atoms[j])
                     atoms[j].connected.append(atoms[i])
               

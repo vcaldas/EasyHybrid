@@ -253,7 +253,7 @@ class GtkGLWidget(Gtk.GLArea):
         self.axis = glaxis.GLAxis()
         self.set_has_depth_buffer(True)
         self.set_has_alpha(True)
-        self.frame_i = 0
+        self.frame = 0
         self.shader_flag = True
         self.modified_data = False
         self.modified_view = False
@@ -363,15 +363,81 @@ class GtkGLWidget(Gtk.GLArea):
             raise RuntimeError(GL.glGetShaderInfoLog(shader))
         return shader
     
+    
+    
     def render(self, area, context):
         """ This is the function that will be called everytime the window
             needs to be re-drawed.
         """
+        #self.data = True
+        if self.shader_flag:
+            print ('create_gl_programs')
+            self.create_gl_programs()
+            self.axis.make_axis_program()
+            self.axis.make_vaos()
+            self.shader_flag = False
+            print ('create_gl_programs done')
+
         
+
+        GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
+                        self.bckgrnd_color[2],self.bckgrnd_color[3])
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+
+        for visObj in self.vismolSession.vismol_objects:
+            if visObj.actived:
+                
+                if visObj.lines_actived:
+                
+                    if visObj.lines_vao is None:
+                        shapes._make_gl_lines(self.lines_program, vismol_object = visObj)
+                    else:
+                        GL.glEnable(GL.GL_DEPTH_TEST)                        
+                        GL.glUseProgram(self.lines_program)
+                        GL.glLineWidth(60/abs(self.dist_cam_zrp))
+                        self.load_matrices(self.lines_program, visObj.model_mat, visObj.normal_mat)
+                        self._draw_lines(visObj = visObj)
+                        GL.glUseProgram(0)
+                        GL.glDisable(GL.GL_DEPTH_TEST)
+                
+                if visObj.dots_actived:
+                    pass
+                    
+                    #if visObj.dots_vao is None:
+                    #    #print ('_make_gl_dots')
+                    #    shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
+                    #else:
+                    #    GL.glEnable(GL.GL_DEPTH_TEST)
+                    #    GL.glUseProgram(self.dots_program)
+                    #    GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                    #    self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
+                    #    self.load_dot_params(self.dots_program)
+                    #    self._draw_dots(visObj = visObj)
+                    #    GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                    #    GL.glUseProgram(0)
+                    #    GL.glDisable(GL.GL_DEPTH_TEST)
+        
+        if self.SHOW_AXIS:
+            GL.glUseProgram(self.axis.gl_axis_program)
+            self.axis.load_params()
+            self.draw_axis()
+            GL.glUseProgram(0)
+    
+    
+    
+    
+    def old_render(self, area, context):
+        """ This is the function that will be called everytime the window
+            needs to be re-drawed.
+        """
+        #self.data = True
         if self.shader_flag:
             self.create_gl_programs()
             self.axis.initialize_gl()
             self.shader_flag = False
+        
+        
+        
         
         if self.data is not None:
             if self.modified_data:
@@ -383,25 +449,47 @@ class GtkGLWidget(Gtk.GLArea):
             
             for visObj in self.vismolSession.vismol_objects:
                 
-                if self.LINES:
+                if visObj.lines_actived:
                     GL.glEnable(GL.GL_DEPTH_TEST)
                     GL.glUseProgram(self.lines_program)
                     GL.glLineWidth(60/abs(self.dist_cam_zrp))
                     self.load_matrices(self.lines_program, visObj.model_mat, visObj.normal_mat)
-                    self.draw_lines()
+                    self._draw_lines(visObj = visObj)
                     GL.glUseProgram(0)
                     GL.glDisable(GL.GL_DEPTH_TEST)
-                if self.DOTS:
-                    GL.glEnable(GL.GL_DEPTH_TEST)
-                    GL.glUseProgram(self.dots_program)
-                    GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                    self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
-                    self.load_dot_params(self.dots_program)
-                    self.draw_dots()
-                    GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                    GL.glUseProgram(0)
-                    GL.glDisable(GL.GL_DEPTH_TEST)
+                
+                #if visObj.dots_actived:
+                #    GL.glEnable(GL.GL_DEPTH_TEST)
+                #    GL.glUseProgram(self.dots_program)
+                #    GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                #    self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
+                #    self.load_dot_params(self.dots_program)
+                #    self.draw_dots()
+                #    GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                #    GL.glUseProgram(0)
+                #    GL.glDisable(GL.GL_DEPTH_TEST)
+                
+                
+                #if self.LINES:
+                #    GL.glEnable(GL.GL_DEPTH_TEST)
+                #    GL.glUseProgram(self.lines_program)
+                #    GL.glLineWidth(60/abs(self.dist_cam_zrp))
+                #    self.load_matrices(self.lines_program, visObj.model_mat, visObj.normal_mat)
+                #    self.draw_lines()
+                #    GL.glUseProgram(0)
+                #    GL.glDisable(GL.GL_DEPTH_TEST)
+                #if self.DOTS:
+                #    GL.glEnable(GL.GL_DEPTH_TEST)
+                #    GL.glUseProgram(self.dots_program)
+                #    GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                #    self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
+                #    self.load_dot_params(self.dots_program)
+                #    self.draw_dots()
+                #    GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                #    GL.glUseProgram(0)
+                #    GL.glDisable(GL.GL_DEPTH_TEST)
             
+        
         else:
             GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
                             self.bckgrnd_color[2],self.bckgrnd_color[3])
@@ -489,9 +577,13 @@ class GtkGLWidget(Gtk.GLArea):
             bind the coordinates data to the buffer array.
         """
         for visObj in self.vismolSession.vismol_objects:
-            visObj.dots_vao, visObj.dot_buffers = shapes.make_gl_dots(self.dots_program, visObj.atoms)
-            visObj.lines_vao, visObj.line_buffers = shapes.make_gl_lines(self.lines_program, visObj.index_bonds, visObj.atoms)
-        
+            shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
+            shapes._make_gl_lines(self.lines_program, vismol_object = visObj)
+            
+            #visObj.dots_vao,  visObj.dot_buffers   = shapes.make_gl_dots(self.dots_program, visObj.atoms)
+            #visObj.lines_vao, visObj.line_buffers  = shapes._make_gl_lines(self.lines_program, visObj.index_bonds, visObj.atoms)
+            #visObj.lines_vao, visObj.line_buffers  = shapes._make_gl_lines(self.lines_program, vismol_object = visObj)
+
         self.modified_data = False
     
     def draw_dots(self):
@@ -511,6 +603,96 @@ class GtkGLWidget(Gtk.GLArea):
                 else:
                     GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
                 GL.glBindVertexArray(0)
+    
+
+    def _draw_dots(self, visObj = None):
+        """ Function doc
+        """
+
+        if visObj.dots_vao is not None:
+            GL.glBindVertexArray(visObj.dots_vao)
+            
+            if self.modified_view:
+                pass
+            #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
+            #    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_indexes.itemsize*int(len(visObj.dot_indexes)), visObj.dot_indexes, GL.GL_DYNAMIC_DRAW)
+            #    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
+            #    GL.glBindVertexArray(0)
+            #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+            #    self.modified_view = False
+            else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dot_buffers[0])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                visObj.frames[self.frame], 
+                                GL.GL_STATIC_DRAW)   
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
+        GL.glBindVertexArray(0)
+
+
+
+    def _draw_lines(self, visObj = None):
+        """ Function doc
+        """
+        if visObj.lines_vao is not None:
+            GL.glBindVertexArray(visObj.lines_vao)
+            if self.modified_view:
+                pass
+                #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[0])
+                #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
+                #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_SHORT, None)
+                #GL.glBindVertexArray(0)
+                #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+                #self.modified_data = False
+                
+                #- - - - -  SHOW HIDE - - - - -
+                #id self.modified_show:
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[0])
+                    #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
+                    #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_SHORT, None)
+                    #GL.glBindVertexArray(0)
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+                    #self.modified_data = False
+                
+                # - - - - - COLOR - - - - -
+                #if self.modified_color:
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[2])
+                    #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
+                    #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_SHORT, None)
+                    #GL.glBindVertexArray(0)
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+                    #self.modified_data = False
+           
+            else:
+                #coord_vbo = GL.glGenBuffers(1)
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.line_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                visObj.frames[self.frame], 
+                                GL.GL_STATIC_DRAW)              
+                GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_SHORT, None)
+        GL.glBindVertexArray(0)
+
+            
+        #for visObj in self.vismolSession.vismol_objects:
+        #    if visObj.lines_vao is not None:
+        #        GL.glBindVertexArray(visObj.lines_vao)
+        #        if self.modified_view:
+        #            pass
+        #            #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[0])
+        #            #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
+        #            #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_SHORT, None)
+        #            #GL.glBindVertexArray(0)
+        #            #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+        #            #self.modified_data = False
+        #        else:
+        #            GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_SHORT, None)
+        #assert(len(self.lines_vao)>0)
+        #GL.glBindVertexArray(self.lines_vao[0])
+        #GL.glDrawArrays(GL.GL_LINES, 0, len(self.vismolSession.vismol_objects[0].index_bonds)*2)
+        #GL.glBindVertexArray(0)
+    
+    def make_lines (self, vismol_object):
+        """ Function doc """
+        shapes._make_gl_lines(self.lines_program, vismol_object = vismol_object)
     
     def draw_lines(self):
         """ Function doc
@@ -635,6 +817,14 @@ class GtkGLWidget(Gtk.GLArea):
         print(k_name, 'key released')
         if func:
             func()
+        
+        if k_name == 'Right':
+            self.frame +=1
+            print (self.frame)
+        if k_name == 'Left':
+            self.frame -=1
+            print (self.frame)
+        self.queue_draw()
         return True
     
     def _pressed_Control_L(self):
@@ -695,13 +885,33 @@ class GtkGLWidget(Gtk.GLArea):
         left   = event.button==1 and event.type==Gdk.EventType.BUTTON_PRESS
         middle = event.button==2 and event.type==Gdk.EventType.BUTTON_PRESS
         right  = event.button==3 and event.type==Gdk.EventType.BUTTON_PRESS
-        self.mouse_rotate = left and not (middle or right)
-        self.mouse_zoom   = right and not (middle or left)
-        self.mouse_pan    = middle and not (right or left)
+        self.mouse_rotate = left   and not (middle or right)
+        self.mouse_zoom   = right  and not (middle or left)
+        self.mouse_pan    = middle and not (right  or left)
         x = self.mouse_x = event.x
         y = self.mouse_y = event.y
         self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(x, y)
         self.dragging = False
+    
+        
+        if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
+            pass
+            #print ('event.button == 1')
+            #nearest, hits = self.pick(x, self.get_allocation().height-1-y, self.pick_radius[0], self.pick_radius[1], event)
+            #selected = self.select(event, nearest, hits)
+            #if selected is not None:
+            #    self.center_on_atom(selected.pos)
+            #    self.zero_reference_point = selected.pos
+            #    self.target_point = selected.pos
+        if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+            pass
+            #print ('event.button == 2')
+            #self.dist_cam_zpr = op.get_euclidean(self.zero_reference_point, self.get_cam_pos())
+        if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+            pass
+            #print ('event.button == 3')
+            #self.pos_mouse = [x, y]
+    
     
     def mouse_released(self, widget, event):
         pass
@@ -711,7 +921,12 @@ class GtkGLWidget(Gtk.GLArea):
                 self.dragging = False
             else:
                 self.glMenu.open_gl_menu(event = event)
-        
+        if event.button==1:
+            if self.dragging:
+                self.dragging = False
+            else:
+                print('funcao de selecao')
+                
     def mouse_motion(self, widget, event):
         x = event.x
         y = event.y
@@ -851,13 +1066,14 @@ class GtkGLWidget(Gtk.GLArea):
         """ Function doc
         """
         print("Test function init")
-        self.data = self.vismolSession
-        for visObj in self.vismolSession.vismol_objects:
-            visObj.generate_dot_indexes()
-        self.modified_data = True
-        self.DOTS = not self.DOTS
-        self.LINES = not self.LINES
-        self.queue_draw()
+        #self.data = self.vismolSession
+        #for visObj in self.vismolSession.vismol_objects:
+        #    visObj.generate_dot_indexes()
+        #self.modified_data = True
+        #self._load_data()
+        #self.DOTS = not self.DOTS
+        #self.LINES = not self.LINES
+        #self.queue_draw()
         print("Test function OK")
         return True
     

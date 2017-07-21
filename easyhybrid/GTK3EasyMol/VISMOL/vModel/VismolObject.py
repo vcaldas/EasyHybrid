@@ -42,26 +42,44 @@ class VismolObject:
         self._generate_chain_structure()
         self._generate_atom_unique_color_id()
         self._generate_bonds()
-        
         #self._generate_colors()
         
         """   L I N E S   """
+        self.lines_actived =  True
+        
         #self.line_representation = LineRepresentation(self)
         #self.line_representation.update()
 
         """   F L A T   S P H E R E   """
+        self.dots_actived =  True
+
         #self.flat_sphere_representation = FlatSphereRepresentation(self)
+        
+        '''
+        self.dot_vao       = None
+        self.dot_ind_vbo   = None
+        self.dot_coord_vbo = None
+        self.dot_col_vbo   = None
+        '''
+
         print ('frames:     ', len(self.frames))
         print ('frame size: ', len(self.frames[0]))
         
+        
+        
+        
+        
+        
+        
+        
         # OpenGL attributes
-        self.dots_vao = None
-        self.lines_vao = None
-        self.spheres_vao = None
-        self.dot_buffers = None
-        self.line_buffers = None
+        self.dots_vao       = None
+        self.lines_vao      = None
+        self.spheres_vao    = None
+        self.dot_buffers    = None
+        self.line_buffers   = None
         self.sphere_buffers = None
-        self.dot_indexes = None
+        self.dot_indexes    = None
         self.model_mat = np.identity(4, dtype=np.float32)
         self.normal_mat = np.identity(3, dtype=np.float32)
     
@@ -164,26 +182,47 @@ class VismolObject:
         print ('generate_bonds end -  total time: ', final - initial, '\n')
 
     def _generate_atom_unique_color_id (self):
-        self.coordinates_color_ids  = []        
+        self.color_indexes  = []
+        self.colors         = []        
+        self.vdw_dot_sizes  = []
 #        self.atom_unique_id_dic     = {}
 
         """ Function doc """
         for atom in self.atoms:
+            #-------------------------------------------------------
+            #                     ID Colors
+            #-------------------------------------------------------
             i = atom.atom_id
             r = (i & 0x000000FF) >>  0
             g = (i & 0x0000FF00) >>  8
             b = (i & 0x00FF0000) >> 16
            
-            self.coordinates_color_ids.append(r/255.0)
-            self.coordinates_color_ids.append(g/255.0)
-            self.coordinates_color_ids.append(b/255.0)
+            self.color_indexes.append(r/255.0)
+            self.color_indexes.append(g/255.0)
+            self.color_indexes.append(b/255.0)
             
             pickedID = r + g * 256 + b * 256*256
             print (pickedID)
             self.EMSession.atom_dic_id[pickedID] = atom
-            #self.atom_unique_id_dic[pickedID] = atom
-        self.coordinates_color_ids = np.array(self.coordinates_color_ids, dtype=np.float32)
-        
+            
+            #-------------------------------------------------------
+            #                      Colors
+            #-------------------------------------------------------
+            self.colors.append(atom.color[0])        
+            self.colors.append(atom.color[1])        
+            self.colors.append(atom.color[2])   
+
+            #-------------------------------------------------------
+            #                      VdW list
+            #-------------------------------------------------------
+            self.vdw_dot_sizes.append(atom.vdw_rad)
+
+        self.color_indexes = np.array(self.color_indexes, dtype=np.float32)
+        self.colors        = np.array(self.colors       , dtype=np.float32)    
+        self.vdw_dot_sizes = np.array(self.vdw_dot_sizes, dtype=np.float32)
+
+
+
     def _generate_colors  (self):
         """ Function doc """
         #self.bond_colors           = []
@@ -212,16 +251,16 @@ class VismolObject:
         #self.bond_colors  = np.array(self.bond_colors, dtype=np.float32)
     
         
-        self.coordinates_colors = []        
+        self.colors = []        
         for atom in self.atoms:
             #if atom.dots:
             #-------------------------------------------------------
             #                        D O T S
             #-------------------------------------------------------
-            self.coordinates_colors.append(atom.color[0])        
-            self.coordinates_colors.append(atom.color[1])        
-            self.coordinates_colors.append(atom.color[2])   
-            #self.coordinates_colors.append(atom.color[3])   
+            self.colors.append(atom.color[0])        
+            self.colors.append(atom.color[1])        
+            self.colors.append(atom.color[2])   
+            #self.colors.append(atom.color[3])   
 
-        self.coordinates_colors  = np.array(self.coordinates_colors, dtype=np.float32)
+        self.colors  = np.array(self.colors, dtype=np.float32)
     
