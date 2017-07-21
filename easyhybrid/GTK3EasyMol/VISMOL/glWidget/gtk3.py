@@ -308,6 +308,8 @@ class GtkGLWidget(Gtk.GLArea):
         self.center_x = width/2
         self.center_y = height/2
         self.glcamera.viewport_aspect_ratio = float(width)/height
+        self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view,
+             self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
         self.queue_draw()
         return True
     
@@ -363,27 +365,21 @@ class GtkGLWidget(Gtk.GLArea):
             raise RuntimeError(GL.glGetShaderInfoLog(shader))
         return shader
     
-    
-    
     def render(self, area, context):
         """ This is the function that will be called everytime the window
             needs to be re-drawed.
         """
-        #self.data = True
         if self.shader_flag:
             print ('create_gl_programs')
             self.create_gl_programs()
-            self.axis.make_axis_program()
-            self.axis.make_vaos()
+            self.axis.initialize_gl()
             self.shader_flag = False
             print ('create_gl_programs done')
-
         
-
         GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
                         self.bckgrnd_color[2],self.bckgrnd_color[3])
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-
+        
         for visObj in self.vismolSession.vismol_objects:
             if visObj.actived:
                 
@@ -418,10 +414,17 @@ class GtkGLWidget(Gtk.GLArea):
                     #    GL.glDisable(GL.GL_DEPTH_TEST)
         
         if self.SHOW_AXIS:
+            GL.glEnable(GL.GL_DEPTH_TEST)
             GL.glUseProgram(self.axis.gl_axis_program)
             self.axis.load_params()
-            self.draw_axis()
+            self.draw_axis(True)
             GL.glUseProgram(0)
+            GL.glUseProgram(self.axis.gl_lines_program)
+            GL.glLineWidth(5)
+            self.axis.load_lines_params()
+            self.draw_axis(False)
+            GL.glUseProgram(0)
+            GL.glDisable(GL.GL_DEPTH_TEST)
     
     
     
