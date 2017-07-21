@@ -1039,6 +1039,8 @@ class GtkGLWidget(Gtk.GLArea):
                 self.glcamera.fog_end = self.glcamera.z_near + 2.05
         self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
                         self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
+        
+        #print (self.glcamera.z_near,self.glcamera.z_far)
         self.queue_draw()
     
     def update_normal_mat(self, model_mat):
