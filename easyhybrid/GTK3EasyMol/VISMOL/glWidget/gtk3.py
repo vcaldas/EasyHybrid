@@ -253,7 +253,7 @@ class GtkGLWidget(Gtk.GLArea):
         self.axis = glaxis.GLAxis()
         self.set_has_depth_buffer(True)
         self.set_has_alpha(True)
-        self.frame_i = 0
+        self.frame = 0
         self.shader_flag = True
         self.modified_data = False
         self.modified_view = False
@@ -401,20 +401,21 @@ class GtkGLWidget(Gtk.GLArea):
                         GL.glDisable(GL.GL_DEPTH_TEST)
                 
                 if visObj.dots_actived:
+                    pass
                     
-                    if visObj.dots_vao is None:
-                        #print ('_make_gl_dots')
-                        shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
-                    else:
-                        GL.glEnable(GL.GL_DEPTH_TEST)
-                        GL.glUseProgram(self.dots_program)
-                        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                        self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
-                        self.load_dot_params(self.dots_program)
-                        self._draw_dots(visObj = visObj)
-                        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                        GL.glUseProgram(0)
-                        GL.glDisable(GL.GL_DEPTH_TEST)
+                    #if visObj.dots_vao is None:
+                    #    #print ('_make_gl_dots')
+                    #    shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
+                    #else:
+                    #    GL.glEnable(GL.GL_DEPTH_TEST)
+                    #    GL.glUseProgram(self.dots_program)
+                    #    GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                    #    self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
+                    #    self.load_dot_params(self.dots_program)
+                    #    self._draw_dots(visObj = visObj)
+                    #    GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                    #    GL.glUseProgram(0)
+                    #    GL.glDisable(GL.GL_DEPTH_TEST)
         
         if self.SHOW_AXIS:
             GL.glUseProgram(self.axis.gl_axis_program)
@@ -616,6 +617,10 @@ class GtkGLWidget(Gtk.GLArea):
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
             #    self.modified_view = False
             else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dot_buffers[0])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                visObj.frames[self.frame], 
+                                GL.GL_STATIC_DRAW)   
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
         GL.glBindVertexArray(0)
 
@@ -654,6 +659,11 @@ class GtkGLWidget(Gtk.GLArea):
                     #self.modified_data = False
            
             else:
+                #coord_vbo = GL.glGenBuffers(1)
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.line_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                visObj.frames[self.frame], 
+                                GL.GL_STATIC_DRAW)              
                 GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_SHORT, None)
         GL.glBindVertexArray(0)
 
@@ -798,6 +808,14 @@ class GtkGLWidget(Gtk.GLArea):
         print(k_name, 'key released')
         if func:
             func()
+        
+        if k_name == 'Right':
+            self.frame +=1
+            print (self.frame)
+        if k_name == 'Left':
+            self.frame -=1
+            print (self.frame)
+        self.queue_draw()
         return True
     
     def _pressed_Control_L(self):
