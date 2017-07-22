@@ -3,6 +3,69 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
 
 
+class AnimatedWindow:
+    """ Class doc """
+    
+    def __init__ (self, main_window):
+        """ Class initialiser """
+        self.actived =  False
+        self.main_window = main_window
+        #self.EMSession =  GTKSession.EMSession
+    
+    def open_window (self, text = None):
+        """ Function doc """
+        if self.actived  ==  False:
+            self.builder = Gtk.Builder()
+            self.builder.add_from_file('GTK3EasyMol/GTKGUI/AnimateTrajectory.glade')
+            
+            self.window = self.builder.get_object('animate_window')
+            self.builder.connect_signals(self)
+            
+            self.window.show_all()
+            self.window.set_keep_above (self.window)
+
+            scale = self.builder.get_object("scale1")  
+            scale.set_range(1, 1000)                               
+            scale.set_increments(1, 10)                           
+            actual_frame = int(self.main_window.vismolSession.get_frame())
+            scale.set_digits(1)
+
+            scale.set_digits(actual_frame)                        
+            #gtk.main()
+
+    def on_TrajectoryTool_HSCALE_update (self, MIN = 1, MAX = 100):
+        """ Function doc """
+        #MAX  = int(self.builder.get_object('trajectory_max_entrey').get_text())
+        #MIN  = int(self.builder.get_object('trajectory_min_entrey').get_text())
+
+        scale = self.builder.get_object("scale1")
+        scale.set_range(MIN, MAX)
+        scale.set_increments(1, 10)
+        scale.set_digits(1)
+    
+    def on_TrajectoryTool_BarSetFrame(self, hscale, text= None,  data=None):            # SETUP  trajectory window
+        valor = hscale.get_value()
+	
+        if self.main_window.vismolSession != None:
+            self.main_window.vismolSession.set_frame(int(valor-1))
+            #self.main_window.vismolSession.glwidget.queue_draw()
+        else:
+            print (valor)
+
+    def on_animate_trajectory_window_destroy(self, widget):
+        """ Function doc """
+        self.actived  =  False
+        self.main_window.builder.get_object('toolbutton_trajectory_tool').set_active(False)
+
+
+
+
+
+
+
+
+
+
 class GTKGUI ():
     """ Class doc """
     
@@ -67,8 +130,6 @@ class GTKGUI ():
             i +=1
             n = n + 1
         print ('load fuction finished')
-        #self.EMSession.glarea.draw_lines(self.EMSession.Vobjects[-1])
-    
     
     def on_treeview_Objects_button_release_event(self, tree, event):
         if event.button == 3:
@@ -122,6 +183,20 @@ class GTKGUI ():
                     self.vismolSession.glwidget.queue_draw()
     
     
+    def on_main_toolbar_open_animate_trajectory (self, widget):
+        """ Function doc """
+        #animated_window = AnimatedWindow(self)
+        if widget == self.builder.get_object('toolbutton_trajectory_tool'):
+            if widget.get_active() == True:
+                self.TrajectoryTool.open_window()
+                self.TrajectoryTool.actived =  True
+            else:
+                print ('desligado')
+                self.TrajectoryTool.window.destroy()
+                self.TrajectoryTool.actived =  False
+                #cmd.set('valence', 0.0)
+                #self.builder.get_object('handlebox1').hide()
+    
     
     def __init__ (self, vismolSession = None):
         """ Class initialiser """
@@ -133,7 +208,9 @@ class GTKGUI ():
         self.builder.connect_signals(self)
         
         self.window    = self.builder.get_object('window1')
-        
+    
+    
+    
         self.vismolSession = vismolSession
         if self.vismolSession is not None:
             self.container = self.builder.get_object('paned1')
@@ -143,6 +220,10 @@ class GTKGUI ():
 
         self.window.connect("delete-event",    Gtk.main_quit)
         self.window.show_all()
+        
+        #animated_window = AnimatedWindow(self)
+        self.TrajectoryTool = AnimatedWindow(self)
+        #self.window.set_keep_above (self.window)
         Gtk.main()
         
         

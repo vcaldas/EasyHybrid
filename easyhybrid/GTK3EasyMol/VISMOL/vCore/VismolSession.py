@@ -297,13 +297,15 @@ class VisMolSession (ShowHideVisMol):
     def set_frame (self, frame = 0):
         """ Function doc """
         self.glwidget.frame = frame
+        self.glwidget.queue_draw()
+
         #self.glwidget.updateGL()
     
     def get_frame (self):
         """ Function doc """
         #""" Function doc """
-        #frame = self.glwidget.frame
-        #return frame
+        frame = self.glwidget.frame
+        return frame
         
     def get_vobject_list (self):
         """ Function doc """
