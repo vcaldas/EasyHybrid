@@ -858,14 +858,23 @@ class GtkGLWidget(Gtk.GLArea):
         """ Function doc
         """
         if self.ctrl:
-            for visObj in self.vismolSession.vismol_objects:
-                if visObj.editing:
-                    pass
-                else:
+            if not self.editing_mols:
+                if event.direction == Gdk.ScrollDirection.UP:
+                    self.model_mat = mop.my_glTranslatef(self.model_mat, [0.0, 0.0, -self.scroll])
+                if event.direction == Gdk.ScrollDirection.DOWN:
+                    self.model_mat = mop.my_glTranslatef(self.model_mat, [0.0, 0.0, self.scroll])
+                for visObj in self.vismolSession.vismol_objects:
                     if event.direction == Gdk.ScrollDirection.UP:
                         visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, -self.scroll])
                     if event.direction == Gdk.ScrollDirection.DOWN:
                         visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, self.scroll])
+            else:
+                for visObj in self.vismolSession.vismol_objects:
+                    if visObj.editing:
+                        if event.direction == Gdk.ScrollDirection.UP:
+                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, -self.scroll])
+                        if event.direction == Gdk.ScrollDirection.DOWN:
+                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, self.scroll])
         else:
             pos_z = self.glcamera.get_position()[2]
             if event.direction == Gdk.ScrollDirection.UP:
