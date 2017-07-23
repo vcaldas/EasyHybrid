@@ -262,7 +262,8 @@ class VisMolSession (ShowHideVisMol):
                                                    atoms       = atoms, 
                                                    EMSession   = self, 
                                                    trajectory  = frames)
-			      
+        vismol_object.set_model_matrix(self.glwidget.model_mat)
+        
         self.vismol_objects.append(vismol_object)
         
     def delete_by_index(self, index = None):

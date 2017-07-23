@@ -176,6 +176,17 @@ def my_glOrthof(left, rigth, bottom, top, near, far):
     ortho[3,3] = 1
     return ortho
     
+def get_xyz_coords(xyz_mat):
+    """ Returns the x, y, z position contained in the xyz_mat matrix. The
+        input matrix needs to be a 4x4 matrix.
+    """
+    assert(xyz_mat.ndim==2)
+    assert(xyz_mat.size==16)
+    rot_mat = xyz_mat[:3,:3]
+    pos = -xyz_mat[3,:3]
+    position = pos.dot(rot_mat)
+    return position
+    
 #def my_glScalef(scale):
     #scale_matrix = np.identity(4, dtype=np.float32)
     #scale_matrix[0,0] = scale
