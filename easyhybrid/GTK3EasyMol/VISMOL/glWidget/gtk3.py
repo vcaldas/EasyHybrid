@@ -392,32 +392,37 @@ class GtkGLWidget(Gtk.GLArea):
                 if visObj.dots_actived:
                     pass
                     
-                    #if visObj.dots_vao is None:
-                    #    #print ('_make_gl_dots')
-                    #    shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
-                    #else:
-                    #    GL.glEnable(GL.GL_DEPTH_TEST)
-                    #    GL.glUseProgram(self.dots_program)
-                    #    GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                    #    self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
-                    #    self.load_dot_params(self.dots_program)
-                    #    self._draw_dots(visObj = visObj)
-                    #    GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                    #    GL.glUseProgram(0)
-                    #    GL.glDisable(GL.GL_DEPTH_TEST)
+                    if visObj.dots_vao is None:
+                        #print ('_make_gl_dots')
+                        shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
+                    else:
+                        GL.glEnable(GL.GL_DEPTH_TEST)
+                        GL.glUseProgram(self.dots_program)
+                        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                        self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
+                        
+                        self.load_dot_params(self.dots_program)
+                        
+                        self._draw_dots(visObj = visObj)
+                        
+                        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                        
+                        GL.glUseProgram(0)
+                        
+                        GL.glDisable(GL.GL_DEPTH_TEST)
         
-        if self.show_axis:
-            GL.glEnable(GL.GL_DEPTH_TEST)
-            GL.glUseProgram(self.axis.gl_axis_program)
-            self.axis.load_params()
-            self.draw_axis(True)
-            GL.glUseProgram(0)
-            GL.glUseProgram(self.axis.gl_lines_program)
-            GL.glLineWidth(5)
-            self.axis.load_lines_params()
-            self.draw_axis(False)
-            GL.glUseProgram(0)
-            GL.glDisable(GL.GL_DEPTH_TEST)
+        #if self.show_axis:
+        #    GL.glEnable(GL.GL_DEPTH_TEST)
+        #    GL.glUseProgram(self.axis.gl_axis_program)
+        #    self.axis.load_params()
+        #    self.draw_axis(True)
+        #    GL.glUseProgram(0)
+        #    GL.glUseProgram(self.axis.gl_lines_program)
+        #    GL.glLineWidth(5)
+        #    self.axis.load_lines_params()
+        #    self.draw_axis(False)
+        #    GL.glUseProgram(0)
+        #    GL.glDisable(GL.GL_DEPTH_TEST)
     
     def load_matrices(self, program, model_mat, normal_mat):
         """ Load the matrices to OpenGL.
@@ -533,15 +538,21 @@ class GtkGLWidget(Gtk.GLArea):
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
             #    self.modified_view = False
             else:
-                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dot_buffers[0])
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dot_buffers[1])
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
                                 visObj.frames[self.frame], 
                                 GL.GL_STATIC_DRAW)   
+        
+                #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dot_buffers[2])            
+                #GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
+        
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
+                
         GL.glBindVertexArray(0)
+        
 
-
-
+        
+        
     def _draw_lines(self, visObj = None):
         """ Function doc
         """
@@ -580,6 +591,7 @@ class GtkGLWidget(Gtk.GLArea):
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
                                 visObj.frames[self.frame], 
                                 GL.GL_STATIC_DRAW)              
+                #GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_SHORT, None)
                 GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_SHORT, None)
         GL.glBindVertexArray(0)
 
@@ -748,6 +760,44 @@ class GtkGLWidget(Gtk.GLArea):
                 self.dragging = False
             else:
                 print('funcao de selecao')
+                x = event.x
+                y = event.y
+                #self._draw_dots()
+                
+                #GL.glFlush()
+                #GL.glFinish()
+                #GL.glClearColor(1,1,1,1)
+                #GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+                
+                #
+                #
+                #for visObj in self.vismolSession.vismol_objects:
+                #    if visObj.actived:                      
+                #        if visObj.dots_actived:
+                #            if visObj.dots_vao is None:
+                #                shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
+                #            else:
+                #                GL.glEnable(GL.GL_DEPTH_TEST)
+                #                GL.glUseProgram(self.dots_program)
+                #                GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                #                self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
+                #                self.load_dot_params(self.dots_program)
+                #                
+                #                self._draw_dots(visObj = visObj)
+                #                GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                #                GL.glUseProgram(0)
+                #                GL.glDisable(GL.GL_DEPTH_TEST)
+
+                #GL.glPixelStorei(GL.GL_PACK_ALIGNMENT, 1)
+
+                #pos = [self.mouse_x, self.height - self.mouse_y]
+                pos = [x, self.height - y]
+                data = GL.glReadPixels(pos[0], pos[1], 1, 1, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE)
+                
+                print (pos, self.height, self.mouse_y, data)
+                pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
+                print (pickedID)
+                
                 
     def mouse_motion(self, widget, event):
         x = event.x

@@ -224,8 +224,9 @@ class GTKGUI ():
         #animated_window = AnimatedWindow(self)
         self.TrajectoryTool = AnimatedWindow(self)
         #self.window.set_keep_above (self.window)
+        self.builder.get_object('notebook2').hide()
+
         Gtk.main()
-        
         
         
         
