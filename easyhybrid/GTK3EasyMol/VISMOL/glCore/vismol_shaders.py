@@ -22,6 +22,39 @@
 #  
 #  
 
+
+vertex_shader_picking_dots = """
+#version 330
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 projection_mat;
+
+in vec3  vert_coord;
+in vec3  vert_color;
+
+out vec3 index_color;
+
+void main(){
+    gl_Position  = projection_mat * view_mat * model_mat * vec4(vert_coord, 1.0);
+    gl_PointSize = 15;
+    index_color = vert_color;
+}
+"""
+
+fragment_shader_picking_dots = """
+#version 330
+
+in vec3 index_color;
+
+void main(){
+    gl_FragColor = vec4(index_color,1);
+}
+
+"""
+
+
+
 vertex_shader_dots = """
 #version 330
 

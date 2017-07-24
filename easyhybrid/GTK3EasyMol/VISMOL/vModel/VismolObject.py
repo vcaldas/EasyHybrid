@@ -107,7 +107,10 @@ class VismolObject:
         self.dot_indexes    = None
         self.model_mat = np.identity(4, dtype=np.float32)
         self.normal_mat = np.identity(3, dtype=np.float32)
-    
+
+        self.picking_dots_vao      = None
+        self.picking_dot_buffers   = None
+
     def generate_dot_indexes(self):
         """ Function doc
         """

@@ -197,6 +197,10 @@ class GTKGUI ():
                 #cmd.set('valence', 0.0)
                 #self.builder.get_object('handlebox1').hide()
     
+    def on_resize (self, widget):
+        """ Function doc """
+        print(widget)
+        print(self.window.get_size ())
     
     def __init__ (self, vismolSession = None):
         """ Class initialiser """
@@ -214,6 +218,8 @@ class GTKGUI ():
         self.vismolSession = vismolSession
         if self.vismolSession is not None:
             self.container = self.builder.get_object('paned1')
+            #self.container = self.builder.get_object('box4')
+
             self.container.add(self.vismolSession.glwidget)
             self.window.connect("key-press-event", self.vismolSession.glwidget.key_pressed)
             self.window.connect("key-release-event", self.vismolSession.glwidget.key_released)
@@ -224,8 +230,11 @@ class GTKGUI ():
         #animated_window = AnimatedWindow(self)
         self.TrajectoryTool = AnimatedWindow(self)
         #self.window.set_keep_above (self.window)
-        self.builder.get_object('notebook2').hide()
-
+        #self.builder.get_object('notebook2').hide()
+        #self.builder.get_object('notebook1').hide()
+        #self.builder.get_object('statusbar1').hide()
+        
+        #print (a ,b, " <----------aqui oh")
         Gtk.main()
         
         
