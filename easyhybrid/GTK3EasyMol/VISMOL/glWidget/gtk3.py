@@ -316,7 +316,8 @@ class GtkGLWidget(Gtk.GLArea):
             print('OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION))
         except:
             print('OpenGL major version not found')
-        self.dots_program  = self.load_shaders(vm_shader.vertex_shader_dots, vm_shader.fragment_shader_dots)
+        self.pseudospheres_program = self.load_shaders(vm_shader.vertex_shader_pseudospheres, vm_shader.fragment_shader_pseudospheres)
+        self.dots_program = self.load_shaders(vm_shader.vertex_shader_dots, vm_shader.fragment_shader_dots)
         self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
         self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
     
@@ -365,44 +366,12 @@ class GtkGLWidget(Gtk.GLArea):
             needs to be re-drawed.
         """
         if self.shader_flag:
-            print ('create_gl_programs')
             self.create_gl_programs()
             self.axis.initialize_gl()
             self.shader_flag = False
-            print ('create_gl_programs done')
-        
         
         if self.picking:
-            print('funcao de selecao')
-            print (self.picking_x, self.picking_y)
-            GL.glClearColor(1,1,1,1)
-            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-            
-            for visObj in self.vismolSession.vismol_objects:
-                if visObj.actived:
-                    if visObj.picking_dots_vao is None:
-                        shapes._make_gl_picking_dots(self.picking_dots_program,  vismol_object = visObj)
-                    #else:
-                    GL.glEnable(GL.GL_DEPTH_TEST)
-                    GL.glUseProgram(self.picking_dots_program)
-                    GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                    self.load_matrices_picking(self.picking_dots_program, visObj.model_mat)
-                    self._draw_picking_dots(visObj = visObj, indexes = False)
-                    GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                    GL.glUseProgram(0)
-                    GL.glDisable(GL.GL_DEPTH_TEST)
-            
-            GL.glPixelStorei(GL.GL_PACK_ALIGNMENT, 1)
-            pos = [self.picking_x, self.height - self.picking_y]
-            data = GL.glReadPixels(pos[0], (pos[1]), 1, 1, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE)
-            #print (pos, self.picking_x, self.picking_y, data)
-            pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
-            #print(pickedID, "<= atom index")
-            if pickedID == 16777215:
-                self.atom_picked = None
-            else:
-                self.atom_picked = self.vismolSession.atom_dic_id[pickedID]
-            self.picking = False
+            self.pick()
         
         GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
                         self.bckgrnd_color[2],self.bckgrnd_color[3])
@@ -410,9 +379,7 @@ class GtkGLWidget(Gtk.GLArea):
         
         for visObj in self.vismolSession.vismol_objects:
             if visObj.actived:
-                
                 if visObj.lines_actived:
-                
                     if visObj.lines_vao is None:
                         shapes._make_gl_lines(self.lines_program, vismol_object = visObj)
                     else:
@@ -425,8 +392,6 @@ class GtkGLWidget(Gtk.GLArea):
                         GL.glDisable(GL.GL_DEPTH_TEST)
                 
                 if visObj.dots_actived:
-                    pass
-                    
                     if visObj.dots_vao is None:
                         shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
                     else:
@@ -436,6 +401,20 @@ class GtkGLWidget(Gtk.GLArea):
                         self.load_matrices(self.dots_program, visObj.model_mat)
                         self.load_dot_params(self.dots_program)
                         self._draw_dots(visObj = visObj, indexes = False)
+                        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                        GL.glUseProgram(0)
+                        GL.glDisable(GL.GL_DEPTH_TEST)
+                
+                if visObj.pseudospheres_actived:
+                    if visObj.pseudospheres_vao is None:
+                        shapes._make_gl_pseudospheres(self.pseudospheres_program,  vismol_object = visObj)
+                    else:
+                        GL.glEnable(GL.GL_DEPTH_TEST)
+                        GL.glUseProgram(self.pseudospheres_program)
+                        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                        self.load_matrices(self.pseudospheres_program, visObj.model_mat)
+                        self.load_lights(self.pseudospheres_program)
+                        self._draw_pseudospheres(visObj = visObj, indexes = False)
                         GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
                         GL.glUseProgram(0)
                         GL.glDisable(GL.GL_DEPTH_TEST)
@@ -452,7 +431,37 @@ class GtkGLWidget(Gtk.GLArea):
             self._draw_axis(False)
             GL.glUseProgram(0)
             GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    def pick(self):
+        """ Function doc
+        """
+        GL.glClearColor(1,1,1,1)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+        for visObj in self.vismolSession.vismol_objects:
+            if visObj.actived:
+                if visObj.picking_dots_vao is None:
+                    shapes._make_gl_picking_dots(self.picking_dots_program,  vismol_object = visObj)
+                GL.glEnable(GL.GL_DEPTH_TEST)
+                GL.glUseProgram(self.picking_dots_program)
+                GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                self.load_matrices_picking(self.picking_dots_program, visObj.model_mat)
+                self._draw_picking_dots(visObj = visObj, indexes = False)
+                GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                GL.glUseProgram(0)
+                GL.glDisable(GL.GL_DEPTH_TEST)
         
+        GL.glPixelStorei(GL.GL_PACK_ALIGNMENT, 1)
+        pos = [self.picking_x, self.height - self.picking_y]
+        data = GL.glReadPixels(pos[0], (pos[1]), 1, 1, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE)
+        #print (pos, self.picking_x, self.picking_y, data)
+        pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
+        #print(pickedID, "<= atom index")
+        if pickedID == 16777215:
+            self.atom_picked = None
+        else:
+            self.atom_picked = self.vismolSession.atom_dic_id[pickedID]
+        self.picking = False
+    
     def load_matrices_picking(self, program, model_mat):
         """ Load the matrices to OpenGL.
             
@@ -492,20 +501,22 @@ class GtkGLWidget(Gtk.GLArea):
     def load_lights(self, program):
         """ Function doc
         """
-        light_pos = GL.glGetUniformLocation(program, 'my_light.position')
+        light_pos = GL.glGetUniformLocation(program, 'light_position')
         GL.glUniform3fv(light_pos, 1, self.light_position)
-        light_col = GL.glGetUniformLocation(program, 'my_light.color')
-        GL.glUniform3fv(light_col, 1, self.light_color)
-        amb_coef = GL.glGetUniformLocation(program, 'my_light.ambient_coef')
-        GL.glUniform1fv(amb_coef, 1, self.light_ambient_coef)
-        shiny = GL.glGetUniformLocation(program, 'my_light.shininess')
-        GL.glUniform1fv(shiny, 1, self.light_shininess)
-        intensity = GL.glGetUniformLocation(program, 'my_light.intensity')
-        GL.glUniform3fv(intensity, 1, self.light_intensity)
-        spec_col = GL.glGetUniformLocation(program, 'my_light.specular_color')
-        GL.glUniform3fv(spec_col, 1, self.light_specular_color)
-        cam_pos = GL.glGetUniformLocation(program, 'cam_pos')
-        GL.glUniform3fv(cam_pos, 1, self.glcamera.get_position())
+        #light_pos = GL.glGetUniformLocation(program, 'my_light.position')
+        #GL.glUniform3fv(light_pos, 1, self.light_position)
+        #light_col = GL.glGetUniformLocation(program, 'my_light.color')
+        #GL.glUniform3fv(light_col, 1, self.light_color)
+        #amb_coef = GL.glGetUniformLocation(program, 'my_light.ambient_coef')
+        #GL.glUniform1fv(amb_coef, 1, self.light_ambient_coef)
+        #shiny = GL.glGetUniformLocation(program, 'my_light.shininess')
+        #GL.glUniform1fv(shiny, 1, self.light_shininess)
+        #intensity = GL.glGetUniformLocation(program, 'my_light.intensity')
+        #GL.glUniform3fv(intensity, 1, self.light_intensity)
+        #spec_col = GL.glGetUniformLocation(program, 'my_light.specular_color')
+        #GL.glUniform3fv(spec_col, 1, self.light_specular_color)
+        #cam_pos = GL.glGetUniformLocation(program, 'cam_pos')
+        #GL.glUniform3fv(cam_pos, 1, self.glcamera.get_position())
         return True
     
     def load_dot_params(self, program):
@@ -544,6 +555,29 @@ class GtkGLWidget(Gtk.GLArea):
             #visObj.lines_vao, visObj.line_buffers  = shapes._make_gl_lines(self.lines_program, visObj.index_bonds, visObj.atoms)
             #visObj.lines_vao, visObj.line_buffers  = shapes._make_gl_lines(self.lines_program, vismol_object = visObj)
         self.modified_data = False
+    
+    def _draw_pseudospheres(self, visObj = None, indexes = False):
+        """ Function doc
+        """
+        if visObj.pseudosphere_vao is not None:
+            GL.glBindVertexArray(visObj.pseudosphere_vao)
+            if self.modified_view:
+                pass
+            #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
+            #    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_indexes.itemsize*int(len(visObj.dot_indexes)), visObj.dot_indexes, GL.GL_DYNAMIC_DRAW)
+            #    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
+            #    GL.glBindVertexArray(0)
+            #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+            #    self.modified_view = False
+            else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.pseudosphere_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), visObj.frames[self.frame], GL.GL_STATIC_DRAW)   
+                if indexes:
+                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.pseudosphere_buffers[2])            
+                    GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
+        GL.glBindVertexArray(0)
+    
     
     def _draw_dots(self, visObj = None,  indexes = False):
         """ Function doc
@@ -742,7 +776,10 @@ class GtkGLWidget(Gtk.GLArea):
         """
         #self.glcamera.print_matrices()
         for visObj in self.vismolSession.vismol_objects:
-            print(visObj.model_mat,"Matriz de modelo")
+            #print(visObj.model_mat,"Matriz de modelo")
+            visObj.dots_actived = not visObj.dots_actived
+            visObj.lines_actived = not visObj.lines_actived
+            visObj.pseudospheres_actived = not visObj.pseudospheres_actived
         return True
     
     def _pressed_Control_L(self):
@@ -969,22 +1006,33 @@ class GtkGLWidget(Gtk.GLArea):
         return px, py, pz
     
     def center_on_atom(self, atom_pos):
-        """ Function doc
+        """ Takes the coordinates of an atom in absolute coordinates and first
+            transforms them in 4D world coordinates, then takes the unit vector
+            of that atom position to generate the loop animation. To generate
+            the animation, first obtains the distance from the zero reference
+            point (always 0,0,0) to the atom, then divides this distance in a
+            defined number of cycles, this result will be the step for
+            translation. For the translation, the world will move a number of
+            steps defined, and every new point will be finded by multiplying the
+            unit vector by the step. As a final step, to avoid biases, the world
+            will be translated to the atom position in world coordinates.
+            The effects will be applied on the model matrices of every VisMol
+            object and the model matrix of the window.
         """
-        print("centralizando")
+        import time
         pos = np.array([atom_pos[0],atom_pos[1],atom_pos[2],1],dtype=np.float32)
         model_pos = self.model_mat.T.dot(pos)
         self.model_mat = mop.my_glTranslatef(self.model_mat, -model_pos[:3])
-        unit_vec = op.unit_vector(-atom_pos)
-        dist = op.get_euclidean(atom_pos, [0.0,0.0,0.0])
+        unit_vec = op.unit_vector(model_pos)
+        dist = op.get_euclidean(model_pos, [0.0,0.0,0.0])
         step = dist/15.0
-        #for i in range(1, 15):
-            #to_add = float(i)*step
-            #to_move = unit_vec * to_add
-            ##to_move += atom_pos
-            #for visObj in self.vismolSession.vismol_objects:
-                    #visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move)
-            #self.queue_draw()
+        for i in range(15):
+            to_move = unit_vec * step
+            for visObj in self.vismolSession.vismol_objects:
+                    visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move[:3])
+            self.get_window().invalidate_rect(None, False)
+            self.get_window().process_updates(False)
+            time.sleep(0.02)
         for visObj in self.vismolSession.vismol_objects:
             model_pos = visObj.model_mat.T.dot(pos)
             visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -model_pos[:3])

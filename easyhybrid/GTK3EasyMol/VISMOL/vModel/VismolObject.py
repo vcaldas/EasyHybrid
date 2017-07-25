@@ -75,8 +75,11 @@ class VismolObject:
         #self.line_representation = LineRepresentation(self)
         #self.line_representation.update()
 
-        """   F L A T   S P H E R E   """
+        """   D O T S   """
         self.dots_actived =  True
+
+        """   F L A T   S P H E R E   """
+        self.pseudospheres_actived =  False
 
         #self.flat_sphere_representation = FlatSphereRepresentation(self)
         
@@ -100,10 +103,10 @@ class VismolObject:
         # OpenGL attributes
         self.dots_vao       = None
         self.lines_vao      = None
-        self.spheres_vao    = None
+        self.pseudospheres_vao    = None
         self.dot_buffers    = None
         self.line_buffers   = None
-        self.sphere_buffers = None
+        self.pseudosphere_buffers = None
         self.dot_indexes    = None
         self.model_mat = np.identity(4, dtype=np.float32)
 

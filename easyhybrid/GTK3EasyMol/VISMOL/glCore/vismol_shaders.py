@@ -222,6 +222,72 @@ void main(){
 """
 
 
+vertex_shader_pseudospheres = """
+#version 330
+
+uniform vec3 light_position;
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 projection_mat;
+
+attribute vec3 vert_coord;
+attribute vec3 vert_color;
+attribute float radius;
+
+varying vec3 frag_color;
+varying vec3 frag_light_direction;
+varying vec4 frag_eye_position;
+varying float frag_size;
+varying float frag_radius;
+
+void main (void){
+    frag_color = vert_color;
+    frag_radius = radius;
+    frag_eye_position = view_mat * model_mat * vec4(vert_coord, 1.0);
+    frag_light_direction = normalize(light_position);
+    gl_Position = projection_mat * view_mat * model_mat * vec4(vert_coord, 1);
+    vec4 p = projection_mat * vec4(radius, radius, frag_eye_position.z, frag_eye_position.w);
+    frag_size = 512.0 * p.x / p.w;
+    gl_PointSize = frag_size + 25.0;
+}
+"""
+fragment_shader_pseudospheres = """
+#version 330
+//#include "antialias/outline.glsl"
+
+uniform mat4 projection_mat;
+
+varying vec3 frag_color;
+varying vec3 frag_light_direction;
+varying vec4 frag_eye_position;
+varying float frag_size;
+varying float frag_radius;
+
+void main(){
+    vec2 P = gl_PointCoord.xy - vec2(0.5, 0.5);
+    float point_size = frag_size  + 5.0;
+    float distance = length(P*point_size) - frag_size/2;
+    vec2 texcoord = gl_PointCoord * 2.0 - vec2(1.0);
+    float x = texcoord.x;
+    float y = texcoord.y;
+    float d = 1.0 - x*x - y*y;
+    //if (d <= 0.0){
+    //    discard;
+    //}
+    float z = sqrt(d);
+    vec4 pos = frag_eye_position;
+    pos.z += frag_radius*z;
+    vec3 pos2 = pos.xyz;
+    pos = projection_mat * pos;
+    gl_FragDepth = 0.5*(pos.z / pos.w)+0.5;
+    vec3 normal = vec3(x,y,z);
+    float diffuse = clamp(dot(normal, frag_light_direction), 0.0, 1.0);
+    vec4 color = vec4((0.5 + 0.5 * diffuse) * frag_color, 1.0);
+    //gl_FragColor = outline(distance, 1.0, 1.0, vec4(0,0,0,1), color);
+    gl_FragColor = color;
+}
+"""
+
 
 
 
