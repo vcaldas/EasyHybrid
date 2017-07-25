@@ -41,7 +41,6 @@ void main(){
     index_color = vert_color;
 }
 """
-
 fragment_shader_picking_dots = """
 #version 330
 
@@ -53,15 +52,12 @@ void main(){
 
 """
 
-
-
 vertex_shader_dots = """
 #version 330
 
 uniform mat4 model_mat;
 uniform mat4 view_mat;
 uniform mat4 projection_mat;
-uniform mat3 normal_mat;
 uniform float vert_ext_linewidth;
 uniform float vert_int_antialias;
 uniform float vert_dot_factor;
@@ -137,9 +133,14 @@ void main(){
                 final_color = frag_bckgrnd_color;
             }
             else{
-                float fog_factor = (fog_end-dist)/(fog_end-fog_start);
-                vec4 my_color = mix(frag_dot_color, frag_bckgrnd_color, alpha);
-                final_color = mix(fog_color, my_color, fog_factor);
+                if (dist > fog_start){
+                    float fog_factor = (fog_end-dist)/(fog_end-fog_start);
+                    vec4 my_color = mix(frag_dot_color, frag_bckgrnd_color, alpha);
+                    final_color = mix(fog_color, my_color, fog_factor);
+                }
+                else{
+                    final_color = mix(frag_dot_color, frag_bckgrnd_color, alpha);
+                }
             }
         }
     }

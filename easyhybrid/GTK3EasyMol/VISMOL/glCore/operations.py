@@ -79,13 +79,13 @@ def get_euclidean(pa, pb):
     """
     import math
     if int(len(pa)) == 1:
-        pa = [pa[0], 0, 0]
+        pa = [pa[0], 0.0, 0.0]
     if int(len(pa)) == 2:
-        pa = [pa[0], pa[1], 0]
+        pa = [pa[0], pa[1], 0.0]
     if int(len(pb)) == 1:
-        pb = [pb[0], 0, 0]
+        pb = [pb[0], 0.0, 0.0]
     if int(len(pb)) == 2:
-        pb = [pb[0], pb[1], 0]
+        pb = [pb[0], pb[1], 0.0]
     return math.sqrt((pb[0]-pa[0])**2 + (pb[1]-pa[1])**2 + (pb[2]-pa[2])**2)
 
 def unit_vector(vector):

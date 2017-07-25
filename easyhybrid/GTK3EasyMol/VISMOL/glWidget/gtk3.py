@@ -25,12 +25,13 @@
 import math
 import numpy as np
 import ctypes
-import VISMOL.glCore.glcamera as cam
-import VISMOL.glCore.matrix_operations as mop
 import VISMOL.glCore.shapes as shapes
+import VISMOL.glCore.glaxis as glaxis
+import VISMOL.glCore.glcamera as cam
+import VISMOL.glCore.operations as op
 import VISMOL.glCore.sphere_data as sph_d
 import VISMOL.glCore.vismol_shaders as vm_shader
-import VISMOL.glCore.glaxis as glaxis
+import VISMOL.glCore.matrix_operations as mop
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -229,7 +230,7 @@ class GtkGLWidget(Gtk.GLArea):
         
         self.data = None
         
-        self.selection = False
+        self.picking = False
     def initialize(self, widget):
         """ Enables the buffers and other charasteristics of the OpenGL context.
             sets the initial projection and view matrix
@@ -282,8 +283,7 @@ class GtkGLWidget(Gtk.GLArea):
         self.dist_cam_zrp = np.linalg.norm(self.glcamera.get_position()-self.zero_reference_point)
         self.ctrl = False
         self.shift = False
-        #GL.glEnable(GL_LINE_SMOOTH)
-        #GL.glEnable(GL_MULTISAMPLE)
+        self.atom_picked = None
     
     def reshape(self, widget, width, height):
         """ Resizing function, takes the widht and height of the widget
@@ -305,15 +305,20 @@ class GtkGLWidget(Gtk.GLArea):
         self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view,
              self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
         self.queue_draw()
-        print (width, height, self.width, self.height)
         return True
     
     def create_gl_programs(self):
         """ Function doc
         """
+        print('OpenGL version: ',GL.glGetString(GL.GL_VERSION))
+        try:
+            print('OpenGL major version: ',GL.glGetDoublev(GL.GL_MAJOR_VERSION))
+            print('OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION))
+        except:
+            print('OpenGL major version not found')
         self.dots_program  = self.load_shaders(vm_shader.vertex_shader_dots, vm_shader.fragment_shader_dots)
         self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
-        self.selection_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
+        self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
     
     def load_shaders(self, vertex, fragment, geometry=None):
         """ Here the shaders are loaded and compiled to an OpenGL program. By default
@@ -334,12 +339,6 @@ class GtkGLWidget(Gtk.GLArea):
         if geometry is not None:
             GL.glAttachShader(program, my_geometry_shader)
         GL.glLinkProgram(program)
-        print('OpenGL version: ',GL.glGetString(GL.GL_VERSION))
-        try:
-            print('OpenGL major version: ',GL.glGetDoublev(GL.GL_MAJOR_VERSION))
-            print('OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION))
-        except:
-            print('OpenGL major version not found')
         return program
         
     def create_shader(self, shader_prog, shader_type):
@@ -373,48 +372,38 @@ class GtkGLWidget(Gtk.GLArea):
             print ('create_gl_programs done')
         
         
-        if self.selection:
-            
+        if self.picking:
             print('funcao de selecao')
-            x = self.selection_x
-            y = self.selection_y
-            #self._draw_dots()
-            print (x, y)
-            #GL.glFlush()
-            #GL.glFinish()
+            print (self.picking_x, self.picking_y)
             GL.glClearColor(1,1,1,1)
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
             
             for visObj in self.vismolSession.vismol_objects:
-                if visObj.actived:                      
+                if visObj.actived:
                     if visObj.picking_dots_vao is None:
-                        shapes._make_gl_picking_dots(self.selection_dots_program,  vismol_object = visObj)
+                        shapes._make_gl_picking_dots(self.picking_dots_program,  vismol_object = visObj)
                     #else:
                     GL.glEnable(GL.GL_DEPTH_TEST)
-                    GL.glUseProgram(self.selection_dots_program)
+                    GL.glUseProgram(self.picking_dots_program)
                     GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                    self.load_matrices_selection(self.selection_dots_program, visObj.model_mat)
+                    self.load_matrices_picking(self.picking_dots_program, visObj.model_mat)
                     self._draw_picking_dots(visObj = visObj, indexes = False)
                     GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
                     GL.glUseProgram(0)
                     GL.glDisable(GL.GL_DEPTH_TEST)
             
             GL.glPixelStorei(GL.GL_PACK_ALIGNMENT, 1)
-            #a ,b = self.window.get_size ()
-
-            #pos = [self.mouse_x, self.height - self.mouse_y]
-            pos = [x, self.height - y]
-            #data = GL.glReadPixels(pos[0]+127, (pos[1]+40), 1, 1, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE)
-            
+            pos = [self.picking_x, self.height - self.picking_y]
             data = GL.glReadPixels(pos[0], (pos[1]), 1, 1, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE)
-
-            print (pos, x, y, data)
+            #print (pos, self.picking_x, self.picking_y, data)
             pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
-            print (pickedID)
-            self.selection = False
-            #self.queue_draw()
-        #else:
-                
+            #print(pickedID, "<= atom index")
+            if pickedID == 16777215:
+                self.atom_picked = None
+            else:
+                self.atom_picked = self.vismolSession.atom_dic_id[pickedID]
+            self.picking = False
+        
         GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
                         self.bckgrnd_color[2],self.bckgrnd_color[3])
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
@@ -430,7 +419,7 @@ class GtkGLWidget(Gtk.GLArea):
                         GL.glEnable(GL.GL_DEPTH_TEST)                        
                         GL.glUseProgram(self.lines_program)
                         GL.glLineWidth(60/abs(self.dist_cam_zrp))
-                        self.load_matrices(self.lines_program, visObj.model_mat, visObj.normal_mat)
+                        self.load_matrices(self.lines_program, visObj.model_mat)
                         self._draw_lines(visObj = visObj)
                         GL.glUseProgram(0)
                         GL.glDisable(GL.GL_DEPTH_TEST)
@@ -439,38 +428,32 @@ class GtkGLWidget(Gtk.GLArea):
                     pass
                     
                     if visObj.dots_vao is None:
-                        #print ('_make_gl_dots')
                         shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
                     else:
                         GL.glEnable(GL.GL_DEPTH_TEST)
                         GL.glUseProgram(self.dots_program)
                         GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                        self.load_matrices(self.dots_program, visObj.model_mat, visObj.normal_mat)
-                        
+                        self.load_matrices(self.dots_program, visObj.model_mat)
                         self.load_dot_params(self.dots_program)
-                        
                         self._draw_dots(visObj = visObj, indexes = False)
-                        
                         GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                        
                         GL.glUseProgram(0)
-                        
                         GL.glDisable(GL.GL_DEPTH_TEST)
         
         if self.show_axis:
             GL.glEnable(GL.GL_DEPTH_TEST)
             GL.glUseProgram(self.axis.gl_axis_program)
             self.axis.load_params()
-            self.draw_axis(True)
+            self._draw_axis(True)
             GL.glUseProgram(0)
             GL.glUseProgram(self.axis.gl_lines_program)
-            GL.glLineWidth(5)
+            GL.glLineWidth(3)
             self.axis.load_lines_params()
-            self.draw_axis(False)
+            self._draw_axis(False)
             GL.glUseProgram(0)
             GL.glDisable(GL.GL_DEPTH_TEST)
         
-    def load_matrices_selection(self, program, model_mat):
+    def load_matrices_picking(self, program, model_mat):
         """ Load the matrices to OpenGL.
             
             model_mat -- transformation matrix for the objects rendered
@@ -483,9 +466,9 @@ class GtkGLWidget(Gtk.GLArea):
         GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.view_matrix)
         proj = GL.glGetUniformLocation(program, 'projection_mat')
         GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
-        return True        
+        return True
         
-    def load_matrices(self, program, model_mat, normal_mat):
+    def load_matrices(self, program, model_mat):
         """ Load the matrices to OpenGL.
             
             model_mat -- transformation matrix for the objects rendered
@@ -498,8 +481,6 @@ class GtkGLWidget(Gtk.GLArea):
         GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.view_matrix)
         proj = GL.glGetUniformLocation(program, 'projection_mat')
         GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
-        norm = GL.glGetUniformLocation(program, 'normal_mat')
-        GL.glUniformMatrix3fv(norm, 1, GL.GL_FALSE, normal_mat)
         fog_s = GL.glGetUniformLocation(program, 'fog_start')
         GL.glUniform1fv(fog_s, 1, self.glcamera.fog_start)
         fog_e = GL.glGetUniformLocation(program, 'fog_end')
@@ -562,34 +543,13 @@ class GtkGLWidget(Gtk.GLArea):
             #visObj.dots_vao,  visObj.dot_buffers   = shapes.make_gl_dots(self.dots_program, visObj.atoms)
             #visObj.lines_vao, visObj.line_buffers  = shapes._make_gl_lines(self.lines_program, visObj.index_bonds, visObj.atoms)
             #visObj.lines_vao, visObj.line_buffers  = shapes._make_gl_lines(self.lines_program, vismol_object = visObj)
-
         self.modified_data = False
-    
-    def draw_dots(self):
-        """ Function doc
-        """
-        for visObj in self.vismolSession.vismol_objects:
-            if visObj.dots_vao is not None:
-                GL.glBindVertexArray(visObj.dots_vao)
-                if self.modified_view:
-                    pass
-                    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
-                    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_indexes.itemsize*int(len(visObj.dot_indexes)), visObj.dot_indexes, GL.GL_DYNAMIC_DRAW)
-                    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
-                    GL.glBindVertexArray(0)
-                    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-                    self.modified_view = False
-                else:
-                    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
-                GL.glBindVertexArray(0)
-    
     
     def _draw_dots(self, visObj = None,  indexes = False):
         """ Function doc
         """
         if visObj.dots_vao is not None:
             GL.glBindVertexArray(visObj.dots_vao)
-            
             if self.modified_view:
                 pass
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
@@ -601,18 +561,13 @@ class GtkGLWidget(Gtk.GLArea):
             else:
                 GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dot_buffers[1])
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
-                                visObj.frames[self.frame], 
-                                GL.GL_STATIC_DRAW)   
-                
+                                visObj.frames[self.frame], GL.GL_STATIC_DRAW)   
                 if  indexes:
                     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dot_buffers[2])            
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
-        
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
-                
         GL.glBindVertexArray(0)
-        
-
+    
     def _draw_picking_dots (self, visObj = None,  indexes = False):
         """ Function doc
         """
@@ -630,18 +585,13 @@ class GtkGLWidget(Gtk.GLArea):
             else:
                 GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.picking_dot_buffers[1])
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
-                                visObj.frames[self.frame], 
-                                GL.GL_STATIC_DRAW)   
-                
-                if  indexes:
+                                visObj.frames[self.frame], GL.GL_STATIC_DRAW)
+                if indexes:
                     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.picking_dot_buffers[2])            
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
-        
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
-                
         GL.glBindVertexArray(0)
-                     
-        
+    
     def _draw_lines(self, visObj = None):
         """ Function doc
         """
@@ -729,7 +679,7 @@ class GtkGLWidget(Gtk.GLArea):
         #GL.glDrawArrays(GL.GL_LINES, 0, len(self.vismolSession.vismol_objects[0].index_bonds)*2)
         #GL.glBindVertexArray(0)
     
-    def draw_axis(self, flag):
+    def _draw_axis(self, flag):
         """ Function doc
         """
         if flag:
@@ -790,7 +740,9 @@ class GtkGLWidget(Gtk.GLArea):
     def _pressed_m(self):
         """ Function doc
         """
-        self.glcamera.print_matrices()
+        #self.glcamera.print_matrices()
+        for visObj in self.vismolSession.vismol_objects:
+            print(visObj.model_mat,"Matriz de modelo")
         return True
     
     def _pressed_Control_L(self):
@@ -806,6 +758,8 @@ class GtkGLWidget(Gtk.GLArea):
         return True
     
     def mouse_pressed(self, widget, event):
+        """ Function doc
+        """
         left   = event.button==1 and event.type==Gdk.EventType.BUTTON_PRESS
         middle = event.button==2 and event.type==Gdk.EventType.BUTTON_PRESS
         right  = event.button==3 and event.type==Gdk.EventType.BUTTON_PRESS
@@ -828,6 +782,10 @@ class GtkGLWidget(Gtk.GLArea):
             #    self.target_point = selected.pos
         if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
             pass
+            self.picking_x = event.x
+            self.picking_y = event.y
+            self.picking = True
+            self.queue_draw()
             #print ('event.button == 2')
             #self.dist_cam_zpr = op.get_euclidean(self.zero_reference_point, self.get_cam_pos())
         if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -837,23 +795,25 @@ class GtkGLWidget(Gtk.GLArea):
     
     
     def mouse_released(self, widget, event):
-        pass
+        """ Function doc
+        """
         self.mouse_rotate = self.mouse_zoom = self.mouse_pan = False
-        if event.button==3:
-            if self.dragging:
-                self.dragging = False
-            else:
-                self.glMenu.open_gl_menu(event = event)
-        if event.button==1:
-            if self.dragging:
-                self.dragging = False
-            else:
-                self.selection_x = event.x
-                self.selection_y = event.y
-                self.selection =  True
+        if not self.dragging:
+            if event.button==1:
+                self.picking_x = event.x
+                self.picking_y = event.y
+                self.picking =  True
                 self.queue_draw()
-                
+            if event.button==2:
+                if self.atom_picked is not None:
+                    self.center_on_atom(self.atom_picked.pos)
+                    self.atom_picked = None
+            if event.button==3:
+                self.glMenu.open_gl_menu(event = event)
+    
     def mouse_motion(self, widget, event):
+        """ Function doc
+        """
         x = event.x
         y = event.y
         state = event.state
@@ -881,15 +841,12 @@ class GtkGLWidget(Gtk.GLArea):
                 rot_mat = mop.my_glRotatef(np.identity(4), angle, [-dy, -dx, 0])
             if not self.editing_mols:
                 self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, rot_mat)
-                self.normal_mat = self.update_normal_mat(self.model_mat)
                 for visObj in self.vismolSession.vismol_objects:
                     visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
-                    visObj.normal_mat = self.update_normal_mat(visObj.model_mat)
             else:
                 for visObj in self.vismolSession.vismol_objects:
                     if visObj.editing:
                         visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
-                        visObj.normal_mat = self.update_normal_mat(visObj.model_mat)
             
             self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, -self.axis.zrp)
             if self.ctrl:
@@ -905,7 +862,6 @@ class GtkGLWidget(Gtk.GLArea):
                         self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0, 0, dy])
             else:
                 self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [dy, dx, 0])
-            self.axis.normal_mat = self.update_normal_mat(self.axis.model_mat)
             self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, self.axis.zrp)
             
             changed = True
@@ -917,15 +873,12 @@ class GtkGLWidget(Gtk.GLArea):
                  (pz-self.drag_pos_z)*self.glcamera.z_far/10])
             if not self.editing_mols:
                 self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, pan_mat)
-                self.normal_mat = self.update_normal_mat(self.model_mat)
                 for visObj in self.vismolSession.vismol_objects:
                     visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
-                    visObj.normal_mat = self.update_normal_mat(visObj.model_mat)
             else:
                 for visObj in self.vismolSession.vismol_objects:
                     if visObj.editing:
                         visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
-                        visObj.normal_mat = self.update_normal_mat(visObj.model_mat)
             
             self.drag_pos_x = px
             self.drag_pos_y = py
@@ -1002,17 +955,6 @@ class GtkGLWidget(Gtk.GLArea):
             self.glcamera.update_fog()
         self.queue_draw()
     
-    def update_normal_mat(self, model_mat):
-        """ Function doc
-        """
-        #modelview = mop.my_glMultiplyMatricesf(self.glcamera.get_view_matrix(), self.model_mat)
-        modelview = mop.my_glMultiplyMatricesf(self.glcamera.view_matrix, model_mat)
-        normal_mat = np.matrix(modelview[:3,:3]).I.T
-        #self.normal_mat = np.array(normal_mat)
-        return np.array(normal_mat)
-        #model = np.matrix(self.model_mat[:3,:3]).I.T
-        #self.normal_mat = np.array(model)
-    
     def pos(self, x, y):
         """
         Use the ortho projection and viewport information
@@ -1026,4 +968,25 @@ class GtkGLWidget(Gtk.GLArea):
         pz = self.glcamera.z_near
         return px, py, pz
     
+    def center_on_atom(self, atom_pos):
+        """ Function doc
+        """
+        print("centralizando")
+        pos = np.array([atom_pos[0],atom_pos[1],atom_pos[2],1],dtype=np.float32)
+        model_pos = self.model_mat.T.dot(pos)
+        self.model_mat = mop.my_glTranslatef(self.model_mat, -model_pos[:3])
+        unit_vec = op.unit_vector(-atom_pos)
+        dist = op.get_euclidean(atom_pos, [0.0,0.0,0.0])
+        step = dist/15.0
+        #for i in range(1, 15):
+            #to_add = float(i)*step
+            #to_move = unit_vec * to_add
+            ##to_move += atom_pos
+            #for visObj in self.vismolSession.vismol_objects:
+                    #visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move)
+            #self.queue_draw()
+        for visObj in self.vismolSession.vismol_objects:
+            model_pos = visObj.model_mat.T.dot(pos)
+            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -model_pos[:3])
+        self.queue_draw()
     

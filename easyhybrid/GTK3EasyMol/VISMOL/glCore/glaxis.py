@@ -32,39 +32,75 @@ class GLAxis:
     """ Class doc
     """
     
-    def __init__ (self):
+    def __init__ (self, cam_pos=np.array([0,0,0],dtype=np.float32)):
         """ Class initialiser
         """
         self.axis_vertices = {'x_axis' : np.array(
-        [-0.85000000, -0.85000000,  0.00000000,
-         -0.85000000, -0.86464466, -0.03535534,
-         -0.85000000, -0.90000000, -0.05000000,
-         -0.85000000, -0.93535534, -0.03535534,
-         -0.85000000, -0.95000000,  0.00000000,
-         -0.85000000, -0.93535534,  0.03535534,
-         -0.85000000, -0.90000000,  0.05000000,
-         -0.85000000, -0.86464466,  0.03535534,
-         -0.77500000, -0.90000000,  0.00000000], dtype=np.float32),
+        [-0.85000000, -0.87500000,  0.00000000,
+         -0.85000000, -0.88232233, -0.01767767,
+         -0.85000000, -0.90000000, -0.02500000,
+         -0.85000000, -0.91767767, -0.01767767,
+         -0.85000000, -0.92500000,  0.00000000,
+         -0.85000000, -0.91767767,  0.01767767,
+         -0.85000000, -0.90000000,  0.02500000,
+         -0.85000000, -0.88232233,  0.01767767,
+         -0.81250000, -0.90000000,  0.00000000,
+         -0.85000000, -0.90000000,  0.00000000], dtype=np.float32),
          'y_axis' : np.array(
-        [-0.90000000, -0.85000000, -0.05000000,
-         -0.86464466, -0.85000000, -0.03535534,
-         -0.85000000, -0.85000000,  0.00000000,
-         -0.86464466, -0.85000000,  0.03535534,
-         -0.90000000, -0.85000000,  0.05000000,
-         -0.93535534, -0.85000000,  0.03535534,
-         -0.95000000, -0.85000000,  0.00000000,
-         -0.93535534, -0.85000000, -0.03535534,
-         -0.90000000, -0.77500000,  0.00000000], dtype=np.float32),
+        [-0.90000000, -0.85000000, -0.02500000,
+         -0.88232233, -0.85000000, -0.01767767,
+         -0.87500000, -0.85000000,  0.00000000,
+         -0.88232233, -0.85000000,  0.01767767,
+         -0.90000000, -0.85000000,  0.02500000,
+         -0.91767767, -0.85000000,  0.01767767,
+         -0.92500000, -0.85000000,  0.00000000,
+         -0.91767767, -0.85000000, -0.01767767,
+         -0.90000000, -0.81250000,  0.00000000,
+         -0.90000000, -0.85000000,  0.00000000], dtype=np.float32),
         'z_axis' : np.array(
-        [-0.90000000, -0.85000000, -0.05000000,
-         -0.86464466, -0.86464466, -0.05000000,
-         -0.85000000, -0.90000000, -0.05000000,
-         -0.86464466, -0.93535534, -0.05000000,
-         -0.90000000, -0.95000000, -0.05000000,
-         -0.93535534, -0.93535534, -0.05000000,
-         -0.95000000, -0.90000000, -0.05000000,
-         -0.93535534, -0.86464466, -0.05000000,
-         -0.90000000, -0.90000000, -0.12500000], dtype=np.float32)}
+        [-0.90000000, -0.87500000, -0.05000000,
+         -0.88232233, -0.88232233, -0.05000000,
+         -0.87500000, -0.90000000, -0.05000000,
+         -0.88232233, -0.91767767, -0.05000000,
+         -0.90000000, -0.92500000, -0.05000000,
+         -0.91767767, -0.91767767, -0.05000000,
+         -0.92500000, -0.90000000, -0.05000000,
+         -0.91767767, -0.88232233, -0.05000000,
+         -0.90000000, -0.90000000, -0.08750000,
+         -0.90000000, -0.90000000, -0.05000000], dtype=np.float32)}
+        self.axis_normals = {'x_axis' : np.array(
+        [-0.85000000, -0.87500000,  0.00000000,
+         -0.85000000, -0.88232233, -0.01767767,
+         -0.85000000, -0.90000000, -0.02500000,
+         -0.85000000, -0.91767767, -0.01767767,
+         -0.85000000, -0.92500000,  0.00000000,
+         -0.85000000, -0.91767767,  0.01767767,
+         -0.85000000, -0.90000000,  0.02500000,
+         -0.85000000, -0.88232233,  0.01767767,
+         -0.81250000, -0.90000000,  0.00000000,
+          0.85000000,  0.90000000,  0.00000000], dtype=np.float32),
+         'y_axis' : np.array(
+        [-0.90000000, -0.85000000, -0.02500000,
+         -0.88232233, -0.85000000, -0.01767767,
+         -0.87500000, -0.85000000,  0.00000000,
+         -0.88232233, -0.85000000,  0.01767767,
+         -0.90000000, -0.85000000,  0.02500000,
+         -0.91767767, -0.85000000,  0.01767767,
+         -0.92500000, -0.85000000,  0.00000000,
+         -0.91767767, -0.85000000, -0.01767767,
+         -0.90000000, -0.81250000,  0.00000000,
+          0.90000000,  0.85000000,  0.00000000], dtype=np.float32),
+        'z_axis' : np.array(
+        [-0.90000000, -0.87500000, -0.05000000,
+         -0.88232233, -0.88232233, -0.05000000,
+         -0.87500000, -0.90000000, -0.05000000,
+         -0.88232233, -0.91767767, -0.05000000,
+         -0.90000000, -0.92500000, -0.05000000,
+         -0.91767767, -0.91767767, -0.05000000,
+         -0.92500000, -0.90000000, -0.05000000,
+         -0.91767767, -0.88232233, -0.05000000,
+         -0.90000000, -0.90000000, -0.08750000,
+          0.90000000,  0.90000000, -0.05000000], dtype=np.float32)}
         self.lines_vertices = np.array(
             [-0.90000000, -0.90000000,  0.00000000,
              -0.82500000, -0.90000000,  0.00000000,
@@ -77,7 +113,9 @@ class GLAxis:
              0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
              0.0, 0.0, 1.0, 0.0, 0.0, 1.0], dtype=np.float32)
         self.axis_indexes = np.array([0, 1, 8, 1, 2, 8, 2, 3, 8, 3, 4, 8,
-                                      4, 5, 8, 5, 6, 8, 6, 7, 8, 7, 0, 8], dtype=np.uint16)
+                                      4, 5, 8, 5, 6, 8, 6, 7, 8, 7, 0, 8,
+                                      0, 1, 9, 1, 2, 9, 2, 3, 9, 3, 4, 9,
+                                      4, 5, 9, 5, 6, 9, 6, 7, 9, 7, 0, 9], dtype=np.uint16)
         self.axis_centers = {'x_axis' : [0.0, 0.0, 0.0],
                              'y_axis' : [0.0, 0.0, 0.0],
                              'z_axis' : [0.0, 0.0, 0.0]}
@@ -85,7 +123,6 @@ class GLAxis:
                             'y_axis' : [0.0, 1.0, 0.0],
                             'z_axis' : [0.0, 0.0, 1.0]}
         self.model_mat = np.identity(4, dtype=np.float32)
-        self.normal_mat = np.identity(3, dtype=np.float32)
         self.gl_axis_program = None
         self.gl_lines_program = None
         self.x_vao = None
@@ -93,17 +130,16 @@ class GLAxis:
         self.z_vao = None
         self.lines_vao = None
         self.zrp = np.array([-0.9, -0.9, 0.0],dtype=np.float32)
+        self.camera_position = cam_pos
         self.light_position = np.array([2.5,2.5,3.0],dtype=np.float32)
         self.light_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
-        self.light_intensity = np.array([0.6,0.6,0.6],dtype=np.float32)
-        self.light_specular_color = np.array([1.0,1.0,1.0],dtype=np.float32)
-        self.light_ambient_coef = 0.5
-        self.light_shininess = 5.5
+        self.light_ambient_coef = 0.1
+        self.light_specular_coef = 0.5
+        self.light_shininess = 32
         self.vertex_shader_axis = """
 #version 330
 
 uniform mat4 model_mat;
-uniform mat3 normal_mat;
 
 in vec3 vert_coord;
 in vec3 vert_center;
@@ -114,10 +150,9 @@ out vec3 frag_color;
 out vec3 frag_normal;
 
 void main(){
-    vec3 coord = vec3(model_mat * vec4(vert_coord, 1.0));
-    gl_Position = vec4(coord, 1.0);
-    frag_coord = -coord;
-    frag_normal = normalize(normal_mat * (vert_coord - vert_center));
+    frag_coord = vec3(model_mat * vec4(vert_coord, 1.0));
+    gl_Position = vec4(frag_coord, 1.0);
+    frag_normal = mat3(transpose(inverse(model_mat))) * (vert_coord - vert_center);
     frag_color = vert_color;
 }
 """
@@ -127,15 +162,13 @@ void main(){
 struct Light {
    vec3 position;
    vec3 color;
-   vec3 intensity;
-   vec3 specular_color;
    float ambient_coef;
+   float specular_coef;
    float shininess;
 };
 
 uniform Light my_light;
-uniform mat4 model_mat;
-uniform mat3 normal_mat;
+uniform vec3 cam_pos;
 
 in vec3 frag_coord;
 in vec3 frag_color;
@@ -145,24 +178,22 @@ out vec4 final_color;
 
 void main(){
     vec3 normal = normalize(frag_normal);
-    vec3 vert_to_light = normalize(my_light.position-frag_coord);
-    vec3 vert_to_cam = normalize(frag_coord);
+    vec3 vert_to_light = normalize(my_light.position - frag_coord);
     
     // Ambient Component
-    vec3 ambient = my_light.ambient_coef * frag_color * my_light.intensity;
+    vec3 ambient = my_light.ambient_coef * frag_color * my_light.color;
     
     // Diffuse component
-    float diffuse_coef = max(0.0, dot(normal, vert_to_light));
-    vec3 diffuse = diffuse_coef * frag_color * my_light.intensity;
+    float diffuse_coef = max(dot(normal, vert_to_light), 0.0);
+    vec3 diffuse = diffuse_coef * my_light.color;
     
     // Specular component
-    float specular_coef = 0.0;
-    if (diffuse_coef > 0.0)
-        specular_coef = pow(max(0.0, dot(vert_to_cam, reflect(-vert_to_light, normal))), my_light.shininess);
-    vec3 specular = specular_coef * my_light.intensity;
-    specular = specular * (vec3(1) - diffuse);
+    vec3 vert_to_cam = normalize(cam_pos - frag_coord);
+    vec3 reflect_dir = reflect(-vert_to_light, normal);
+    float spec = pow(max(dot(vert_to_light, reflect_dir), 0.0), my_light.shininess);
+    vec3 specular = my_light.specular_coef * spec * my_light.color;
     
-    final_color = vec4(ambient + diffuse + specular, 1.0);
+    final_color = vec4((ambient + diffuse + specular) * frag_color, 1.0);
 }
 """
         self.vertex_shader_lines = """
@@ -223,6 +254,12 @@ void main()
         GL.glAttachShader(self.gl_axis_program, v_shader)
         GL.glAttachShader(self.gl_axis_program, f_shader)
         GL.glLinkProgram(self.gl_axis_program)
+        if GL.glGetShaderiv(v_shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
+            print("Error compiling the shader: ", "GL_VERTEX_SHADER")
+            raise RuntimeError(GL.glGetShaderInfoLog(v_shader))
+        if GL.glGetShaderiv(f_shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
+            print("Error compiling the shader: ", "GL_FRAGMENT_SHADER")
+            raise RuntimeError(GL.glGetShaderInfoLog(f_shader))
         return True
     
     def _make_lines_program(self):
@@ -322,20 +359,18 @@ void main()
         """
         model = GL.glGetUniformLocation(self.gl_axis_program, 'model_mat')
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
-        norm = GL.glGetUniformLocation(self.gl_axis_program, 'normal_mat')
-        GL.glUniformMatrix3fv(norm, 1, GL.GL_FALSE, self.normal_mat)
+        cam_pos = GL.glGetUniformLocation(self.gl_axis_program, 'cam_pos')
+        GL.glUniform3fv(cam_pos, 1, self.camera_position)
         light_pos = GL.glGetUniformLocation(self.gl_axis_program, 'my_light.position')
         GL.glUniform3fv(light_pos, 1, self.light_position)
         light_col = GL.glGetUniformLocation(self.gl_axis_program, 'my_light.color')
         GL.glUniform3fv(light_col, 1, self.light_color)
         amb_coef = GL.glGetUniformLocation(self.gl_axis_program, 'my_light.ambient_coef')
         GL.glUniform1fv(amb_coef, 1, self.light_ambient_coef)
+        spec_coef = GL.glGetUniformLocation(self.gl_axis_program, 'my_light.specular_coef')
+        GL.glUniform1fv(spec_coef, 1, self.light_specular_coef)
         shiny = GL.glGetUniformLocation(self.gl_axis_program, 'my_light.shininess')
         GL.glUniform1fv(shiny, 1, self.light_shininess)
-        intensity = GL.glGetUniformLocation(self.gl_axis_program, 'my_light.intensity')
-        GL.glUniform3fv(intensity, 1, self.light_intensity)
-        spec_col = GL.glGetUniformLocation(self.gl_axis_program, 'my_light.specular_color')
-        GL.glUniform3fv(spec_col, 1, self.light_specular_color)
         return True
     
     def load_lines_params(self):
