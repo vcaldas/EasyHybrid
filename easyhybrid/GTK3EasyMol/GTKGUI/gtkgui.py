@@ -143,7 +143,7 @@ class GTKGUI ():
                 self.builder.get_object('TreeViewObjLabel').set_label('- ' +self.selectedObj+' -' )
 
                 widget = self.builder.get_object('treeview_menu')
-                widget.popup(None, None, None, event.button, event.time)
+                widget.popup(None, None, None, None, event.button, event.time)
                 print ('button == 3')
 
 
