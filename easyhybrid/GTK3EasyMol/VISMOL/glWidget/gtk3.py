@@ -371,8 +371,47 @@ class GtkGLWidget(Gtk.GLArea):
             self.shader_flag = False
         
         if self.picking:
+<<<<<<< HEAD
             self.pick()
         
+=======
+            print('funcao de selecao')
+            print (self.picking_x, self.picking_y)
+            GL.glClearColor(1,1,1,1)
+            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+            
+            for visObj in self.vismolSession.vismol_objects:
+                if visObj.actived:
+                    if visObj.picking_dots_vao is None:
+                        shapes._make_gl_picking_dots(self.picking_dots_program,  vismol_object = visObj)
+                    #else:
+                    GL.glEnable(GL.GL_DEPTH_TEST)
+                    GL.glUseProgram(self.picking_dots_program)
+                    GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                    self.load_matrices_picking(self.picking_dots_program, visObj.model_mat)
+                    self._draw_picking_dots(visObj = visObj, indexes = False)
+                    GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                    GL.glUseProgram(0)
+                    GL.glDisable(GL.GL_DEPTH_TEST)
+            
+            GL.glPixelStorei(GL.GL_PACK_ALIGNMENT, 1)
+            pos = [self.picking_x, self.height - self.picking_y]
+            data = GL.glReadPixels(pos[0], (pos[1]), 1, 1, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE)
+            #print (pos, self.picking_x, self.picking_y, data)
+            pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
+            #print(pickedID, "<= atom index")
+            if pickedID == 16777215:
+                self.atom_picked = None
+            else:
+                self.atom_picked = self.vismolSession.atom_dic_id[pickedID]
+            self.picking = False
+            
+            if self.atom_picked is not None:
+                #print (self.atom_picked.name)
+                self.vismolSession.selection_function(pickedID)
+                print(self.vismolSession.selections)
+            
+>>>>>>> 54fc6fd3b067c3abbb9eb42725e520535191e41f
         GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
                         self.bckgrnd_color[2],self.bckgrnd_color[3])
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
@@ -841,11 +880,23 @@ class GtkGLWidget(Gtk.GLArea):
                 self.picking_y = event.y
                 self.picking =  True
                 self.queue_draw()
+                #self.picking =  False
+
+
+            
             if event.button==2:
                 if self.atom_picked is not None:
-                    self.center_on_atom(self.atom_picked.pos)
+                    # 
+                    selected = self.atom_picked
+                    coord = [selected.Vobject.frames[self.frame][(selected.index-1)*3  ],
+                             selected.Vobject.frames[self.frame][(selected.index-1)*3+1],
+                             selected.Vobject.frames[self.frame][(selected.index-1)*3+2],]
+                    coord = np.array(coord, dtype=np.float32) 
+                    self.center_on_atom(coord) # should "center on coords"
+                    
                     self.atom_picked = None
             if event.button==3:
+                
                 self.glMenu.open_gl_menu(event = event)
     
     def mouse_motion(self, widget, event):
