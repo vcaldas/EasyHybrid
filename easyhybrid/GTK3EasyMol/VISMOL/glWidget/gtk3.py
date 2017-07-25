@@ -403,7 +403,12 @@ class GtkGLWidget(Gtk.GLArea):
             else:
                 self.atom_picked = self.vismolSession.atom_dic_id[pickedID]
             self.picking = False
-        
+            
+            if self.atom_picked is not None:
+                #print (self.atom_picked.name)
+                self.vismolSession.selection_function(pickedID)
+                print(self.vismolSession.selections)
+            
         GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
                         self.bckgrnd_color[2],self.bckgrnd_color[3])
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
@@ -804,11 +809,23 @@ class GtkGLWidget(Gtk.GLArea):
                 self.picking_y = event.y
                 self.picking =  True
                 self.queue_draw()
+                #self.picking =  False
+
+
+            
             if event.button==2:
                 if self.atom_picked is not None:
-                    self.center_on_atom(self.atom_picked.pos)
+                    # 
+                    selected = self.atom_picked
+                    coord = [selected.Vobject.frames[self.frame][(selected.index-1)*3  ],
+                             selected.Vobject.frames[self.frame][(selected.index-1)*3+1],
+                             selected.Vobject.frames[self.frame][(selected.index-1)*3+2],]
+                    coord = np.array(coord, dtype=np.float32) 
+                    self.center_on_atom(coord) # should "center on coords"
+                    
                     self.atom_picked = None
             if event.button==3:
+                
                 self.glMenu.open_gl_menu(event = event)
     
     def mouse_motion(self, widget, event):
