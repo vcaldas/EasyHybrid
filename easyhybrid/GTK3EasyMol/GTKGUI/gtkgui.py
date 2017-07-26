@@ -203,10 +203,13 @@ class GTKGUI ():
         if widget == self.builder.get_object('menuitem6_center'):
             print(widget)
         if widget == self.builder.get_object('menuitem5_rename'):
+            tree      = self.builder.get_object('treeview1')
+            selection = tree.get_selection()
             model = tree.get_model()
+            (model, iter) = selection.get_selected()
             obj_index = model.get_value(iter, 1)
             #self.vismolSession.glwidget.edit_molecule()
-            print(widget,"<=es el widget")
+            print(widget,"<=es el widget",obj_index,model  )
             #coord = np.array(coord, dtype=np.float32) 
             #self.vismolSession.glwidget.center_on_atom(coord)
         
