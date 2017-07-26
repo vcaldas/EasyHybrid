@@ -200,10 +200,13 @@ class GTKGUI ():
     def on_treemenu_item_selection (self, widget):
         """ Function doc """
         #print ( widget)
-        if widget  == self.builder.get_object('menuitem6_center'):
-            print ( widget)
-        if widget  == self.builder.get_object('menuitem5_rename'):
-            print ( widget)
+        if widget == self.builder.get_object('menuitem6_center'):
+            print(widget)
+        if widget == self.builder.get_object('menuitem5_rename'):
+            model = tree.get_model()
+            obj_index = model.get_value(iter, 1)
+            #self.vismolSession.glwidget.edit_molecule()
+            print(widget,"<=es el widget")
             #coord = np.array(coord, dtype=np.float32) 
             #self.vismolSession.glwidget.center_on_atom(coord)
         

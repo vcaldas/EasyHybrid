@@ -225,12 +225,9 @@ class GtkGLWidget(Gtk.GLArea):
                        | Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK )
         
         self.vismolSession = vismolSession 
-        
         self.glMenu = GLMenu(self)
-        
-        self.data = None
-        
         self.picking = False
+    
     def initialize(self, widget):
         """ Enables the buffers and other charasteristics of the OpenGL context.
             sets the initial projection and view matrix
@@ -542,20 +539,6 @@ class GtkGLWidget(Gtk.GLArea):
         GL.glUniform1fv(uni_dot_size, 1, dot_factor)
         return True
     
-    def _load_data(self):
-        """ In this function you load the data to be displayed. Because of
-            using the flag the program loads the data just once. Here you
-            bind the coordinates data to the buffer array.
-        """
-        for visObj in self.vismolSession.vismol_objects:
-            shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
-            shapes._make_gl_lines(self.lines_program, vismol_object = visObj)
-            
-            #visObj.dots_vao,  visObj.dot_buffers   = shapes.make_gl_dots(self.dots_program, visObj.atoms)
-            #visObj.lines_vao, visObj.line_buffers  = shapes._make_gl_lines(self.lines_program, visObj.index_bonds, visObj.atoms)
-            #visObj.lines_vao, visObj.line_buffers  = shapes._make_gl_lines(self.lines_program, vismol_object = visObj)
-        self.modified_data = False
-    
     def _draw_pseudospheres(self, visObj = None, indexes = False):
         """ Function doc
         """
@@ -602,7 +585,7 @@ class GtkGLWidget(Gtk.GLArea):
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
         GL.glBindVertexArray(0)
     
-    def _draw_picking_dots (self, visObj = None,  indexes = False):
+    def _draw_picking_dots(self, visObj = None,  indexes = False):
         """ Function doc
         """
         if visObj.dots_vao is not None:
@@ -691,28 +674,6 @@ class GtkGLWidget(Gtk.GLArea):
         """ Function doc """
         shapes._make_gl_lines(self.lines_program, vismol_object = vismol_object)
     
-    def draw_lines(self):
-        """ Function doc
-        """
-        for visObj in self.vismolSession.vismol_objects:
-            if visObj.lines_vao is not None:
-                GL.glBindVertexArray(visObj.lines_vao)
-                if self.modified_view:
-                    pass
-                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[0])
-                    #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
-                    #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_SHORT, None)
-                    #GL.glBindVertexArray(0)
-                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-                    #self.modified_data = False
-                else:
-                    GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_SHORT, None)
-        GL.glBindVertexArray(0)
-        #assert(len(self.lines_vao)>0)
-        #GL.glBindVertexArray(self.lines_vao[0])
-        #GL.glDrawArrays(GL.GL_LINES, 0, len(self.vismolSession.vismol_objects[0].index_bonds)*2)
-        #GL.glBindVertexArray(0)
-    
     def _draw_axis(self, flag):
         """ Function doc
         """
@@ -755,7 +716,6 @@ class GtkGLWidget(Gtk.GLArea):
         #print(k_name, 'key released')
         if func:
             func()
-        
         if k_name == 'Right':
             self.frame +=1
             print (self.frame)
@@ -844,18 +804,8 @@ class GtkGLWidget(Gtk.GLArea):
                 self.queue_draw()
             if event.button==2:
                 if self.atom_picked is not None:
-                    #----------------------------------------------------------------------
-                    self.center_on_atom (self.atom_picked)
-                    #selected = self.atom_picked
-                    #coord = [selected.Vobject.frames[self.frame][(selected.index-1)*3  ],
-                    #         selected.Vobject.frames[self.frame][(selected.index-1)*3+1],
-                    #         selected.Vobject.frames[self.frame][(selected.index-1)*3+2],]
-                    #coord = np.array(coord, dtype=np.float32) 
-                    #self.center_on_coordinates(coord) # should be "center on coords" ?
-                    #----------------------------------------------------------------------
-                    #self.center_on_coordinates(self.atom_picked.pos)
+                    self.center_on_atom(self.atom_picked)
                     self.atom_picked = None
-
             if event.button==3:
                 self.glMenu.open_gl_menu(event = event)
     
@@ -990,7 +940,6 @@ class GtkGLWidget(Gtk.GLArea):
                     if (self.glcamera.z_far-self.scroll) > (self.glcamera.z_near+self.scroll):
                         self.glcamera.z_near += self.scroll
                         self.glcamera.z_far -= self.scroll
-
             if self.glcamera.z_near >= self.glcamera.min_znear:
                 self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
                         self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
@@ -1016,18 +965,15 @@ class GtkGLWidget(Gtk.GLArea):
         pz = self.glcamera.z_near
         return px, py, pz
     
-    
     def center_on_atom (self, atom):
-        """ Function doc """
-        #----------------------------------------------------------------------
-        #atom = self.atom_picked
+        """ Function doc
+        """
         coord = [atom.Vobject.frames[self.frame][(atom.index-1)*3  ],
                  atom.Vobject.frames[self.frame][(atom.index-1)*3+1],
                  atom.Vobject.frames[self.frame][(atom.index-1)*3+2],]
         coord = np.array(coord, dtype=np.float32) 
-        self.center_on_coordinates(coord) # should be "center on coords" ?
-        #----------------------------------------------------------------------
-    
+        self.center_on_coordinates(coord)
+        return True
     
     def center_on_coordinates(self, atom_pos):
         """ Takes the coordinates of an atom in absolute coordinates and first
