@@ -996,10 +996,16 @@ class GtkGLWidget(Gtk.GLArea):
         unit_vec = op.unit_vector(model_pos)
         dist = op.get_euclidean(model_pos, [0.0,0.0,0.0])
         step = dist/15.0
+        to_move = unit_vec * step
+        #for visObj in self.vismolSession.vismol_objects:
+            #visObj.target = visObj.model_mat.T.dot(pos)
+            #visObj.dir_vector = op.unit_vector(visObj.target)
+            #visObj.distance = op.get_euclidean(visObj.target, [0.0,0.0,0.0])
+            #visObj.step = dist/15.0
         for i in range(15):
             to_move = unit_vec * step
             for visObj in self.vismolSession.vismol_objects:
-                    visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move[:3])
+                visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move[:3])
             self.get_window().invalidate_rect(None, False)
             self.get_window().process_updates(False)
             time.sleep(0.02)

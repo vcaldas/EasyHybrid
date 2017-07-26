@@ -294,7 +294,12 @@ class VisMolSession (ShowHideVisMol):
         self.vismol_objects[index].actived = True
         #self.glwidget.draw()
         self.glwidget.queue_draw()
-        
+    
+    def edit_by_index(self, index = 0):
+        """ Function doc """
+        self.vismol_objects[index].editing = not self.vismol_objects[index].editing
+        #self.glwidget.queue_draw()
+    
     def set_frame (self, frame = 0):
         """ Function doc """
         self.glwidget.frame = frame
