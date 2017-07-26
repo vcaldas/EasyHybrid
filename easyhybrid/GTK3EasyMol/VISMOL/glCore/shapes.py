@@ -264,18 +264,20 @@ def make_gl_lines(program, bond_list, atom_list):
     return vao, (ind_vbo, coord_vbo, col_vbo)
 
 
-def _make_gl_pseudospheres(program, vismol_object = None):
+def _make_gl_pseudospheres(program, vismol_object = None, bckgrnd_color= [0.0,0.0,0.0,1.0]):
     """ Function doc
     """
     colors = vismol_object.colors
     radios = np.copy(vismol_object.vdw_dot_sizes)
-    radios *= 10.0
+    radios /= 2.9
     coords = vismol_object.frames[0]
     dot_qtty = int(len(coords)/3)
     indexes = []
     for i in range(dot_qtty):
         indexes.append(i)
     indexes = np.array(indexes,dtype=np.uint16)
+    bckgrnd_color = [bckgrnd_color[0],bckgrnd_color[1], bckgrnd_color[2],bckgrnd_color[3]]*dot_qtty
+    bckgrnd_color = np.array(bckgrnd_color, dtype=np.float32)
     
     vao = GL.glGenVertexArrays(1)
     GL.glBindVertexArray(vao)
@@ -312,8 +314,8 @@ def _make_gl_pseudospheres(program, vismol_object = None):
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
     
-    vismol_object.pseudosphere_vao = vao
-    vismol_object.pseudosphere_buffers = (ind_vbo, coord_vbo, col_vbo)
+    vismol_object.pseudospheres_vao = vao
+    vismol_object.pseudospheres_buffers = (ind_vbo, coord_vbo, col_vbo)
     return True
 
 def _make_gl_dots(program, vismol_object = None, bckgrnd_color= [0.0,0.0,0.0,1.0]):

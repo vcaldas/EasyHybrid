@@ -103,10 +103,10 @@ class VismolObject:
         # OpenGL attributes
         self.dots_vao       = None
         self.lines_vao      = None
-        self.pseudospheres_vao    = None
+        self.pseudospheres_vao = None
         self.dot_buffers    = None
         self.line_buffers   = None
-        self.pseudosphere_buffers = None
+        self.pseudospheres_buffers = None
         self.dot_indexes    = None
         self.model_mat = np.identity(4, dtype=np.float32)
 

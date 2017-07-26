@@ -271,7 +271,7 @@ class GtkGLWidget(Gtk.GLArea):
         self.mouse_pan = False
         self.bckgrnd_color = [0.0,0.0,0.0,1.0]
         #self.bckgrnd_color = [1.0,1.0,1.0,1.0]
-        self.light_position = np.array([2.5,2.5,3.0],dtype=np.float32)
+        self.light_position = np.array([-2.5,-2.5,3.0],dtype=np.float32)
         self.light_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
         self.light_ambient_coef = 0.5
         self.light_shininess = 5.5
@@ -559,8 +559,8 @@ class GtkGLWidget(Gtk.GLArea):
     def _draw_pseudospheres(self, visObj = None, indexes = False):
         """ Function doc
         """
-        if visObj.pseudosphere_vao is not None:
-            GL.glBindVertexArray(visObj.pseudosphere_vao)
+        if visObj.pseudospheres_vao is not None:
+            GL.glBindVertexArray(visObj.pseudospheres_vao)
             if self.modified_view:
                 pass
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
@@ -570,10 +570,10 @@ class GtkGLWidget(Gtk.GLArea):
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
             #    self.modified_view = False
             else:
-                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.pseudosphere_buffers[1])
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.pseudospheres_buffers[1])
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), visObj.frames[self.frame], GL.GL_STATIC_DRAW)   
                 if indexes:
-                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.pseudosphere_buffers[2])            
+                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.pseudospheres_buffers[2])            
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
         GL.glBindVertexArray(0)
@@ -780,6 +780,7 @@ class GtkGLWidget(Gtk.GLArea):
             visObj.dots_actived = not visObj.dots_actived
             visObj.lines_actived = not visObj.lines_actived
             visObj.pseudospheres_actived = not visObj.pseudospheres_actived
+        self.queue_draw()
         return True
     
     def _pressed_Control_L(self):

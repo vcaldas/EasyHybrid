@@ -248,7 +248,7 @@ void main (void){
     gl_Position = projection_mat * view_mat * model_mat * vec4(vert_coord, 1);
     vec4 p = projection_mat * vec4(radius, radius, frag_eye_position.z, frag_eye_position.w);
     frag_size = 512.0 * p.x / p.w;
-    gl_PointSize = frag_size + 25.0;
+    gl_PointSize = frag_size + 5.0;
 }
 """
 fragment_shader_pseudospheres = """
@@ -256,6 +256,9 @@ fragment_shader_pseudospheres = """
 //#include "antialias/outline.glsl"
 
 uniform mat4 projection_mat;
+uniform vec4 fog_color;
+uniform float fog_start;
+uniform float fog_end;
 
 varying vec3 frag_color;
 varying vec3 frag_light_direction;
@@ -263,7 +266,34 @@ varying vec4 frag_eye_position;
 varying float frag_size;
 varying float frag_radius;
 
+vec4 outline(float distance, float linewidth, float antialias, vec4 fg_color, vec4 bg_color){
+    vec4 frag_color;
+    float t = linewidth/2.0 - antialias;
+    float signed_distance = distance;
+    float border_distance = abs(signed_distance) - t;
+    float alpha = border_distance/antialias;
+    alpha = exp(-alpha*alpha);
+    if (border_distance < 0.0){
+        frag_color = fg_color;
+    }
+    else{
+        if (signed_distance < 0.0){
+            frag_color = mix(bg_color, fg_color, sqrt(alpha));
+        }
+        else{
+            if (abs(signed_distance) < (linewidth/2.0 + antialias)){
+                frag_color = vec4(fg_color.rgb, fg_color.a * alpha);
+            }
+            else{
+                discard;
+            }
+        }
+    }
+    return frag_color;
+}
+
 void main(){
+    float dist =  abs(frag_eye_position.z);
     vec2 P = gl_PointCoord.xy - vec2(0.5, 0.5);
     float point_size = frag_size  + 5.0;
     float distance = length(P*point_size) - frag_size/2;
@@ -271,9 +301,9 @@ void main(){
     float x = texcoord.x;
     float y = texcoord.y;
     float d = 1.0 - x*x - y*y;
-    //if (d <= 0.0){
-    //    discard;
-    //}
+    if (d <= 0.0){
+        discard;
+    }
     float z = sqrt(d);
     vec4 pos = frag_eye_position;
     pos.z += frag_radius*z;
@@ -284,7 +314,14 @@ void main(){
     float diffuse = clamp(dot(normal, frag_light_direction), 0.0, 1.0);
     vec4 color = vec4((0.5 + 0.5 * diffuse) * frag_color, 1.0);
     //gl_FragColor = outline(distance, 1.0, 1.0, vec4(0,0,0,1), color);
-    gl_FragColor = color;
+    if (dist > fog_start){
+        float fog_factor = (fog_end-dist)/(fog_end-fog_start);
+        gl_FragColor = mix(fog_color, color, fog_factor);
+    }
+    else{
+        //gl_FragColor = outline(distance, 1.0, 1.0, vec4(0,0,0,1), color);
+        gl_FragColor = color;
+    }
 }
 """
 
