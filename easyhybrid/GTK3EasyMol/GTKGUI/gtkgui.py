@@ -197,6 +197,16 @@ class GTKGUI ():
                 #cmd.set('valence', 0.0)
                 #self.builder.get_object('handlebox1').hide()
     
+    def on_treemenu_item_selection (self, widget):
+        """ Function doc """
+        #print ( widget)
+        if widget  == self.builder.get_object('menuitem6_center'):
+            print ( widget)
+        if widget  == self.builder.get_object('menuitem5_rename'):
+            print ( widget)
+            #coord = np.array(coord, dtype=np.float32) 
+            #self.vismolSession.glwidget.center_on_atom(coord)
+        
     def on_resize (self, widget):
         """ Function doc """
         print(widget)

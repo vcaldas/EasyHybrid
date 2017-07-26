@@ -659,6 +659,7 @@
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Center</property>
         <property name="use_underline">True</property>
+        <signal name="activate" handler="on_treemenu_item_selection" swapped="no"/>
       </object>
     </child>
     <child>
@@ -683,6 +684,7 @@
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">dots</property>
                 <property name="use_underline">True</property>
+                <signal name="activate" handler="on_treemenu_item_selection" swapped="no"/>
               </object>
             </child>
             <child>
@@ -785,6 +787,7 @@
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Rename</property>
         <property name="use_underline">True</property>
+        <signal name="activate" handler="on_treemenu_item_selection" swapped="no"/>
       </object>
     </child>
     <child>
