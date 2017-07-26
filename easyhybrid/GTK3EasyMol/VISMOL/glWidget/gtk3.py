@@ -814,7 +814,7 @@ class GtkGLWidget(Gtk.GLArea):
             #nearest, hits = self.pick(x, self.get_allocation().height-1-y, self.pick_radius[0], self.pick_radius[1], event)
             #selected = self.select(event, nearest, hits)
             #if selected is not None:
-            #    self.center_on_atom(selected.pos)
+            #    self.center_on_coordinates(selected.pos)
             #    self.zero_reference_point = selected.pos
             #    self.target_point = selected.pos
         if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
@@ -843,8 +843,18 @@ class GtkGLWidget(Gtk.GLArea):
                 self.queue_draw()
             if event.button==2:
                 if self.atom_picked is not None:
-                    self.center_on_atom(self.atom_picked.pos)
+                    #----------------------------------------------------------------------
+                    self.center_on_atom (self.atom_picked)
+                    #selected = self.atom_picked
+                    #coord = [selected.Vobject.frames[self.frame][(selected.index-1)*3  ],
+                    #         selected.Vobject.frames[self.frame][(selected.index-1)*3+1],
+                    #         selected.Vobject.frames[self.frame][(selected.index-1)*3+2],]
+                    #coord = np.array(coord, dtype=np.float32) 
+                    #self.center_on_coordinates(coord) # should be "center on coords" ?
+                    #----------------------------------------------------------------------
+                    #self.center_on_coordinates(self.atom_picked.pos)
                     self.atom_picked = None
+
             if event.button==3:
                 self.glMenu.open_gl_menu(event = event)
     
@@ -1005,7 +1015,20 @@ class GtkGLWidget(Gtk.GLArea):
         pz = self.glcamera.z_near
         return px, py, pz
     
-    def center_on_atom(self, atom_pos):
+    
+    def center_on_atom (self, atom):
+        """ Function doc """
+        #----------------------------------------------------------------------
+        #atom = self.atom_picked
+        coord = [atom.Vobject.frames[self.frame][(atom.index-1)*3  ],
+                 atom.Vobject.frames[self.frame][(atom.index-1)*3+1],
+                 atom.Vobject.frames[self.frame][(atom.index-1)*3+2],]
+        coord = np.array(coord, dtype=np.float32) 
+        self.center_on_coordinates(coord) # should be "center on coords" ?
+        #----------------------------------------------------------------------
+    
+    
+    def center_on_coordinates(self, atom_pos):
         """ Takes the coordinates of an atom in absolute coordinates and first
             transforms them in 4D world coordinates, then takes the unit vector
             of that atom position to generate the loop animation. To generate
