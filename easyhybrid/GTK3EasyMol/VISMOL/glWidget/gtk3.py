@@ -261,6 +261,7 @@ class GtkGLWidget(Gtk.GLArea):
         self.left = -self.right
         self.top = 1
         self.bottom = -1
+        self.button = None
         self.mouse_x = 0
         self.mouse_y = 0
         self.mouse_rotate = False
@@ -416,6 +417,25 @@ class GtkGLWidget(Gtk.GLArea):
                         GL.glUseProgram(0)
                         GL.glDisable(GL.GL_DEPTH_TEST)
         
+        
+        # Selection 
+        #-------------------------------------------------------------------------------
+        for vobject in self.vismolSession.selections[self.vismolSession.current_selection].selected_objects:
+            print(vobject.name,self.vismolSession.selections[self.vismolSession.current_selection].selected_objects[vobject] )
+            #if visObj.dots_vao is None:
+            #    shapes._make_gl_picking_dots (self.dots_program,  vismol_object = visObj)
+            #else:
+            #    GL.glEnable(GL.GL_DEPTH_TEST)
+            #    GL.glUseProgram(self.dots_program)
+            #    GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+            #    self.load_matrices(self.dots_program, visObj.model_mat)
+            #    self.load_dot_params(self.dots_program)
+            #    self._draw_dots(visObj = visObj, indexes = False)
+            #    GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+            #    GL.glUseProgram(0)
+            #    GL.glDisable(GL.GL_DEPTH_TEST)
+        #-------------------------------------------------------------------------------
+        
         if self.show_axis:
             GL.glEnable(GL.GL_DEPTH_TEST)
             GL.glUseProgram(self.axis.gl_axis_program)
@@ -457,6 +477,13 @@ class GtkGLWidget(Gtk.GLArea):
             self.atom_picked = None
         else:
             self.atom_picked = self.vismolSession.atom_dic_id[pickedID]
+            #if self.atom_picked:
+            print (self.atom_picked.name, self.atom_picked.index)
+            
+            if self.button ==1:
+                self.vismolSession._selection_function (self.atom_picked)
+                self.button = None
+        
         self.picking = False
     
     def load_matrices_picking(self, program, model_mat):
@@ -801,12 +828,17 @@ class GtkGLWidget(Gtk.GLArea):
                 self.picking_x = event.x
                 self.picking_y = event.y
                 self.picking =  True
+                self.button  = 1
                 self.queue_draw()
+
+                
             if event.button==2:
                 if self.atom_picked is not None:
+                    self.button  = 2
                     self.center_on_atom(self.atom_picked)
                     self.atom_picked = None
             if event.button==3:
+                self.button  = 3
                 self.glMenu.open_gl_menu(event = event)
     
     def mouse_motion(self, widget, event):
@@ -969,11 +1001,12 @@ class GtkGLWidget(Gtk.GLArea):
     def center_on_atom (self, atom):
         """ Function doc
         """
-        coord = [atom.Vobject.frames[self.frame][(atom.index-1)*3  ],
-                 atom.Vobject.frames[self.frame][(atom.index-1)*3+1],
-                 atom.Vobject.frames[self.frame][(atom.index-1)*3+2],]
-        coord = np.array(coord, dtype=np.float32) 
-        self.center_on_coordinates(atom.Vobject, coord)
+        coords = atom.coords()
+        #coord = [atom.Vobject.frames[self.frame][(atom.index-1)*3  ],
+        #         atom.Vobject.frames[self.frame][(atom.index-1)*3+1],
+        #         atom.Vobject.frames[self.frame][(atom.index-1)*3+2],]
+        coords = np.array(coords, dtype=np.float32) 
+        self.center_on_coordinates(atom.Vobject, coords)
         return True
     
     def center_on_coordinates(self, vismol_object, atom_pos):

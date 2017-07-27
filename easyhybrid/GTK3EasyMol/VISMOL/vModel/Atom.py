@@ -52,4 +52,13 @@ class Atom:
         self.spheres        = False
         self.surface        = False
         self.connected      = []
-
+    
+    def coords (self):
+        """ Function doc """
+        frame  = self.Vobject.vismol_session.glwidget.frame
+        
+        coords = [self.Vobject.frames[frame][(self.index-1)*3  ],
+                  self.Vobject.frames[frame][(self.index-1)*3+1],
+                  self.Vobject.frames[frame][(self.index-1)*3+2],]
+        
+        return coords

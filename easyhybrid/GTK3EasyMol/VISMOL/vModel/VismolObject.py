@@ -46,7 +46,7 @@ class VismolObject:
                   trajectory = None):
         
         """ Class initialiser """
-        self.EMSession = EMSession
+        self.vismol_session = EMSession
         self.actived            = False
         self.editing            = False
         self.Type               = 'molecule'
@@ -148,7 +148,7 @@ class VismolObject:
             #self.atoms[self.atoms.index(atom)].atom_id = counter
             #print  (self.atoms[self.atoms.index(atom)].atom_id)
             atom.index   = index
-            atom.atom_id = self.EMSession.atom_id_counter
+            atom.atom_id = self.vismol_session.atom_id_counter
             atom.Vobject =  self
             if atom.chain in self.chains.keys():
                 ch = self.chains[atom.chain]
@@ -178,13 +178,13 @@ class VismolObject:
             if atom.name == 'CA':
                 ch.backbone.append(atom)
 
-            self.EMSession.atom_dic_id[self.EMSession.atom_id_counter] = atom
+            self.vismol_session.atom_dic_id[self.vismol_session.atom_id_counter] = atom
             
             sum_x += atom.pos[0]
             sum_y += atom.pos[1]
             sum_z += atom.pos[2]
             index   +=1
-            self.EMSession.atom_id_counter +=1
+            self.vismol_session.atom_id_counter +=1
             
         #self.frames.append(frame)
         total = len(self.atoms)
@@ -238,7 +238,7 @@ class VismolObject:
             
             pickedID = r + g * 256 + b * 256*256
             print (pickedID)
-            self.EMSession.atom_dic_id[pickedID] = atom
+            self.vismol_session.atom_dic_id[pickedID] = atom
             
             #-------------------------------------------------------
             #                      Colors
@@ -255,8 +255,6 @@ class VismolObject:
         self.color_indexes = np.array(self.color_indexes, dtype=np.float32)
         self.colors        = np.array(self.colors       , dtype=np.float32)    
         self.vdw_dot_sizes = np.array(self.vdw_dot_sizes, dtype=np.float32)
-
-
 
     def _generate_colors  (self):
         """ Function doc """
@@ -305,3 +303,9 @@ class VismolObject:
         self.model_mat = np.copy(mat)
         return True
     
+    def pos (self, frame = None):
+        """ Function doc """
+        
+        
+        
+        

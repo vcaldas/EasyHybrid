@@ -22,6 +22,7 @@
 #  
 #  
 
+#import numpy as np
 
 
 class VisMolPickingSelection:
@@ -74,8 +75,9 @@ class VisMolViewingSelection:
         self.actived = True
         
         self._selection_mode    = 'residue'
-        
+        self.selected_objects          = {}
         self.viewing_selections = []
+        self.viewing_selections_coords = []
         
         self.selected_residues  = []
         
@@ -83,17 +85,6 @@ class VisMolViewingSelection:
         self.selected_atoms = []
         self.selected_frames= []
 	
-    def _generate_viewing_selection_coordinates (self):
-        """ Function doc """
-        pass
-        
-        #for i,atom in enumerate(self.EMSession.selections[self.EMSession.current_selection].viewing_selections):
-        #    #print (atom, atom.index, frame, atom.Vobject_id, self.EMSession.Vobjects[atom.Vobject_id].frames, self.EMSession.Vobjects[atom.Vobject_id].coords  )
-        #    #rep.draw_picked(atom)
-        #    coord = atom.Vobject.frames[frame][atom.index-1]
-        #    #glVertex3f(coord1[0], coord1[1], coord1[2])
-        #    rep.draw_selected(atom, coord)
-        ##'''
     
     def selecting_by_atom (self, selected):
         """ Function doc """
@@ -112,7 +103,7 @@ class VisMolViewingSelection:
             for atom in selected.residue.atoms:
                 print (len(selected.residue.atoms), atom.name, atom.index)
                 
-        # the atom is not on the list -  add atom by atom
+                # the atom is not on the list -  add atom by atom
                 if atom not in self.viewing_selections:
                     self.viewing_selections.append(atom)
                 
@@ -172,74 +163,28 @@ class VisMolViewingSelection:
         else:
             if self._selection_mode == 'atom':
                 self.selecting_by_atom (selected)
-                '''
-                #if selected not in self.viewing_selections:
-                #    self.viewing_selections.append(selected)
-                #    
-                #else:
-                #    index = self.viewing_selections.index(selected)
-                #    self.viewing_selections.pop(index)
-                '''
             
             elif self._selection_mode == 'residue':
                 self.selecting_by_residue (selected)
-                '''
-                #if selected not in self.viewing_selections:
-                #    
-                #    for atom in selected.residue.atoms:
-                #        print (len(selected.residue.atoms), atom.name, atom.index)
-                #        
-                ## the atom is not on the list -  add atom by atom
-                #        if atom not in self.viewing_selections:
-                #            self.viewing_selections.append(atom)
-                #        
-                #        # the atom IS on the list - do nothing 
-                #        else:
-                #            pass
-                #
-                ## if the selected atoms IS on the selected list
-                #else:
-                #    # So, add all atoms  - selected residue <- selected.resi
-                #    for atom in selected.residue.atoms:
-                #        
-                #        # the atom is not on the list -  add atom by atom
-                #        if atom in self.viewing_selections:
-                #            index = self.viewing_selections.index(atom)
-                #            self.viewing_selections.pop(index)                            
-                #        # the atom IS on the list - do nothing 
-                #        else:
-                #            pass                    
-                '''
-                
+
             elif self._selection_mode == 'chain':
                 self.selecting_by_chain (selected)
-                '''
-                ## if the selected atoms is not on the selected list
-                #if selected not in self.viewing_selections:
-                #    # So, add all atoms  - selected residue <- selected.resi
-                #    for residue in selected.Vobject.chains[selected.chain].residues:
-                #        for atom in residue.atoms:
-                #            # the atom is not on the list -  add atom by atom
-                #            if atom not in self.viewing_selections:
-                #                self.viewing_selections.append(atom)
-                #            
-                #            # the atom IS on the list - do nothing 
-                #            else:
-                #                pass
-                #
-                ## if the selected atoms IS on the selected list
-                #else:
-                #    for residue in selected.Vobject.chains[selected.chain].residues:
-                #        #for residue in chain.residues:
-                #        for atom in residue.atoms:
-                #            # the atom is not on the list -  add atom by atom
-                #            if atom in self.viewing_selections:
-                #                index = self.viewing_selections.index(atom)
-                #                self.viewing_selections.pop(index)                            
-                #            # the atom IS on the list - do nothing 
-                #            else:
-                #                pass          
-                #
-                #print ('selected atoms: ',len(self.viewing_selections))
-                '''
         
+        self.viewing_selections_coords = []
+        self.selected_objects          = {}
+        for atom in self.viewing_selections:
+            
+            if atom.Vobject in self.selected_objects:
+                self.selected_objects[atom.Vobject] += [atom.index-1]
+            else:
+                self.selected_objects[atom.Vobject] = [atom.index-1]
+            
+            coords =  atom.coords()
+            self.viewing_selections_coords = self.viewing_selections_coords + coords
+            
+        #print  (self.viewing_selections_coords)      
+        #for vobject in     self.selected_objects:
+        #    print(vobject.name,self.selected_objects[vobject] )
+            
+        
+            

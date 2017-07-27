@@ -204,7 +204,8 @@ class VisMolSession (ShowHideVisMol):
         #---------------------------------------------------------------------------
         
         
-        
+        # F R A M E
+        self.frame = 0
         
         
         self._picking_selection_mode = False # True/False  - interchange between viewing  and picking mode
@@ -341,6 +342,15 @@ class VisMolSession (ShowHideVisMol):
         if self._picking_selection_mode:
             self.picking_selections.selection_function_picking(selected)
         
+        else:
+            self.selections[self.current_selection].selection_function_viewing(selected)
+
+    def _selection_function (self, selected):
+        #"""     P I C K I N G     S E L E C T I O N S     """
+        if self._picking_selection_mode:
+            self.picking_selections.selection_function_picking(selected)
+        
+        #"""     V I E W I N G     S E L E C T I O N S     """
         else:
             self.selections[self.current_selection].selection_function_viewing(selected)
 
