@@ -81,7 +81,7 @@ def my_glForwardVectorAbs(in_matrix):
     side = np.array([[0],[0],[-1],[1]],dtype=np.float32)
     side = np.array(inv_mat*side).T
     return side[0,:3]
-    
+
 def my_glScalef(in_matrix, scale_vec):
     x_scale = np.float32(scale_vec[0])
     y_scale = np.float32(scale_vec[1])
@@ -175,7 +175,7 @@ def my_glOrthof(left, rigth, bottom, top, near, far):
     ortho[3,2] = (far+near)/(near-far)
     ortho[3,3] = 1
     return ortho
-    
+
 def get_xyz_coords(xyz_mat):
     """ Returns the x, y, z position contained in the xyz_mat matrix. The
         input matrix needs to be a 4x4 matrix.
@@ -186,7 +186,14 @@ def get_xyz_coords(xyz_mat):
     pos = -xyz_mat[3,:3]
     position = pos.dot(rot_mat)
     return position
-    
+
+def get_inverse_matrix(mat):
+    """ Function doc
+    """
+    mat_o = np.matrix(np.copy(mat))
+    assert(mat.shape == (4,4))
+    return np.array(mat_o.I)
+
 #def my_glScalef(scale):
     #scale_matrix = np.identity(4, dtype=np.float32)
     #scale_matrix[0,0] = scale

@@ -368,7 +368,7 @@ class GtkGLWidget(Gtk.GLArea):
             self.shader_flag = False
         
         if self.picking:
-            self.pick()
+            self._pick()
         
         GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
                         self.bckgrnd_color[2],self.bckgrnd_color[3])
@@ -429,7 +429,7 @@ class GtkGLWidget(Gtk.GLArea):
             GL.glUseProgram(0)
             GL.glDisable(GL.GL_DEPTH_TEST)
     
-    def pick(self):
+    def _pick(self):
         """ Function doc
         """
         GL.glClearColor(1,1,1,1)
@@ -734,13 +734,13 @@ class GtkGLWidget(Gtk.GLArea):
     def _pressed_m(self):
         """ Function doc
         """
-        #self.glcamera.print_matrices()
-        for visObj in self.vismolSession.vismol_objects:
-            #print(visObj.model_mat,"Matriz de modelo")
-            visObj.dots_actived = not visObj.dots_actived
-            visObj.lines_actived = not visObj.lines_actived
-            visObj.pseudospheres_actived = not visObj.pseudospheres_actived
-        self.queue_draw()
+        self._print_matrices()
+        #for visObj in self.vismolSession.vismol_objects:
+        #    #print(visObj.model_mat,"Matriz de modelo")
+        #    visObj.dots_actived = not visObj.dots_actived
+        #    visObj.lines_actived = not visObj.lines_actived
+        #    visObj.pseudospheres_actived = not visObj.pseudospheres_actived
+        #self.queue_draw()
         return True
     
     def _pressed_Control_L(self):
@@ -846,21 +846,22 @@ class GtkGLWidget(Gtk.GLArea):
                     if visObj.editing:
                         visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
             
-            self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, -self.axis.zrp)
-            if self.ctrl:
-                if abs(dx) >= abs(dy):
-                    if (y-self.height/2) < 0:
-                        self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0, 0, dx])
+            if not self.editing_mols:
+                self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, -self.axis.zrp)
+                if self.ctrl:
+                    if abs(dx) >= abs(dy):
+                        if (y-self.height/2) < 0:
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0, 0, dx])
+                        else:
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0, 0, -dx])
                     else:
-                        self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0, 0, -dx])
+                        if (x-self.width/2) < 0:
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0, 0, -dy])
+                        else:
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0, 0, dy])
                 else:
-                    if (x-self.width/2) < 0:
-                        self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0, 0, -dy])
-                    else:
-                        self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0, 0, dy])
-            else:
-                self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [dy, dx, 0])
-            self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, self.axis.zrp)
+                    self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [dy, dx, 0])
+                self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, self.axis.zrp)
             
             changed = True
         elif self.mouse_pan:
@@ -972,10 +973,10 @@ class GtkGLWidget(Gtk.GLArea):
                  atom.Vobject.frames[self.frame][(atom.index-1)*3+1],
                  atom.Vobject.frames[self.frame][(atom.index-1)*3+2],]
         coord = np.array(coord, dtype=np.float32) 
-        self.center_on_coordinates(coord)
+        self.center_on_coordinates(atom.Vobject, coord)
         return True
     
-    def center_on_coordinates(self, atom_pos):
+    def center_on_coordinates(self, vismol_object, atom_pos):
         """ Takes the coordinates of an atom in absolute coordinates and first
             transforms them in 4D world coordinates, then takes the unit vector
             of that atom position to generate the loop animation. To generate
@@ -991,17 +992,12 @@ class GtkGLWidget(Gtk.GLArea):
         """
         import time
         pos = np.array([atom_pos[0],atom_pos[1],atom_pos[2],1],dtype=np.float32)
-        model_pos = self.model_mat.T.dot(pos)
+        model_pos = vismol_object.model_mat.T.dot(pos)
         self.model_mat = mop.my_glTranslatef(self.model_mat, -model_pos[:3])
         unit_vec = op.unit_vector(model_pos)
         dist = op.get_euclidean(model_pos, [0.0,0.0,0.0])
         step = dist/15.0
         to_move = unit_vec * step
-        #for visObj in self.vismolSession.vismol_objects:
-            #visObj.target = visObj.model_mat.T.dot(pos)
-            #visObj.dir_vector = op.unit_vector(visObj.target)
-            #visObj.distance = op.get_euclidean(visObj.target, [0.0,0.0,0.0])
-            #visObj.step = dist/15.0
         for i in range(15):
             to_move = unit_vec * step
             for visObj in self.vismolSession.vismol_objects:
@@ -1009,8 +1005,13 @@ class GtkGLWidget(Gtk.GLArea):
             self.get_window().invalidate_rect(None, False)
             self.get_window().process_updates(False)
             time.sleep(0.02)
-        for visObj in self.vismolSession.vismol_objects:
-            model_pos = visObj.model_mat.T.dot(pos)
-            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -model_pos[:3])
         self.queue_draw()
+    
+    def _print_matrices(self):
+        """ Function doc
+        """
+        print(self.model_mat,"<== widget model_mat")
+        for visObj in self.vismolSession.vismol_objects:
+            print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+            print(visObj.model_mat,"<== visObj model_mat")
     

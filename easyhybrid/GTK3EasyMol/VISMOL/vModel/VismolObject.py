@@ -109,8 +109,9 @@ class VismolObject:
         self.pseudospheres_buffers = None
         self.dot_indexes    = None
         self.model_mat = np.identity(4, dtype=np.float32)
+        self.trans_mat = np.identity(4, dtype=np.float32)
         self.target = None
-        self.dir_vector = None
+        self.unit_vec = None
         self.distance = None
         self.step = None
 
