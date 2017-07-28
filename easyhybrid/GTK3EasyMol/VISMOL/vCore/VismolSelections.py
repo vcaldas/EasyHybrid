@@ -22,7 +22,7 @@
 #  
 #  
 
-#import numpy as np
+import numpy as np
 
 
 class VisMolPickingSelection:
@@ -170,6 +170,7 @@ class VisMolViewingSelection:
             elif self._selection_mode == 'chain':
                 self.selecting_by_chain (selected)
         
+        
         self.viewing_selections_coords = []
         self.selected_objects          = {}
         for atom in self.viewing_selections:
@@ -181,7 +182,10 @@ class VisMolViewingSelection:
             
             coords =  atom.coords()
             self.viewing_selections_coords = self.viewing_selections_coords + coords
-            
+        
+        
+        for vobject in self.selected_objects:
+            self.selected_objects[vobject] =  np.array(self.selected_objects[vobject], dtype=np.uint16)         
         #print  (self.viewing_selections_coords)      
         #for vobject in     self.selected_objects:
         #    print(vobject.name,self.selected_objects[vobject] )

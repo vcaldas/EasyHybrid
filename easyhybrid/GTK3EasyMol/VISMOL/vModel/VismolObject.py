@@ -108,6 +108,10 @@ class VismolObject:
         self.line_buffers   = None
         self.pseudospheres_buffers = None
         self.dot_indexes    = None
+        
+        self.selection_dots_vao      = None
+        self.selection_dot_buffers   = None
+        
         self.model_mat = np.identity(4, dtype=np.float32)
         self.trans_mat = np.identity(4, dtype=np.float32)
         self.target = None

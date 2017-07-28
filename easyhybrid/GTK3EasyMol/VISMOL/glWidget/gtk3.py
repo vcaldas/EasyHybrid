@@ -420,20 +420,33 @@ class GtkGLWidget(Gtk.GLArea):
         
         # Selection 
         #-------------------------------------------------------------------------------
-        for vobject in self.vismolSession.selections[self.vismolSession.current_selection].selected_objects:
-            print(vobject.name,self.vismolSession.selections[self.vismolSession.current_selection].selected_objects[vobject] )
-            #if visObj.dots_vao is None:
-            #    shapes._make_gl_picking_dots (self.dots_program,  vismol_object = visObj)
-            #else:
-            #    GL.glEnable(GL.GL_DEPTH_TEST)
-            #    GL.glUseProgram(self.dots_program)
-            #    GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-            #    self.load_matrices(self.dots_program, visObj.model_mat)
-            #    self.load_dot_params(self.dots_program)
-            #    self._draw_dots(visObj = visObj, indexes = False)
-            #    GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-            #    GL.glUseProgram(0)
-            #    GL.glDisable(GL.GL_DEPTH_TEST)
+        for visObj in self.vismolSession.selections[self.vismolSession.current_selection].selected_objects:
+            #print(vobject.name,self.vismolSession.selections[self.vismolSession.current_selection].selected_objects[vobject] )
+            if visObj.selection_dots_vao is None:
+                shapes._make_gl_selection_dots (self.dots_program,  vismol_object = visObj)
+            else:
+                GL.glEnable(GL.GL_DEPTH_TEST)
+                GL.glUseProgram(self.dots_program)
+                GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                self.load_matrices(self.dots_program, visObj.model_mat)
+                self.load_dot_params(self.dots_program)
+                
+                #self._draw_dots(visObj = visObj, indexes = False)
+                
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.selection_dot_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                visObj.frames[self.frame], GL.GL_STATIC_DRAW)   
+
+                GL.glDrawElements(GL.GL_POINTS, self.vismolSession.selections[self.vismolSession.current_selection].selected_objects[visObj], GL.GL_UNSIGNED_SHORT, None)
+                
+                
+                
+                
+                
+                
+                GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                GL.glUseProgram(0)
+                #GL.glDisable(GL.GL_DEPTH_TEST)
         #-------------------------------------------------------------------------------
         
         if self.show_axis:
