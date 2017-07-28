@@ -393,15 +393,16 @@ class GtkGLWidget(Gtk.GLArea):
                     if visObj.dots_vao is None:
                         shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
                     else:
-                        GL.glEnable(GL.GL_DEPTH_TEST)
-                        GL.glUseProgram(self.dots_program)
-                        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                        self.load_matrices(self.dots_program, visObj.model_mat)
-                        self.load_dot_params(self.dots_program)
-                        self._draw_dots(visObj = visObj, indexes = False)
-                        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                        GL.glUseProgram(0)
-                        GL.glDisable(GL.GL_DEPTH_TEST)
+                        pass
+                        #GL.glEnable(GL.GL_DEPTH_TEST)
+                        #GL.glUseProgram(self.dots_program)
+                        #GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                        #self.load_matrices(self.dots_program, visObj.model_mat)
+                        #self.load_dot_params(self.dots_program)
+                        #self._draw_dots(visObj = visObj, indexes = False)
+                        #GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                        #GL.glUseProgram(0)
+                        #GL.glDisable(GL.GL_DEPTH_TEST)
                 
                 if visObj.pseudospheres_actived:
                     if visObj.pseudospheres_vao is None:
@@ -420,6 +421,38 @@ class GtkGLWidget(Gtk.GLArea):
         
         # Selection 
         #-------------------------------------------------------------------------------
+        for visObj in self.vismolSession.selections[self.vismolSession.current_selection].selected_objects:
+            if visObj.selection_dots_vao is None:
+                shapes._make_gl_selection_dots(self.picking_dots_program, vismol_object = visObj)
+            
+            #GL.glEnable(GL.GL_DEPTH_TEST)
+            GL.glUseProgram(self.picking_dots_program)
+            GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+            self.load_matrices_picking(self.picking_dots_program, visObj.model_mat)
+            
+            indexes = self.vismolSession.selections[self.vismolSession.current_selection].selected_objects[visObj]
+            
+            #self._draw_picking_dots(visObj = visObj, indexes = False)
+            GL.glBindVertexArray(visObj.selection_dots_vao)
+            
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.selection_dot_buffers[0])
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), 
+                            indexes, GL.GL_STATIC_DRAW)
+            
+            
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.selection_dot_buffers[1])
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                            visObj.frames[self.frame], GL.GL_STATIC_DRAW)
+
+            GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_SHORT, None)
+            GL.glBindVertexArray(0)
+            
+            GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+            GL.glUseProgram(0)
+            GL.glDisable(GL.GL_DEPTH_TEST)
+        
+        
+        
         #for visObj in self.vismolSession.selections[self.vismolSession.current_selection].selected_objects:
         #    #print(vobject.name,self.vismolSession.selections[self.vismolSession.current_selection].selected_objects[vobject] )
         #    if visObj.selection_dots_vao is None:
@@ -486,13 +519,16 @@ class GtkGLWidget(Gtk.GLArea):
         #print (pos, self.picking_x, self.picking_y, data)
         pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
         #print(pickedID, "<= atom index")
+        
         if pickedID == 16777215:
             self.atom_picked = None
+            if self.button ==1:
+                self.vismolSession._selection_function (self.atom_picked)
+                self.button = None
+
         else:
             self.atom_picked = self.vismolSession.atom_dic_id[pickedID]
-            #if self.atom_picked:
-            print (self.atom_picked.name, self.atom_picked.index)
-            
+            #print (self.atom_picked.name, self.atom_picked.index)
             if self.button ==1:
                 self.vismolSession._selection_function (self.atom_picked)
                 self.button = None
@@ -1050,7 +1086,7 @@ class GtkGLWidget(Gtk.GLArea):
                 visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move[:3])
             self.get_window().invalidate_rect(None, False)
             self.get_window().process_updates(False)
-            time.sleep(0.02)
+            time.sleep(0.01)
         self.queue_draw()
     
     def _print_matrices(self):

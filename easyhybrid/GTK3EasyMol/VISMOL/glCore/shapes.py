@@ -412,8 +412,7 @@ def _make_gl_selection_dots(program, vismol_object = None):
     coords    = vismol_object.frames[0]
     colors    = [0.,1.,1.]*int(len(coords)/3)
     colors    = np.array(colors, dtype=np.float32)
-    
-    
+   
     dot_qtty = int(len(coords)/3)
     
     #bckgrnd_color = [bckgrnd_color[0],bckgrnd_color[1],
@@ -433,6 +432,10 @@ def _make_gl_selection_dots(program, vismol_object = None):
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
     GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), indexes, GL.GL_DYNAMIC_DRAW)
     
+    ind_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
+    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), indexes, GL.GL_DYNAMIC_DRAW)
+    
     coord_vbo = GL.glGenBuffers(1)
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, coord_vbo)
     GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.itemsize*int(len(coords)), coords, GL.GL_STATIC_DRAW)
@@ -447,26 +450,10 @@ def _make_gl_selection_dots(program, vismol_object = None):
     GL.glEnableVertexAttribArray(att_colors)
     GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
     
-    dot_vbo = GL.glGenBuffers(1)
-    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, dot_vbo)
-    GL.glBufferData(GL.GL_ARRAY_BUFFER, dot_sizes.itemsize*len(dot_sizes), dot_sizes, GL.GL_STATIC_DRAW)
-    att_size = GL.glGetAttribLocation(program, 'vert_dot_size')
-    GL.glEnableVertexAttribArray(att_size)
-    GL.glVertexAttribPointer(att_size, 1, GL.GL_FLOAT, GL.GL_FALSE, dot_sizes.itemsize, ctypes.c_void_p(0))
-    
-    bckgrnd_vbo = GL.glGenBuffers(1)
-    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, bckgrnd_vbo)
-    GL.glBufferData(GL.GL_ARRAY_BUFFER, bckgrnd_color.itemsize*len(bckgrnd_color), bckgrnd_color, GL.GL_STATIC_DRAW)
-    att_bck_color = GL.glGetAttribLocation(program, 'bckgrnd_color')
-    GL.glEnableVertexAttribArray(att_bck_color)
-    GL.glVertexAttribPointer(att_bck_color, 4, GL.GL_FLOAT, GL.GL_FALSE, 4*bckgrnd_color.itemsize, ctypes.c_void_p(0))
-    
     #vao_list.append(vao)
     GL.glBindVertexArray(0)
     GL.glDisableVertexAttribArray(att_position)
     GL.glDisableVertexAttribArray(att_colors)
-    GL.glDisableVertexAttribArray(att_size)
-    GL.glDisableVertexAttribArray(att_bck_color)
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
     
