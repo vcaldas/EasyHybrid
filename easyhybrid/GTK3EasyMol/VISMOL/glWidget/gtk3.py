@@ -314,7 +314,7 @@ class GtkGLWidget(Gtk.GLArea):
             print('OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION))
         except:
             print('OpenGL major version not found')
-        self.pseudospheres_program = self.load_shaders(vm_shader.vertex_shader_pseudospheres, vm_shader.fragment_shader_pseudospheres)
+        self.pseudospheres_program = self.load_shaders(vm_shader.vertex_shader_pseudospheres, vm_shader.fragment_shader_pseudospheres, vm_shader.geometry_shader_pseudospheres)
         self.dots_program = self.load_shaders(vm_shader.vertex_shader_dots, vm_shader.fragment_shader_dots)
         self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
         self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
@@ -406,15 +406,13 @@ class GtkGLWidget(Gtk.GLArea):
                 
                 if visObj.pseudospheres_actived:
                     if visObj.pseudospheres_vao is None:
-                        shapes._make_gl_pseudospheres(self.pseudospheres_program,  vismol_object = visObj)
+                        shapes._make_gl_pseudospheres(self.pseudospheres_program, vismol_object = visObj)
                     else:
+                        #print("pseudospheres")
                         GL.glEnable(GL.GL_DEPTH_TEST)
                         GL.glUseProgram(self.pseudospheres_program)
-                        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                        self.load_matrices(self.pseudospheres_program, visObj.model_mat)
-                        self.load_lights(self.pseudospheres_program)
+                        self.load_matrices_picking(self.pseudospheres_program, visObj.model_mat)
                         self._draw_pseudospheres(visObj = visObj, indexes = False)
-                        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
                         GL.glUseProgram(0)
                         GL.glDisable(GL.GL_DEPTH_TEST)
         
@@ -620,21 +618,7 @@ class GtkGLWidget(Gtk.GLArea):
         """
         if visObj.pseudospheres_vao is not None:
             GL.glBindVertexArray(visObj.pseudospheres_vao)
-            if self.modified_view:
-                pass
-            #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
-            #    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_indexes.itemsize*int(len(visObj.dot_indexes)), visObj.dot_indexes, GL.GL_DYNAMIC_DRAW)
-            #    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
-            #    GL.glBindVertexArray(0)
-            #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-            #    self.modified_view = False
-            else:
-                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.pseudospheres_buffers[1])
-                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), visObj.frames[self.frame], GL.GL_STATIC_DRAW)   
-                if indexes:
-                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.pseudospheres_buffers[2])            
-                    GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
-                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
+            GL.glDrawElements(GL.GL_POINTS, visObj.spheres_elemns, GL.GL_UNSIGNED_SHORT, None)
         GL.glBindVertexArray(0)
     
     

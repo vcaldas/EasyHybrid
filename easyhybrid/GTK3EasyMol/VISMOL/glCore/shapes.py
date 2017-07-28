@@ -264,20 +264,17 @@ def make_gl_lines(program, bond_list, atom_list):
     return vao, (ind_vbo, coord_vbo, col_vbo)
 
 
-def _make_gl_pseudospheres(program, vismol_object = None, bckgrnd_color= [0.0,0.0,0.0,1.0]):
+def _make_gl_pseudospheres(program, vismol_object = None):
     """ Function doc
     """
     colors = vismol_object.colors
     radios = np.copy(vismol_object.vdw_dot_sizes)
-    radios /= 2.9
     coords = vismol_object.frames[0]
     dot_qtty = int(len(coords)/3)
     indexes = []
     for i in range(dot_qtty):
         indexes.append(i)
     indexes = np.array(indexes,dtype=np.uint16)
-    bckgrnd_color = [bckgrnd_color[0],bckgrnd_color[1], bckgrnd_color[2],bckgrnd_color[3]]*dot_qtty
-    bckgrnd_color = np.array(bckgrnd_color, dtype=np.float32)
     
     vao = GL.glGenVertexArrays(1)
     GL.glBindVertexArray(vao)
@@ -288,33 +285,33 @@ def _make_gl_pseudospheres(program, vismol_object = None, bckgrnd_color= [0.0,0.
     
     coord_vbo = GL.glGenBuffers(1)
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, coord_vbo)
-    GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.itemsize*int(len(coords)), coords, GL.GL_STATIC_DRAW)
-    att_position = GL.glGetAttribLocation(program, 'vert_coord')
-    GL.glEnableVertexAttribArray(att_position)
-    GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*coords.itemsize, ctypes.c_void_p(0))
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.itemsize*len(coords), coords, GL.GL_STATIC_DRAW)
+    gl_coord = GL.glGetAttribLocation(program, 'vert_coord')
+    GL.glEnableVertexAttribArray(gl_coord)
+    GL.glVertexAttribPointer(gl_coord, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*coords.itemsize, ctypes.c_void_p(0))
     
     col_vbo = GL.glGenBuffers(1)
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
-    GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*int(len(colors)), colors, GL.GL_STATIC_DRAW)
-    att_colors = GL.glGetAttribLocation(program, 'vert_color')
-    GL.glEnableVertexAttribArray(att_colors)
-    GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*len(colors), colors, GL.GL_STATIC_DRAW)
+    gl_color = GL.glGetAttribLocation(program, 'vert_color')
+    GL.glEnableVertexAttribArray(gl_color)
+    GL.glVertexAttribPointer(gl_color, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
     
-    dot_vbo = GL.glGenBuffers(1)
-    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, dot_vbo)
+    rad_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, rad_vbo)
     GL.glBufferData(GL.GL_ARRAY_BUFFER, radios.itemsize*len(radios), radios, GL.GL_STATIC_DRAW)
-    att_size = GL.glGetAttribLocation(program, 'radius')
-    GL.glEnableVertexAttribArray(att_size)
-    GL.glVertexAttribPointer(att_size, 1, GL.GL_FLOAT, GL.GL_FALSE, radios.itemsize, ctypes.c_void_p(0))
+    gl_rad = GL.glGetAttribLocation(program, 'vert_rad')
+    GL.glEnableVertexAttribArray(gl_rad)
+    GL.glVertexAttribPointer(gl_rad, 1, GL.GL_FLOAT, GL.GL_FALSE, colors.itemsize, ctypes.c_void_p(0))
     
     GL.glBindVertexArray(0)
-    GL.glDisableVertexAttribArray(att_position)
-    GL.glDisableVertexAttribArray(att_colors)
-    GL.glDisableVertexAttribArray(att_size)
+    GL.glDisableVertexAttribArray(gl_coord)
+    GL.glDisableVertexAttribArray(gl_color)
+    GL.glDisableVertexAttribArray(gl_rad)
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
     
     vismol_object.pseudospheres_vao = vao
+    vismol_object.spheres_elemns = int(len(coords))
     vismol_object.pseudospheres_buffers = (ind_vbo, coord_vbo, col_vbo)
     return True
 

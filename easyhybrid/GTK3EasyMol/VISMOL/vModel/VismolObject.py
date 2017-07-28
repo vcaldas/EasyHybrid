@@ -70,16 +70,16 @@ class VismolObject:
         #self._generate_colors()
         
         """   L I N E S   """
-        self.lines_actived =  True
+        self.lines_actived =  False
         
         #self.line_representation = LineRepresentation(self)
         #self.line_representation.update()
 
         """   D O T S   """
-        self.dots_actived =  True
+        self.dots_actived =  False
 
         """   F L A T   S P H E R E   """
-        self.pseudospheres_actived =  False
+        self.pseudospheres_actived =  True
 
         #self.flat_sphere_representation = FlatSphereRepresentation(self)
         
