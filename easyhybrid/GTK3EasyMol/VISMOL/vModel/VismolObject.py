@@ -128,7 +128,7 @@ class VismolObject:
         self.dot_indexes = []
         for i in range(int(len(self.atoms))):
             self.dot_indexes.append(i)
-        self.dot_indexes = np.array(self.dot_indexes, dtype=np.uint16)
+        self.dot_indexes = np.array(self.dot_indexes, dtype=np.uint32)
     
     def _generate_chain_structure (self):
         """ Function doc """

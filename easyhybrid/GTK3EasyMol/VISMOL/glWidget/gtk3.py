@@ -448,6 +448,7 @@ class GtkGLWidget(Gtk.GLArea):
             GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
                             visObj.frames[self.frame], GL.GL_STATIC_DRAW)
 
+            #GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_SHORT, None)
             GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_INT, None)
             GL.glBindVertexArray(0)
             

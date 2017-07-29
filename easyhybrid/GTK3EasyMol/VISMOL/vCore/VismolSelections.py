@@ -185,7 +185,7 @@ class VisMolViewingSelection:
         
         
         for vobject in self.selected_objects:
-            self.selected_objects[vobject] =  np.array(self.selected_objects[vobject], dtype=np.uint16)         
+            self.selected_objects[vobject] =  np.array(self.selected_objects[vobject], dtype=np.uint32)         
         
         #print  (self.viewing_selections_coords)      
         #for vobject in     self.selected_objects:
