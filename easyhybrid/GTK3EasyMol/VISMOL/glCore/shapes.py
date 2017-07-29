@@ -268,7 +268,7 @@ def _make_gl_pseudospheres(program, vismol_object = None):
     """ Function doc
     """
     colors = vismol_object.colors
-    radios = np.copy(vismol_object.vdw_dot_sizes)
+    radios = vismol_object.cov_dot_sizes
     coords = vismol_object.frames[0]
     dot_qtty = int(len(coords)/3)
     indexes = []
@@ -311,7 +311,6 @@ def _make_gl_pseudospheres(program, vismol_object = None):
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
     
     vismol_object.pseudospheres_vao = vao
-    vismol_object.spheres_elemns = int(len(coords))
     vismol_object.pseudospheres_buffers = (ind_vbo, coord_vbo, col_vbo)
     return True
 

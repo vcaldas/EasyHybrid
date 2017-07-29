@@ -411,7 +411,7 @@ class GtkGLWidget(Gtk.GLArea):
                         #print("pseudospheres")
                         GL.glEnable(GL.GL_DEPTH_TEST)
                         GL.glUseProgram(self.pseudospheres_program)
-                        self.load_matrices_picking(self.pseudospheres_program, visObj.model_mat)
+                        self.load_matrices(self.pseudospheres_program, visObj.model_mat)
                         self._draw_pseudospheres(visObj = visObj, indexes = False)
                         GL.glUseProgram(0)
                         GL.glDisable(GL.GL_DEPTH_TEST)
@@ -538,13 +538,13 @@ class GtkGLWidget(Gtk.GLArea):
             
             model_mat -- transformation matrix for the objects rendered
             view_mat -- transformation matrix for the camera used
-            projection_mat -- matrix for the space to be visualized in the scene
+            proj_mat -- matrix for the space to be visualized in the scene
         """
         model = GL.glGetUniformLocation(program, 'model_mat')
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, model_mat)
         view = GL.glGetUniformLocation(program, 'view_mat')
         GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.view_matrix)
-        proj = GL.glGetUniformLocation(program, 'projection_mat')
+        proj = GL.glGetUniformLocation(program, 'proj_mat')
         GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
         return True
         
@@ -553,13 +553,13 @@ class GtkGLWidget(Gtk.GLArea):
             
             model_mat -- transformation matrix for the objects rendered
             view_mat -- transformation matrix for the camera used
-            projection_mat -- matrix for the space to be visualized in the scene
+            proj_mat -- matrix for the space to be visualized in the scene
         """
         model = GL.glGetUniformLocation(program, 'model_mat')
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, model_mat)
         view = GL.glGetUniformLocation(program, 'view_mat')
         GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.view_matrix)
-        proj = GL.glGetUniformLocation(program, 'projection_mat')
+        proj = GL.glGetUniformLocation(program, 'proj_mat')
         GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
         fog_s = GL.glGetUniformLocation(program, 'fog_start')
         GL.glUniform1fv(fog_s, 1, self.glcamera.fog_start)
@@ -618,7 +618,22 @@ class GtkGLWidget(Gtk.GLArea):
         """
         if visObj.pseudospheres_vao is not None:
             GL.glBindVertexArray(visObj.pseudospheres_vao)
-            GL.glDrawElements(GL.GL_POINTS, visObj.spheres_elemns, GL.GL_UNSIGNED_SHORT, None)
+            if self.modified_view:
+                pass
+            #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
+            #    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_indexes.itemsize*int(len(visObj.dot_indexes)), visObj.dot_indexes, GL.GL_DYNAMIC_DRAW)
+            #    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
+            #    GL.glBindVertexArray(0)
+            #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+            #    self.modified_view = False
+            else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.pseudospheres_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                visObj.frames[self.frame], GL.GL_STATIC_DRAW)   
+                if  indexes:
+                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.pseudospheres_buffers[2])            
+                    GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
         GL.glBindVertexArray(0)
     
     

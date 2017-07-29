@@ -196,18 +196,18 @@ def get_cov_rad(name):
     """
     """
     try:
-        rad = ATOM_TYPES[name][6]/2.0
+        rad = ATOM_TYPES[name][5]
     except KeyError:
         if name[0] == 'H' or name in hydrogen:
-            rad = ATOM_TYPES['H'][6]/2.0
+            rad = ATOM_TYPES['H'][5]
         elif name[0] == 'C':
-            rad = ATOM_TYPES['C'][6]/2.0
+            rad = ATOM_TYPES['C'][5]
         elif name[0] == 'O':
-            rad = ATOM_TYPES['O'][6]/2.0
+            rad = ATOM_TYPES['O'][5]
         elif name[0] == 'N':
-            rad = ATOM_TYPES['N'][6]/2.0
+            rad = ATOM_TYPES['N'][5]
         elif name[0] == 'S':
-            rad = ATOM_TYPES['S'][6]/2.0
+            rad = ATOM_TYPES['S'][5]
         else:
             rad = 0.30
     return rad

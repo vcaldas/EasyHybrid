@@ -70,16 +70,16 @@ class VismolObject:
         #self._generate_colors()
         
         """   L I N E S   """
-        self.lines_actived =  False
+        self.lines_actived = False
         
         #self.line_representation = LineRepresentation(self)
         #self.line_representation.update()
 
         """   D O T S   """
-        self.dots_actived =  False
+        self.dots_actived = False
 
         """   F L A T   S P H E R E   """
-        self.pseudospheres_actived =  True
+        self.pseudospheres_actived = True
 
         #self.flat_sphere_representation = FlatSphereRepresentation(self)
         
@@ -224,6 +224,7 @@ class VismolObject:
         self.color_indexes  = []
         self.colors         = []        
         self.vdw_dot_sizes  = []
+        self.cov_dot_sizes  = []
 #        self.atom_unique_id_dic     = {}
 
         """ Function doc """
@@ -255,10 +256,12 @@ class VismolObject:
             #                      VdW list
             #-------------------------------------------------------
             self.vdw_dot_sizes.append(atom.vdw_rad)
+            self.cov_dot_sizes.append(atom.cov_rad)
 
         self.color_indexes = np.array(self.color_indexes, dtype=np.float32)
         self.colors        = np.array(self.colors       , dtype=np.float32)    
         self.vdw_dot_sizes = np.array(self.vdw_dot_sizes, dtype=np.float32)
+        self.cov_dot_sizes = np.array(self.cov_dot_sizes, dtype=np.float32)
 
     def _generate_colors  (self):
         """ Function doc """
