@@ -112,7 +112,7 @@ def get_cylinder(pos, color, angle, vec_dir, length, stacks, radius=0.5, level='
     inds = copy.copy(cyd.cylinder_triangles[level])
     vertices = np.array([],dtype=np.float32)
     normals = np.array([],dtype=np.float32)
-    indices = np.array([],dtype=np.uint16)
+    indices = np.array([],dtype=np.uint32)
     colors = np.array(color*int(len(verts)/3)*stacks,dtype=np.float32)
     to_add_pos = length/float(stacks-1)
     rot_mat = mop.my_glRotatef(np.identity(4, dtype=np.float32), angle, vec_dir)[:3,:3]
@@ -166,7 +166,7 @@ def make_gl_dots(program, atom_list, bckgrnd_color=[0.0,0.0,0.0,1.0]):
     indexes = []
     for i in range(dot_qtty):
         indexes.append(i)
-    indexes = np.array(indexes,dtype=np.uint16)
+    indexes = np.array(indexes,dtype=np.uint32)
     
     vao = GL.glGenVertexArrays(1)
     GL.glBindVertexArray(vao)
@@ -231,7 +231,7 @@ def make_gl_lines(program, bond_list, atom_list):
     indexes = []
     for i in range(int(len(coords)/3)):
         indexes.append(i)
-    indexes = np.array(indexes,dtype=np.uint16)
+    indexes = np.array(indexes,dtype=np.uint32)
     
     vao = GL.glGenVertexArrays(1)
     GL.glBindVertexArray(vao)
@@ -275,7 +275,7 @@ def _make_gl_circles(program, vismol_object = None):
     indexes = []
     for i in range(dot_qtty):
         indexes.append(i)
-    indexes = np.array(indexes, dtype=np.uint16)
+    indexes = np.array(indexes, dtype=np.uint32)
     
     vao = GL.glGenVertexArrays(1)
     GL.glBindVertexArray(vao)
@@ -347,7 +347,7 @@ def _make_gl_dots(program, vismol_object = None, bckgrnd_color= [0.0,0.0,0.0,1.0
     indexes = []
     for i in range(dot_qtty):
         indexes.append(i)
-    indexes = np.array(indexes,dtype=np.uint16)
+    indexes = np.array(indexes,dtype=np.uint32)
     
     vao = GL.glGenVertexArrays(1)
     GL.glBindVertexArray(vao)
@@ -420,7 +420,7 @@ def _make_gl_selection_dots(program, vismol_object = None):
     indexes = []
     for i in range(dot_qtty):
         indexes.append(i)
-    indexes = np.array(indexes,dtype=np.uint16)
+    indexes = np.array(indexes,dtype=np.uint32)
     
     vao = GL.glGenVertexArrays(1)
     GL.glBindVertexArray(vao)
@@ -474,7 +474,7 @@ def _make_gl_picking_dots(program, vismol_object = None):
     indexes = []
     for i in range(dot_qtty):
         indexes.append(i)
-    indexes = np.array(indexes,dtype=np.uint16)
+    indexes = np.array(indexes,dtype=np.uint32)
     
     vao = GL.glGenVertexArrays(1)
     GL.glBindVertexArray(vao)
@@ -536,9 +536,9 @@ def _make_gl_lines(program, vismol_object = None):
     #indexes = []
     #for i in range(int(len(coords)/3)):
     #    indexes.append(i)
-    #indexes = np.array(indexes,dtype=np.uint16)
+    #indexes = np.array(indexes,dtype=np.uint32)
     
-    indexes = np.array(vismol_object.index_bonds,dtype=np.uint16)
+    indexes = np.array(vismol_object.index_bonds,dtype=np.uint32)
     coords  = vismol_object.frames[0]
     colors  = vismol_object.colors
     

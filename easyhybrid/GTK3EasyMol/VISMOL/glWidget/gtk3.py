@@ -448,7 +448,7 @@ class GtkGLWidget(Gtk.GLArea):
             GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
                             visObj.frames[self.frame], GL.GL_STATIC_DRAW)
 
-            GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_SHORT, None)
+            GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_INT, None)
             GL.glBindVertexArray(0)
             
             GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
@@ -474,7 +474,7 @@ class GtkGLWidget(Gtk.GLArea):
         #        GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
         #                        visObj.frames[self.frame], GL.GL_STATIC_DRAW)   
         #
-        #        GL.glDrawElements(GL.GL_POINTS, self.vismolSession.selections[self.vismolSession.current_selection].selected_objects[visObj], GL.GL_UNSIGNED_SHORT, None)
+        #        GL.glDrawElements(GL.GL_POINTS, self.vismolSession.selections[self.vismolSession.current_selection].selected_objects[visObj], GL.GL_UNSIGNED_INT, None)
         #        
         #        
         #        
@@ -596,7 +596,7 @@ class GtkGLWidget(Gtk.GLArea):
                 pass
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
             #    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_indexes.itemsize*int(len(visObj.dot_indexes)), visObj.dot_indexes, GL.GL_DYNAMIC_DRAW)
-            #    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
+            #    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_INT, None)
             #    GL.glBindVertexArray(0)
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
             #    self.modified_view = False
@@ -607,7 +607,7 @@ class GtkGLWidget(Gtk.GLArea):
                 if  indexes:
                     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.circles_buffers[2])            
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
-                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
     
     
@@ -620,7 +620,7 @@ class GtkGLWidget(Gtk.GLArea):
                 pass
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
             #    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_indexes.itemsize*int(len(visObj.dot_indexes)), visObj.dot_indexes, GL.GL_DYNAMIC_DRAW)
-            #    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
+            #    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_INT, None)
             #    GL.glBindVertexArray(0)
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
             #    self.modified_view = False
@@ -631,7 +631,7 @@ class GtkGLWidget(Gtk.GLArea):
                 if  indexes:
                     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dot_buffers[2])            
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
-                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
     
     def _draw_picking_dots(self, visObj = None,  indexes = False):
@@ -644,7 +644,7 @@ class GtkGLWidget(Gtk.GLArea):
                 pass
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
             #    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_indexes.itemsize*int(len(visObj.dot_indexes)), visObj.dot_indexes, GL.GL_DYNAMIC_DRAW)
-            #    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_SHORT, None)
+            #    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_INT, None)
             #    GL.glBindVertexArray(0)
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
             #    self.modified_view = False
@@ -655,7 +655,7 @@ class GtkGLWidget(Gtk.GLArea):
                 if indexes:
                     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.picking_dot_buffers[2])            
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
-                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
     
     def _draw_lines(self, visObj = None):
@@ -667,7 +667,7 @@ class GtkGLWidget(Gtk.GLArea):
                 pass
                 #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[0])
                 #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
-                #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_SHORT, None)
+                #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_INT, None)
                 #GL.glBindVertexArray(0)
                 #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
                 #self.modified_data = False
@@ -676,7 +676,7 @@ class GtkGLWidget(Gtk.GLArea):
                 #id self.modified_show:
                     #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[0])
                     #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
-                    #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_SHORT, None)
+                    #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_INT, None)
                     #GL.glBindVertexArray(0)
                     #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
                     #self.modified_data = False
@@ -685,7 +685,7 @@ class GtkGLWidget(Gtk.GLArea):
                 #if self.modified_color:
                     #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[2])
                     #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
-                    #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_SHORT, None)
+                    #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_INT, None)
                     #GL.glBindVertexArray(0)
                     #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
                     #self.modified_data = False
@@ -696,8 +696,8 @@ class GtkGLWidget(Gtk.GLArea):
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
                                 visObj.frames[self.frame], 
                                 GL.GL_STATIC_DRAW)              
-                #GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_SHORT, None)
-                GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_SHORT, None)
+                #GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+                GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
 
             
@@ -708,12 +708,12 @@ class GtkGLWidget(Gtk.GLArea):
         #            pass
         #            #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[0])
         #            #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
-        #            #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_SHORT, None)
+        #            #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_INT, None)
         #            #GL.glBindVertexArray(0)
         #            #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         #            #self.modified_data = False
         #        else:
-        #            GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_SHORT, None)
+        #            GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         #assert(len(self.lines_vao)>0)
         #GL.glBindVertexArray(self.lines_vao[0])
         #GL.glDrawArrays(GL.GL_LINES, 0, len(self.vismolSession.vismol_objects[0].index_bonds)*2)
@@ -728,13 +728,13 @@ class GtkGLWidget(Gtk.GLArea):
         """
         if flag:
             GL.glBindVertexArray(self.axis.x_vao)
-            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_SHORT, None)
+            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_INT, None)
             GL.glBindVertexArray(0)
             GL.glBindVertexArray(self.axis.y_vao)
-            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_SHORT, None)
+            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_INT, None)
             GL.glBindVertexArray(0)
             GL.glBindVertexArray(self.axis.z_vao)
-            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_SHORT, None)
+            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_INT, None)
             GL.glBindVertexArray(0)
         else:
             GL.glBindVertexArray(self.axis.lines_vao)
