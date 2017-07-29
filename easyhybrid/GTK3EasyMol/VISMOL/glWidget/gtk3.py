@@ -155,7 +155,7 @@ class GLMenu:
         self.builder.connect_signals(self)
         self.glWidget = glWidget
     
-    def open_gl_menu (self, event = None):
+    def open_gl_menu(self, event = None):
         """ Function doc """
         
         # Check if right mouse button was preseed
@@ -165,6 +165,7 @@ class GLMenu:
             widget = self.builder.get_object('menu1')
             widget.popup(None, None, None, None, event.button, event.time)        
             pass
+    
     def menuItem_function (self, widget, data):
         """ Function doc """
         #print ('Charlitos, seu lindo')
@@ -217,7 +218,7 @@ class GtkGLWidget(Gtk.GLArea):
         self.connect("button-release-event", self.mouse_released)
         self.connect("motion-notify-event", self.mouse_motion)
         self.connect("scroll-event", self.mouse_scroll)
-        #self.set_size_request(width, height)
+        self.set_size_request(width, height)
         self.grab_focus()
         self.set_events( self.get_events() | Gdk.EventMask.SCROLL_MASK
                        | Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK
@@ -248,7 +249,7 @@ class GtkGLWidget(Gtk.GLArea):
         self.model_mat = np.identity(4, dtype=np.float32)
         self.normal_mat = np.identity(3, dtype=np.float32)
         self.zero_reference_point = np.array([0.0, 0.0, 0.0],dtype=np.float32)
-        self.glcamera = cam.GLCamera(30.0, float(w)/float(h), np.array([0,0,5],dtype=np.float32), self.zero_reference_point)
+        self.glcamera = cam.GLCamera(10.0, float(w)/float(h), np.array([0,0,10],dtype=np.float32), self.zero_reference_point)
         self.axis = glaxis.GLAxis()
         self.set_has_depth_buffer(True)
         self.set_has_alpha(True)
@@ -268,7 +269,6 @@ class GtkGLWidget(Gtk.GLArea):
         self.mouse_zoom = False
         self.mouse_pan = False
         self.bckgrnd_color = [0.0,0.0,0.0,1.0]
-        #self.bckgrnd_color = [1.0,1.0,1.0,1.0]
         self.light_position = np.array([-2.5,-2.5,3.0],dtype=np.float32)
         self.light_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
         self.light_ambient_coef = 0.5
@@ -314,7 +314,7 @@ class GtkGLWidget(Gtk.GLArea):
             print('OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION))
         except:
             print('OpenGL major version not found')
-        self.pseudospheres_program = self.load_shaders(vm_shader.vertex_shader_pseudospheres, vm_shader.fragment_shader_pseudospheres, vm_shader.geometry_shader_pseudospheres)
+        self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
         self.dots_program = self.load_shaders(vm_shader.vertex_shader_dots, vm_shader.fragment_shader_dots)
         self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
         self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
@@ -381,38 +381,44 @@ class GtkGLWidget(Gtk.GLArea):
                     if visObj.lines_vao is None:
                         shapes._make_gl_lines(self.lines_program, vismol_object = visObj)
                     else:
-                        GL.glEnable(GL.GL_DEPTH_TEST)                        
+                        GL.glEnable(GL.GL_DEPTH_TEST)
+                        #GL.glEnable(GL.GL_BLEND)
+                        #GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+                        #GL.glEnable(GL.GL_LINE_SMOOTH)
+                        #GL.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST)
                         GL.glUseProgram(self.lines_program)
-                        GL.glLineWidth(60/abs(self.dist_cam_zrp))
+                        GL.glLineWidth(80/abs(self.dist_cam_zrp))
                         self.load_matrices(self.lines_program, visObj.model_mat)
+                        self.load_fog(self.lines_program)
                         self._draw_lines(visObj = visObj)
                         GL.glUseProgram(0)
+                        #GL.glDisable(GL.GL_LINE_SMOOTH)
+                        #GL.glDisable(GL.GL_BLEND)
                         GL.glDisable(GL.GL_DEPTH_TEST)
-                
                 if visObj.dots_actived:
                     if visObj.dots_vao is None:
                         shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
                     else:
                         pass
-                        #GL.glEnable(GL.GL_DEPTH_TEST)
-                        #GL.glUseProgram(self.dots_program)
-                        #GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                        #self.load_matrices(self.dots_program, visObj.model_mat)
-                        #self.load_dot_params(self.dots_program)
-                        #self._draw_dots(visObj = visObj, indexes = False)
-                        #GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                        #GL.glUseProgram(0)
-                        #GL.glDisable(GL.GL_DEPTH_TEST)
-                
-                if visObj.pseudospheres_actived:
-                    if visObj.pseudospheres_vao is None:
-                        shapes._make_gl_pseudospheres(self.pseudospheres_program, vismol_object = visObj)
-                    else:
-                        #print("pseudospheres")
                         GL.glEnable(GL.GL_DEPTH_TEST)
-                        GL.glUseProgram(self.pseudospheres_program)
-                        self.load_matrices(self.pseudospheres_program, visObj.model_mat)
-                        self._draw_pseudospheres(visObj = visObj, indexes = False)
+                        GL.glUseProgram(self.dots_program)
+                        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                        self.load_matrices(self.dots_program, visObj.model_mat)
+                        self.load_fog(self.dots_program)
+                        self.load_dot_params(self.dots_program)
+                        self._draw_dots(visObj = visObj, indexes = False)
+                        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+                        GL.glUseProgram(0)
+                        GL.glDisable(GL.GL_DEPTH_TEST)
+                if visObj.circles_actived:
+                    if visObj.circles_vao is None:
+                        shapes._make_gl_circles(self.circles_program, vismol_object = visObj)
+                    else:
+                        GL.glEnable(GL.GL_DEPTH_TEST)
+                        GL.glUseProgram(self.circles_program)
+                        self.load_matrices(self.circles_program, visObj.model_mat)
+                        self.load_fog(self.lines_program)
+                        self._draw_circles(visObj = visObj, indexes = False)
                         GL.glUseProgram(0)
                         GL.glDisable(GL.GL_DEPTH_TEST)
         
@@ -426,7 +432,7 @@ class GtkGLWidget(Gtk.GLArea):
             #GL.glEnable(GL.GL_DEPTH_TEST)
             GL.glUseProgram(self.picking_dots_program)
             GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-            self.load_matrices_picking(self.picking_dots_program, visObj.model_mat)
+            self.load_matrices(self.picking_dots_program, visObj.model_mat)
             
             indexes = self.vismolSession.selections[self.vismolSession.current_selection].selected_objects[visObj]
             
@@ -505,47 +511,42 @@ class GtkGLWidget(Gtk.GLArea):
                 GL.glEnable(GL.GL_DEPTH_TEST)
                 GL.glUseProgram(self.picking_dots_program)
                 GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                self.load_matrices_picking(self.picking_dots_program, visObj.model_mat)
+                self.load_matrices(self.picking_dots_program, visObj.model_mat)
                 self._draw_picking_dots(visObj = visObj, indexes = False)
                 GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
                 GL.glUseProgram(0)
                 GL.glDisable(GL.GL_DEPTH_TEST)
-        
         GL.glPixelStorei(GL.GL_PACK_ALIGNMENT, 1)
         pos = [self.picking_x, self.height - self.picking_y]
         data = GL.glReadPixels(pos[0], (pos[1]), 1, 1, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE)
-        #print (pos, self.picking_x, self.picking_y, data)
         pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
-        #print(pickedID, "<= atom index")
-        
         if pickedID == 16777215:
             self.atom_picked = None
             if self.button ==1:
                 self.vismolSession._selection_function (self.atom_picked)
                 self.button = None
-
         else:
             self.atom_picked = self.vismolSession.atom_dic_id[pickedID]
-            #print (self.atom_picked.name, self.atom_picked.index)
             if self.button ==1:
                 self.vismolSession._selection_function (self.atom_picked)
                 self.button = None
-        
         self.picking = False
     
-    def load_matrices_picking(self, program, model_mat):
-        """ Load the matrices to OpenGL.
+    def load_fog(self, program):
+        """ Load the fog parameters in the specified program
             
-            model_mat -- transformation matrix for the objects rendered
-            view_mat -- transformation matrix for the camera used
-            proj_mat -- matrix for the space to be visualized in the scene
+            fog_start -- The coordinates where the fog will begin (always
+                         positive)
+            fog_end -- The coordinates where the fog will begin (always positive
+                       and greater than fog_start)
+            fog_color -- The color for the fog (same as background)
         """
-        model = GL.glGetUniformLocation(program, 'model_mat')
-        GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, model_mat)
-        view = GL.glGetUniformLocation(program, 'view_mat')
-        GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.view_matrix)
-        proj = GL.glGetUniformLocation(program, 'proj_mat')
-        GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
+        fog_s = GL.glGetUniformLocation(program, 'fog_start')
+        GL.glUniform1fv(fog_s, 1, self.glcamera.fog_start)
+        fog_e = GL.glGetUniformLocation(program, 'fog_end')
+        GL.glUniform1fv(fog_e, 1, self.glcamera.fog_end)
+        fog_c = GL.glGetUniformLocation(program, 'fog_color')
+        GL.glUniform4fv(fog_c, 1, self.bckgrnd_color)
         return True
         
     def load_matrices(self, program, model_mat):
@@ -561,33 +562,6 @@ class GtkGLWidget(Gtk.GLArea):
         GL.glUniformMatrix4fv(view, 1, GL.GL_FALSE, self.glcamera.view_matrix)
         proj = GL.glGetUniformLocation(program, 'proj_mat')
         GL.glUniformMatrix4fv(proj, 1, GL.GL_FALSE, self.glcamera.projection_matrix)
-        fog_s = GL.glGetUniformLocation(program, 'fog_start')
-        GL.glUniform1fv(fog_s, 1, self.glcamera.fog_start)
-        fog_e = GL.glGetUniformLocation(program, 'fog_end')
-        GL.glUniform1fv(fog_e, 1, self.glcamera.fog_end)
-        fog_c = GL.glGetUniformLocation(program, 'fog_color')
-        GL.glUniform4fv(fog_c, 1, self.bckgrnd_color)
-        return True
-    
-    def load_lights(self, program):
-        """ Function doc
-        """
-        light_pos = GL.glGetUniformLocation(program, 'light_position')
-        GL.glUniform3fv(light_pos, 1, self.light_position)
-        #light_pos = GL.glGetUniformLocation(program, 'my_light.position')
-        #GL.glUniform3fv(light_pos, 1, self.light_position)
-        #light_col = GL.glGetUniformLocation(program, 'my_light.color')
-        #GL.glUniform3fv(light_col, 1, self.light_color)
-        #amb_coef = GL.glGetUniformLocation(program, 'my_light.ambient_coef')
-        #GL.glUniform1fv(amb_coef, 1, self.light_ambient_coef)
-        #shiny = GL.glGetUniformLocation(program, 'my_light.shininess')
-        #GL.glUniform1fv(shiny, 1, self.light_shininess)
-        #intensity = GL.glGetUniformLocation(program, 'my_light.intensity')
-        #GL.glUniform3fv(intensity, 1, self.light_intensity)
-        #spec_col = GL.glGetUniformLocation(program, 'my_light.specular_color')
-        #GL.glUniform3fv(spec_col, 1, self.light_specular_color)
-        #cam_pos = GL.glGetUniformLocation(program, 'cam_pos')
-        #GL.glUniform3fv(cam_pos, 1, self.glcamera.get_position())
         return True
     
     def load_dot_params(self, program):
@@ -613,11 +587,11 @@ class GtkGLWidget(Gtk.GLArea):
         GL.glUniform1fv(uni_dot_size, 1, dot_factor)
         return True
     
-    def _draw_pseudospheres(self, visObj = None, indexes = False):
+    def _draw_circles(self, visObj = None, indexes = False):
         """ Function doc
         """
-        if visObj.pseudospheres_vao is not None:
-            GL.glBindVertexArray(visObj.pseudospheres_vao)
+        if visObj.circles_vao is not None:
+            GL.glBindVertexArray(visObj.circles_vao)
             if self.modified_view:
                 pass
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
@@ -627,11 +601,11 @@ class GtkGLWidget(Gtk.GLArea):
             #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
             #    self.modified_view = False
             else:
-                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.pseudospheres_buffers[1])
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.circles_buffers[1])
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
                                 visObj.frames[self.frame], GL.GL_STATIC_DRAW)   
                 if  indexes:
-                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.pseudospheres_buffers[2])            
+                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.circles_buffers[2])            
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_SHORT, None)
         GL.glBindVertexArray(0)
@@ -663,7 +637,7 @@ class GtkGLWidget(Gtk.GLArea):
     def _draw_picking_dots(self, visObj = None,  indexes = False):
         """ Function doc
         """
-        if visObj.dots_vao is not None:
+        if visObj.picking_dots_vao is not None:
             GL.glBindVertexArray(visObj.picking_dots_vao)
             
             if self.modified_view:
@@ -806,18 +780,6 @@ class GtkGLWidget(Gtk.GLArea):
         self.glcamera.print_parms()
         return True
     
-    def _pressed_m(self):
-        """ Function doc
-        """
-        self._print_matrices()
-        #for visObj in self.vismolSession.vismol_objects:
-        #    #print(visObj.model_mat,"Matriz de modelo")
-        #    visObj.dots_actived = not visObj.dots_actived
-        #    visObj.lines_actived = not visObj.lines_actived
-        #    visObj.pseudospheres_actived = not visObj.pseudospheres_actived
-        #self.queue_draw()
-        return True
-    
     def _pressed_Control_L(self):
         """ Function doc
         """
@@ -833,60 +795,45 @@ class GtkGLWidget(Gtk.GLArea):
     def mouse_pressed(self, widget, event):
         """ Function doc
         """
-        left   = event.button==1 and event.type==Gdk.EventType.BUTTON_PRESS
-        middle = event.button==2 and event.type==Gdk.EventType.BUTTON_PRESS
-        right  = event.button==3 and event.type==Gdk.EventType.BUTTON_PRESS
+        left   = event.button == 1
+        middle = event.button == 2
+        right  = event.button == 3
         self.mouse_rotate = left   and not (middle or right)
         self.mouse_zoom   = right  and not (middle or left)
         self.mouse_pan    = middle and not (right  or left)
-        x = self.mouse_x = event.x
-        y = self.mouse_y = event.y
-        self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(x, y)
+        self.mouse_x = event.x
+        self.mouse_y = event.y
+        self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(self.mouse_x, self.mouse_y)
         self.dragging = False
-        
-        if event.button == 1 and event.type == Gdk.EventType.BUTTON_PRESS:
+        if event.button == 1:
             pass
-            #print ('event.button == 1')
-            #nearest, hits = self.pick(x, self.get_allocation().height-1-y, self.pick_radius[0], self.pick_radius[1], event)
-            #selected = self.select(event, nearest, hits)
-            #if selected is not None:
-            #    self.center_on_coordinates(selected.pos)
-            #    self.zero_reference_point = selected.pos
-            #    self.target_point = selected.pos
-        if event.button == 2 and event.type == Gdk.EventType.BUTTON_PRESS:
+        if event.button == 2:
             pass
             self.picking_x = event.x
             self.picking_y = event.y
             self.picking = True
             self.queue_draw()
-            #print ('event.button == 2')
-            #self.dist_cam_zpr = op.get_euclidean(self.zero_reference_point, self.get_cam_pos())
-        if event.button == 3 and event.type == Gdk.EventType.BUTTON_PRESS:
+        if event.button == 3:
             pass
-            #print ('event.button == 3')
-            #self.pos_mouse = [x, y]
-    
     
     def mouse_released(self, widget, event):
         """ Function doc
         """
         self.mouse_rotate = self.mouse_zoom = self.mouse_pan = False
         if not self.dragging:
-            if event.button==1:
+            if event.button == 1:
                 self.picking_x = event.x
                 self.picking_y = event.y
                 self.picking =  True
-                self.button  = 1
+                self.button = 1
                 self.queue_draw()
-
-                
-            if event.button==2:
+            if event.button == 2:
                 if self.atom_picked is not None:
-                    self.button  = 2
+                    self.button = 2
                     self.center_on_atom(self.atom_picked)
                     self.atom_picked = None
-            if event.button==3:
-                self.button  = 3
+            if event.button == 3:
+                self.button = 3
                 self.glMenu.open_gl_menu(event = event)
     
     def mouse_motion(self, widget, event):
@@ -903,7 +850,6 @@ class GtkGLWidget(Gtk.GLArea):
         changed = False
         if self.mouse_rotate:
             angle = math.sqrt(dx**2+dy**2)/float(self.width+1)*180.0
-            
             if self.ctrl:
                 if abs(dx) >= abs(dy):
                     if (y-self.height/2) < 0:
@@ -925,7 +871,6 @@ class GtkGLWidget(Gtk.GLArea):
                 for visObj in self.vismolSession.vismol_objects:
                     if visObj.editing:
                         visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
-            
             if not self.editing_mols:
                 self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, -self.axis.zrp)
                 if self.ctrl:
@@ -942,8 +887,8 @@ class GtkGLWidget(Gtk.GLArea):
                 else:
                     self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [dy, dx, 0])
                 self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, self.axis.zrp)
-            
             changed = True
+        
         elif self.mouse_pan:
             px, py, pz = self.pos(x, y)
             pan_mat = mop.my_glTranslatef(np.identity(4,dtype=np.float32),
@@ -958,11 +903,11 @@ class GtkGLWidget(Gtk.GLArea):
                 for visObj in self.vismolSession.vismol_objects:
                     if visObj.editing:
                         visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
-            
             self.drag_pos_x = px
             self.drag_pos_y = py
             self.drag_pos_z = pz
             changed = True
+        
         elif self.mouse_zoom:
             delta = (((self.glcamera.z_far-self.glcamera.z_near)/2)+self.glcamera.z_near)/200
             move_z = dy * delta
@@ -1017,11 +962,11 @@ class GtkGLWidget(Gtk.GLArea):
                 self.glcamera.z_near -= self.scroll
                 self.glcamera.z_far += self.scroll
             if event.direction == Gdk.ScrollDirection.DOWN:
-                if (self.glcamera.z_far-self.scroll) >= (pos_z+self.glcamera.min_zfar):
+                if (self.glcamera.z_far-self.scroll) >= (self.glcamera.min_zfar):
                     if (self.glcamera.z_far-self.scroll) > (self.glcamera.z_near+self.scroll):
                         self.glcamera.z_near += self.scroll
                         self.glcamera.z_far -= self.scroll
-            if self.glcamera.z_near >= self.glcamera.min_znear:
+            if (self.glcamera.z_near >= self.glcamera.min_znear):
                 self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
                         self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
             else:
@@ -1046,13 +991,10 @@ class GtkGLWidget(Gtk.GLArea):
         pz = self.glcamera.z_near
         return px, py, pz
     
-    def center_on_atom (self, atom):
+    def center_on_atom(self, atom):
         """ Function doc
         """
         coords = atom.coords()
-        #coord = [atom.Vobject.frames[self.frame][(atom.index-1)*3  ],
-        #         atom.Vobject.frames[self.frame][(atom.index-1)*3+1],
-        #         atom.Vobject.frames[self.frame][(atom.index-1)*3+2],]
         coords = np.array(coords, dtype=np.float32) 
         self.center_on_coordinates(atom.Vobject, coords)
         return True
@@ -1085,7 +1027,7 @@ class GtkGLWidget(Gtk.GLArea):
                 visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move[:3])
             self.get_window().invalidate_rect(None, False)
             self.get_window().process_updates(False)
-            time.sleep(0.01)
+            time.sleep(0.02)
         self.queue_draw()
     
     def _print_matrices(self):

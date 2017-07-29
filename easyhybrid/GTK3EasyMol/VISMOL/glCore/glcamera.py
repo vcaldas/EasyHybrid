@@ -62,12 +62,11 @@ class GLCamera():
         self.field_of_view = fov
         self.viewport_aspect_ratio = var
         self.zero_reference_point = zrp
-        #self.position = pos
         self.max_vertical_angle = 85.0  # must be less than 90 to avoid gimbal lock
         self.horizontal_angle = 0.0
         self.vertical_angle = 0.0
         self.min_znear = 0.1
-        self.min_zfar = 1.5
+        self.min_zfar = 2.5
         dist = op.get_euclidean(pos, zrp)
         if dist < 10.0:
             self.z_near = dist - 3.0
@@ -148,8 +147,7 @@ class GLCamera():
     def get_proj_view_matrix(self):
         """ Function doc
         """
-        return mop.my_glMultiplyMatricesf(self.get_projection_matrix(),
-                                          self.get_view_matrix())
+        return mop.my_glMultiplyMatricesf(self.get_projection_matrix(), self.get_view_matrix())
     
     def set_view_matrix(self, new_view_matrix):
         """ Function doc

@@ -201,7 +201,13 @@ class GTKGUI ():
         """ Function doc """
         #print ( widget)
         if widget == self.builder.get_object('menuitem6_center'):
-            print(widget)
+            tree = self.builder.get_object('treeview1')
+            selection = tree.get_selection()
+            model = tree.get_model()
+            (model, iter) = selection.get_selected()
+            obj_index = model.get_value(iter, 1)
+            visObj = self.vismolSession.vismol_objects[(int(obj_index)-1)]
+            self.vismolSession.glwidget.center_on_coordinates(visObj, visObj.mass_center)
         if widget == self.builder.get_object('menuitem5_rename'):
             tree = self.builder.get_object('treeview1')
             selection = tree.get_selection()
@@ -210,9 +216,6 @@ class GTKGUI ():
             obj_index = model.get_value(iter, 1)
             self.vismolSession.edit_by_index(int(obj_index)-1)
             self.vismolSession.glwidget.editing_mols = not self.vismolSession.glwidget.editing_mols
-            #self.vismolSession.glwidget.edit_molecule()
-            #coord = np.array(coord, dtype=np.float32) 
-            #self.vismolSession.glwidget.center_on_atom(coord)
         
     def on_resize (self, widget):
         """ Function doc """

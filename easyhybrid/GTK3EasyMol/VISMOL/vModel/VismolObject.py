@@ -70,7 +70,7 @@ class VismolObject:
         #self._generate_colors()
         
         """   L I N E S   """
-        self.lines_actived = False
+        self.lines_actived = True
         
         #self.line_representation = LineRepresentation(self)
         #self.line_representation.update()
@@ -78,8 +78,8 @@ class VismolObject:
         """   D O T S   """
         self.dots_actived = False
 
-        """   F L A T   S P H E R E   """
-        self.pseudospheres_actived = True
+        """   C I R C L E S   """
+        self.circles_actived = True
 
         #self.flat_sphere_representation = FlatSphereRepresentation(self)
         
@@ -103,10 +103,10 @@ class VismolObject:
         # OpenGL attributes
         self.dots_vao       = None
         self.lines_vao      = None
-        self.pseudospheres_vao = None
+        self.circles_vao = None
         self.dot_buffers    = None
         self.line_buffers   = None
-        self.pseudospheres_buffers = None
+        self.circles_buffers = None
         self.dot_indexes    = None
         
         self.selection_dots_vao      = None

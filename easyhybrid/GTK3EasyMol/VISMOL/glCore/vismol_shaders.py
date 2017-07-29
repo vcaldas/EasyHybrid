@@ -150,14 +150,18 @@ void main(){
 vertex_shader_lines = """
 #version 330
 
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+
 in vec3 vert_coord;
 in vec3 vert_color;
 
 out vec3 geom_color;
+out vec4 geom_coord;
 
 void main(){
-    gl_Position = vec4(vert_coord, 1.0);
     geom_color = vert_color;
+    geom_coord = view_mat * model_mat * vec4(vert_coord, 1.0);
 }
 """
 geometry_shader_lines = """
@@ -166,32 +170,31 @@ geometry_shader_lines = """
 layout (lines) in;
 layout (line_strip, max_vertices = 4) out;
 
-uniform mat4 model_mat;
-uniform mat4 view_mat;
 uniform mat4 proj_mat;
 
 in vec3 geom_color[];
+in vec4 geom_coord[];
 
 out vec3 frag_color;
 out vec4 crd_dist;
 
 void main(){
-    vec4 mid_coord = vec4((gl_in[1].gl_Position.xyz + gl_in[0].gl_Position.xyz)/2, 1.0);
-    gl_Position = proj_mat * view_mat * model_mat * gl_in[0].gl_Position;
+    vec4 mid_coord = vec4((geom_coord[0].xyz + geom_coord[1].xyz)/2, 1.0);
+    gl_Position = proj_mat * geom_coord[0];
     frag_color = geom_color[0];
-    crd_dist = view_mat * model_mat * gl_in[0].gl_Position;
+    crd_dist = geom_coord[0];
     EmitVertex();
-    gl_Position = proj_mat * view_mat * model_mat * mid_coord;
+    gl_Position = proj_mat * mid_coord;
     frag_color = geom_color[0];
-    crd_dist = view_mat * model_mat * mid_coord;
+    crd_dist = mid_coord;
     EmitVertex();
     EndPrimitive();
-    gl_Position = proj_mat * view_mat * model_mat * mid_coord;
+    gl_Position = proj_mat * mid_coord;
     frag_color = geom_color[1];
-    crd_dist = view_mat * model_mat * mid_coord;
+    crd_dist = mid_coord;
     EmitVertex();
-    gl_Position = proj_mat * view_mat * model_mat * gl_in[1].gl_Position;
-    crd_dist = view_mat * model_mat * gl_in[1].gl_Position;
+    gl_Position = proj_mat * geom_coord[1];
+    crd_dist = geom_coord[1];
     frag_color = geom_color[1];
     EmitVertex();
     EndPrimitive();
@@ -323,6 +326,177 @@ void main(){
     else{
         //final_color = outline(distance, 1.0, 1.0, vec4(0,0,0,1), color);
         final_color = color;
+    }
+}
+"""
+
+vertex_shader_circles = """
+#version 330
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+
+in vec3 vert_coord;
+in vec3 vert_color;
+in float vert_rad;
+
+out vec4 geom_coord;
+out vec3 geom_color;
+out float geom_rad;
+
+void main(){
+    geom_color = vert_color;
+    geom_coord = view_mat * model_mat * vec4(vert_coord, 1);
+    geom_rad = vert_rad;
+}
+"""
+geometry_shader_circles = """
+#version 330
+
+layout (points) in;
+layout (triangle_strip, max_vertices = 25) out;
+
+uniform mat4 proj_mat;
+
+const float cos22 = 0.9238795325112867;
+const float cos45 = 0.7071067811865476;
+const float cos67 = 0.3826834323650898;
+const float sin22 = 0.3826834323650898;
+const float sin45 = 0.7071067811865475;
+const float sin67 = 0.9238795325112867;
+const vec3 shadow_col = vec3(0, 0, 0);
+
+in vec4 geom_coord[];
+in vec3 geom_color[];
+in float geom_rad[];
+
+out vec3 frag_color;
+out vec4 crd_dist;
+
+void main(){
+    crd_dist = geom_coord[0] + vec4(geom_rad[0], 0, 0, 0); // Point 1
+    gl_Position = proj_mat * crd_dist; // Point 1
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0]; // Point 2
+    gl_Position = proj_mat * crd_dist; // Point 2
+    frag_color = geom_color[0];
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(cos22*geom_rad[0], sin22*geom_rad[0], 0, 0); // Point 3
+    gl_Position = proj_mat * crd_dist; // Point 3
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(cos45*geom_rad[0], sin45*geom_rad[0], 0, 0); // Point 4
+    gl_Position = proj_mat * crd_dist; // Point 4
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0]; // Point 5
+    gl_Position = proj_mat * crd_dist; // Point 5
+    frag_color = geom_color[0];
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(cos67*geom_rad[0], sin67*geom_rad[0], 0, 0); // Point 6
+    gl_Position = proj_mat * crd_dist; // Point 6
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(0, geom_rad[0], 0, 0); // Point 7
+    gl_Position = proj_mat * crd_dist; // Point 7
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0]; // Point 8
+    gl_Position = proj_mat * crd_dist; // Point 8
+    frag_color = geom_color[0];
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(-cos67*geom_rad[0], sin67*geom_rad[0], 0, 0); // Point 9
+    gl_Position = proj_mat * crd_dist; // Point 9
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(-cos45*geom_rad[0], sin45*geom_rad[0], 0, 0); // Point 10
+    gl_Position = proj_mat * crd_dist; // Point 10
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0]; // Point 11
+    gl_Position = proj_mat * crd_dist; // Point 11
+    frag_color = geom_color[0];
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(-cos22*geom_rad[0], sin22*geom_rad[0], 0, 0); // Point 12
+    gl_Position = proj_mat * crd_dist; // Point 12
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(-geom_rad[0], 0, 0, 0); // Point 13
+    gl_Position = proj_mat * crd_dist; // Point 13
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0]; // Point 14
+    gl_Position = proj_mat * crd_dist; // Point 14
+    frag_color = geom_color[0];
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(-cos22*geom_rad[0], -sin22*geom_rad[0], 0, 0); // Point 15
+    gl_Position = proj_mat * crd_dist; // Point 15
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(-cos45*geom_rad[0], -sin45*geom_rad[0], 0, 0); // Point 16
+    gl_Position = proj_mat * crd_dist; // Point 16
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0]; // Point 17
+    gl_Position = proj_mat * crd_dist; // Point 17
+    frag_color = geom_color[0];
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(-cos67*geom_rad[0], -sin67*geom_rad[0], 0, 0); // Point 18
+    gl_Position = proj_mat * crd_dist; // Point 18
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(0, -geom_rad[0], 0, 0); // Point 19
+    gl_Position = proj_mat * crd_dist; // Point 19
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0]; // Point 20
+    gl_Position = proj_mat * crd_dist; // Point 20
+    frag_color = geom_color[0];
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(cos67*geom_rad[0], -sin67*geom_rad[0], 0, 0); // Point 21
+    gl_Position = proj_mat * crd_dist; // Point 21
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(cos45*geom_rad[0], -sin45*geom_rad[0], 0, 0); // Point 22
+    gl_Position = proj_mat * crd_dist; // Point 22
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0]; // Point 23
+    gl_Position = proj_mat * crd_dist; // Point 23
+    frag_color = geom_color[0];
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(cos22*geom_rad[0], -sin22*geom_rad[0], 0, 0); // Point 24
+    gl_Position = proj_mat * crd_dist; // Point 24
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    crd_dist = geom_coord[0] + vec4(geom_rad[0], 0, 0, 0); // Point 25
+    gl_Position = proj_mat * crd_dist; // Point 25
+    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    EmitVertex();
+    EndPrimitive();
+}
+"""
+fragment_shader_circles = """
+#version 330
+
+uniform vec4 fog_color;
+uniform float fog_start;
+uniform float fog_end;
+
+in vec3 frag_color;
+in vec4 crd_dist;
+
+out vec4 final_color;
+
+void main(){
+    float dist = abs(crd_dist.z);
+    if(dist>=fog_start){
+        float fog_factor = (fog_end-dist)/(fog_end-fog_start);
+        final_color = mix(fog_color, vec4(frag_color, 1.0), fog_factor);
+    }
+    else{
+        final_color = vec4(frag_color, 1);
     }
 }
 """

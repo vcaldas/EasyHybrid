@@ -264,17 +264,18 @@ def make_gl_lines(program, bond_list, atom_list):
     return vao, (ind_vbo, coord_vbo, col_vbo)
 
 
-def _make_gl_pseudospheres(program, vismol_object = None):
+def _make_gl_circles(program, vismol_object = None):
     """ Function doc
     """
     colors = vismol_object.colors
-    radios = vismol_object.cov_dot_sizes
     coords = vismol_object.frames[0]
     dot_qtty = int(len(coords)/3)
+    radios = [0.3] * dot_qtty
+    radios = np.array(radios, dtype=np.float32)
     indexes = []
     for i in range(dot_qtty):
         indexes.append(i)
-    indexes = np.array(indexes,dtype=np.uint16)
+    indexes = np.array(indexes, dtype=np.uint16)
     
     vao = GL.glGenVertexArrays(1)
     GL.glBindVertexArray(vao)
@@ -310,8 +311,8 @@ def _make_gl_pseudospheres(program, vismol_object = None):
     GL.glDisableVertexAttribArray(gl_rad)
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
     
-    vismol_object.pseudospheres_vao = vao
-    vismol_object.pseudospheres_buffers = (ind_vbo, coord_vbo, col_vbo)
+    vismol_object.circles_vao = vao
+    vismol_object.circles_buffers = (ind_vbo, coord_vbo, col_vbo)
     return True
 
 def _make_gl_dots(program, vismol_object = None, bckgrnd_color= [0.0,0.0,0.0,1.0]):
@@ -455,7 +456,7 @@ def _make_gl_selection_dots(program, vismol_object = None):
     
     vismol_object.selection_dots_vao      = vao
     vismol_object.selection_dot_buffers   = (ind_vbo, coord_vbo, col_vbo)
-	
+    
     return True
 
 
