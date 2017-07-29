@@ -115,7 +115,7 @@ class GLAxis:
         self.axis_indexes = np.array([0, 1, 8, 1, 2, 8, 2, 3, 8, 3, 4, 8,
                                       4, 5, 8, 5, 6, 8, 6, 7, 8, 7, 0, 8,
                                       0, 1, 9, 1, 2, 9, 2, 3, 9, 3, 4, 9,
-                                      4, 5, 9, 5, 6, 9, 6, 7, 9, 7, 0, 9], dtype=np.uint16)
+                                      4, 5, 9, 5, 6, 9, 6, 7, 9, 7, 0, 9], dtype=np.uint32)
         self.axis_centers = {'x_axis' : [0.0, 0.0, 0.0],
                              'y_axis' : [0.0, 0.0, 0.0],
                              'z_axis' : [0.0, 0.0, 0.0]}
@@ -130,12 +130,12 @@ class GLAxis:
         self.z_vao = None
         self.lines_vao = None
         self.zrp = np.array([-0.9, -0.9, 0.0],dtype=np.float32)
-        self.camera_position = cam_pos
+        self.camera_position = np.array(cam_pos, dtype=np.float32)
         self.light_position = np.array([2.5,2.5,3.0],dtype=np.float32)
         self.light_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
         self.light_ambient_coef = 0.1
         self.light_specular_coef = 0.5
-        self.light_shininess = 32
+        self.light_shininess = 32.0
         self.vertex_shader_axis = """
 #version 330
 

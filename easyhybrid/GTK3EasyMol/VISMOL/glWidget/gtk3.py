@@ -249,7 +249,7 @@ class GtkGLWidget(Gtk.GLArea):
         self.model_mat = np.identity(4, dtype=np.float32)
         self.normal_mat = np.identity(3, dtype=np.float32)
         self.zero_reference_point = np.array([0.0, 0.0, 0.0],dtype=np.float32)
-        self.glcamera = cam.GLCamera(10.0, float(w)/float(h), np.array([0,0,10],dtype=np.float32), self.zero_reference_point)
+        self.glcamera = cam.GLCamera(10.0, w/h, np.array([0,0,10],dtype=np.float32), self.zero_reference_point)
         self.axis = glaxis.GLAxis()
         self.set_has_depth_buffer(True)
         self.set_has_alpha(True)
@@ -258,7 +258,7 @@ class GtkGLWidget(Gtk.GLArea):
         self.modified_data = False
         self.modified_view = False
         self.scroll = 0.3
-        self.right = float(w)/h
+        self.right = w/h
         self.left = -self.right
         self.top = 1
         self.bottom = -1
@@ -292,14 +292,15 @@ class GtkGLWidget(Gtk.GLArea):
             width -- Actual width of the window
             height -- Actual height of the window
         """
-        
-        self.left = -float(width)/height
+        w = np.float32(width)
+        h = np.float32(height)
+        self.left = -w/h
         self.right = -self.left
-        self.width = width
-        self.height = height
-        self.center_x = width/2
-        self.center_y = height/2
-        self.glcamera.viewport_aspect_ratio = float(width)/height
+        self.width = w
+        self.height = h
+        self.center_x = w/2.0
+        self.center_y = h/2.0
+        self.glcamera.viewport_aspect_ratio = w/h
         self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view,
              self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
         self.queue_draw()
@@ -448,7 +449,7 @@ class GtkGLWidget(Gtk.GLArea):
             GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
                             visObj.frames[self.frame], GL.GL_STATIC_DRAW)
 
-            #GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_SHORT, None)
+            #GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_INT, None)
             GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_INT, None)
             GL.glBindVertexArray(0)
             
@@ -610,7 +611,6 @@ class GtkGLWidget(Gtk.GLArea):
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
-    
     
     def _draw_dots(self, visObj = None,  indexes = False):
         """ Function doc
@@ -985,8 +985,8 @@ class GtkGLWidget(Gtk.GLArea):
         to map from mouse co-ordinates back into world
         co-ordinates
         """
-        px = x/float(self.width)
-        py = y/float(self.height)
+        px = x/self.width
+        py = y/self.height
         px = self.left + px*(self.right-self.left)
         py = self.top + py*(self.bottom-self.top)
         pz = self.glcamera.z_near

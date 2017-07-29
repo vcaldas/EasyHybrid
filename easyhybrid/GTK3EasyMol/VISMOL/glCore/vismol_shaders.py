@@ -364,6 +364,7 @@ const float cos67 = 0.3826834323650898;
 const float sin22 = 0.3826834323650898;
 const float sin45 = 0.7071067811865475;
 const float sin67 = 0.9238795325112867;
+const float alpha = 0.5;
 const vec3 shadow_col = vec3(0, 0, 0);
 
 in vec4 geom_coord[];
@@ -376,7 +377,7 @@ out vec4 crd_dist;
 void main(){
     crd_dist = geom_coord[0] + vec4(geom_rad[0], 0, 0, 0); // Point 1
     gl_Position = proj_mat * crd_dist; // Point 1
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0]; // Point 2
     gl_Position = proj_mat * crd_dist; // Point 2
@@ -384,11 +385,11 @@ void main(){
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(cos22*geom_rad[0], sin22*geom_rad[0], 0, 0); // Point 3
     gl_Position = proj_mat * crd_dist; // Point 3
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(cos45*geom_rad[0], sin45*geom_rad[0], 0, 0); // Point 4
     gl_Position = proj_mat * crd_dist; // Point 4
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0]; // Point 5
     gl_Position = proj_mat * crd_dist; // Point 5
@@ -396,11 +397,11 @@ void main(){
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(cos67*geom_rad[0], sin67*geom_rad[0], 0, 0); // Point 6
     gl_Position = proj_mat * crd_dist; // Point 6
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(0, geom_rad[0], 0, 0); // Point 7
     gl_Position = proj_mat * crd_dist; // Point 7
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0]; // Point 8
     gl_Position = proj_mat * crd_dist; // Point 8
@@ -408,11 +409,11 @@ void main(){
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(-cos67*geom_rad[0], sin67*geom_rad[0], 0, 0); // Point 9
     gl_Position = proj_mat * crd_dist; // Point 9
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(-cos45*geom_rad[0], sin45*geom_rad[0], 0, 0); // Point 10
     gl_Position = proj_mat * crd_dist; // Point 10
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0]; // Point 11
     gl_Position = proj_mat * crd_dist; // Point 11
@@ -420,11 +421,11 @@ void main(){
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(-cos22*geom_rad[0], sin22*geom_rad[0], 0, 0); // Point 12
     gl_Position = proj_mat * crd_dist; // Point 12
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(-geom_rad[0], 0, 0, 0); // Point 13
     gl_Position = proj_mat * crd_dist; // Point 13
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0]; // Point 14
     gl_Position = proj_mat * crd_dist; // Point 14
@@ -432,11 +433,11 @@ void main(){
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(-cos22*geom_rad[0], -sin22*geom_rad[0], 0, 0); // Point 15
     gl_Position = proj_mat * crd_dist; // Point 15
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(-cos45*geom_rad[0], -sin45*geom_rad[0], 0, 0); // Point 16
     gl_Position = proj_mat * crd_dist; // Point 16
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0]; // Point 17
     gl_Position = proj_mat * crd_dist; // Point 17
@@ -444,11 +445,11 @@ void main(){
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(-cos67*geom_rad[0], -sin67*geom_rad[0], 0, 0); // Point 18
     gl_Position = proj_mat * crd_dist; // Point 18
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(0, -geom_rad[0], 0, 0); // Point 19
     gl_Position = proj_mat * crd_dist; // Point 19
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0]; // Point 20
     gl_Position = proj_mat * crd_dist; // Point 20
@@ -456,11 +457,11 @@ void main(){
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(cos67*geom_rad[0], -sin67*geom_rad[0], 0, 0); // Point 21
     gl_Position = proj_mat * crd_dist; // Point 21
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(cos45*geom_rad[0], -sin45*geom_rad[0], 0, 0); // Point 22
     gl_Position = proj_mat * crd_dist; // Point 22
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0]; // Point 23
     gl_Position = proj_mat * crd_dist; // Point 23
@@ -468,11 +469,11 @@ void main(){
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(cos22*geom_rad[0], -sin22*geom_rad[0], 0, 0); // Point 24
     gl_Position = proj_mat * crd_dist; // Point 24
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     crd_dist = geom_coord[0] + vec4(geom_rad[0], 0, 0, 0); // Point 25
     gl_Position = proj_mat * crd_dist; // Point 25
-    frag_color = mix(geom_color[0], shadow_col, 0.5);
+    frag_color = mix(geom_color[0], shadow_col, alpha);
     EmitVertex();
     EndPrimitive();
 }

@@ -59,9 +59,9 @@ class GLCamera():
              + projection_matrix = The projection matrix used in the render
                                    by shaders.
         """
-        self.field_of_view = fov
-        self.viewport_aspect_ratio = var
-        self.zero_reference_point = zrp
+        self.field_of_view = np.float32(fov)
+        self.viewport_aspect_ratio = np.float32(var)
+        self.zero_reference_point = np.array(zrp, dtype=np.float32)
         self.max_vertical_angle = 85.0  # must be less than 90 to avoid gimbal lock
         self.horizontal_angle = 0.0
         self.vertical_angle = 0.0
