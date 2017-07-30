@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  gtk3.py
+#  VisMolWidget.py
 #  
-#  Copyright 2016 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
+#  Copyright 2017 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@
 import math
 import numpy as np
 import ctypes
+from OpenGL import GL
+
 import VISMOL.glCore.shapes as shapes
 import VISMOL.glCore.glaxis as glaxis
 import VISMOL.glCore.glcamera as cam
@@ -33,241 +35,45 @@ import VISMOL.glCore.sphere_data as sph_d
 import VISMOL.glCore.vismol_shaders as vm_shader
 import VISMOL.glCore.matrix_operations as mop
 
-import gi
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk
-
-import OpenGL
-from OpenGL import GLU
-from OpenGL import GL
-from OpenGL.GL import shaders
-
-
-class GLMenu:
-    """ Class doc """
-    def __init__ (self, glWidget):
-        """ Class initialiser """
-        xml = '''
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.18.3 -->
-<interface>
-  <requires lib="gtk+" version="3.12"/>
-  <object class="GtkMenu" id="menu1">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <child>
-      <object class="GtkMenuItem" id="menuitem1">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">menuitem1</property>
-        <property name="use_underline">True</property>
-        <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="menuitem2">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">menuitem2</property>
-        <property name="use_underline">True</property>
-        <child type="submenu">
-          <object class="GtkMenu" id="menu2">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <child>
-              <object class="GtkMenuItem" id="menuitem5">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">menuitem5</property>
-                <property name="use_underline">True</property>
-                <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
-              </object>
-            </child>
-          </object>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="menuitem3">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">menuitem3</property>
-        <property name="use_underline">True</property>
-        <child type="submenu">
-          <object class="GtkMenu" id="menu3">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <child>
-              <object class="GtkMenuItem" id="menuitem4">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">menuitem4</property>
-                <property name="use_underline">True</property>
-                <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
-              </object>
-            </child>
-          </object>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="menuitem6">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">menuitem6</property>
-        <property name="use_underline">True</property>
-        <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="menuitem7">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">menuitem7</property>
-        <property name="use_underline">True</property>
-        <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="menuitem8">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">menuitem8</property>
-        <property name="use_underline">True</property>
-        <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="menuitem9">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">El Diablo</property>
-        <property name="use_underline">True</property>
-        <signal name="button-release-event" handler="menuItem_function" swapped="no"/>
-      </object>
-    </child>
-  </object>
-</interface>
-        '''
-
-        self.builder = Gtk.Builder()
-        self.builder.add_from_string(xml)
-        self.builder.connect_signals(self)
-        self.glWidget = glWidget
+class VisMolWidget():
     
-    def open_gl_menu(self, event = None):
-        """ Function doc """
-        
-        # Check if right mouse button was preseed
-        if event.button == 3:
-        #self.popup.popup(None, None, None, None, event.button, event.time)
-        #return True # event has been handled        
-            widget = self.builder.get_object('menu1')
-            widget.popup(None, None, None, None, event.button, event.time)        
-            pass
-    
-    def menuItem_function (self, widget, data):
-        """ Function doc """
-        #print ('Charlitos, seu lindo')
-        if widget == self.builder.get_object('menuitem1'):
-            self.glWidget.test_hide()
-        
-        if widget == self.builder.get_object('menuitem4'):
-            self.glWidget.test_show()
-        
-        if widget == self.builder.get_object('menuitem5'):
-        
-            print ('Charlitos, el diablo')
-        
-        if widget == self.builder.get_object('menuitem6'):
-            print ('Charlitos, el locotto del Andes')
-        
-        if widget == self.builder.get_object('menuitem7'):
-            print ('Charlitos, seu lindo2')
-        
-        if widget == self.builder.get_object('menuitem8'):
-            print ('Charlitos, seu lindo3')
-        
-        if widget == self.builder.get_object('menuitem9'):
-            print ('Charlitos, seu lindo4')
-            
-class GtkGLWidget(Gtk.GLArea):
-    """ Object that contains the GLArea from GTK3+.
-        It needs a vertex and shader to be created, maybe later I'll
-        add a function to change the shaders.
-    """
-    
-    def __init__(self, vismolSession = None, width=640, height=420):
-        """ Constructor of the class, needs two String objects,
-            the vertex and fragment shaders.
+    def __init__(self, widget, vismolSession = None, width=640.0, height=420.0):
+        """ Constructor of the class.
             
             Keyword arguments:
-            vertex -- The vertex shader to be used (REQUIRED)
-            fragment -- The fragment shader to be used (REQUIRED)
-            
-            Returns:
-            A MyGLProgram object.
+            vismolSession - 
         """
-        super(GtkGLWidget, self).__init__()
-        self.connect("realize", self.initialize)
-        self.connect("render", self.render)
-        self.connect("resize", self.reshape)
-        self.connect("key-press-event", self.key_pressed)
-        self.connect("key-release-event", self.key_released)
-        self.connect("button-press-event", self.mouse_pressed)
-        self.connect("button-release-event", self.mouse_released)
-        self.connect("motion-notify-event", self.mouse_motion)
-        self.connect("scroll-event", self.mouse_scroll)
-        self.set_size_request(width, height)
-        self.grab_focus()
-        self.set_events( self.get_events() | Gdk.EventMask.SCROLL_MASK
-                       | Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK
-                       | Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.POINTER_MOTION_HINT_MASK
-                       | Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK )
-        
-        self.vismolSession = vismolSession 
-        self.glMenu = GLMenu(self)
-        self.picking = False
+        self.parent_widget = widget
+        self.vismolSession = vismolSession
+        self.width = np.float32(width)
+        self.height = np.float32(height)
     
-    def initialize(self, widget):
+    def initialize(self):
         """ Enables the buffers and other charasteristics of the OpenGL context.
-            sets the initial projection and view matrix
+            sets the initial projection, view and model matrices
             
             self.flag -- Needed to only create one OpenGL program, otherwise a bunch of
                          programs will be created and use system resources. If the OpenGL
                          program will be changed change this value to True
         """
-        if self.get_error()!=None:
-            print(self.get_error().args)
-            print(self.get_error().code)
-            print(self.get_error().domain)
-            print(self.get_error().message)
-            Gtk.main_quit()
-        aloc = self.get_allocation()
-        w = np.float32(aloc.width)
-        h = np.float32(aloc.height)
+        w = float(self.width)
+        h = float(self.height)
         self.model_mat = np.identity(4, dtype=np.float32)
         self.normal_mat = np.identity(3, dtype=np.float32)
         self.zero_reference_point = np.array([0.0, 0.0, 0.0],dtype=np.float32)
         self.glcamera = cam.GLCamera(10.0, w/h, np.array([0,0,10],dtype=np.float32), self.zero_reference_point)
         self.axis = glaxis.GLAxis()
-        self.set_has_depth_buffer(True)
-        self.set_has_alpha(True)
+        self.parent_widget.set_has_depth_buffer(True)
+        self.parent_widget.set_has_alpha(True)
         self.frame = 0
-        self.shader_flag = True
-        self.modified_data = False
-        self.modified_view = False
         self.scroll = 0.3
         self.right = w/h
         self.left = -self.right
-        self.top = 1
-        self.bottom = -1
+        self.top = 1.0
+        self.bottom = -1.0
         self.button = None
-        self.mouse_x = 0
-        self.mouse_y = 0
-        self.mouse_rotate = False
-        self.mouse_zoom = False
-        self.mouse_pan = False
+        self.mouse_x = 0.0
+        self.mouse_y = 0.0
         self.bckgrnd_color = [0.0,0.0,0.0,1.0]
         self.light_position = np.array([-2.5,-2.5,3.0],dtype=np.float32)
         self.light_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
@@ -275,25 +81,32 @@ class GtkGLWidget(Gtk.GLArea):
         self.light_shininess = 5.5
         self.light_intensity = np.array([0.6,0.6,0.6],dtype=np.float32)
         self.light_specular_color = np.array([1.0,1.0,1.0],dtype=np.float32)
+        self.dist_cam_zrp = np.linalg.norm(self.glcamera.get_position()-self.zero_reference_point)
+        self.shader_flag = True
+        self.modified_data = False
+        self.modified_view = False
+        self.mouse_rotate = False
+        self.mouse_zoom = False
+        self.mouse_pan = False
         self.dragging = False
         self.editing_mols = False
         self.show_axis = True
-        self.dist_cam_zrp = np.linalg.norm(self.glcamera.get_position()-self.zero_reference_point)
         self.ctrl = False
         self.shift = False
         self.atom_picked = None
+        self.picking = False
+        return True
     
-    def reshape(self, widget, width, height):
+    def resize_window(self, width, height):
         """ Resizing function, takes the widht and height of the widget
             and modifies the view in the camera acording to the new values
         
             Keyword arguments:
-            widget -- The widget that is performing resizing
             width -- Actual width of the window
             height -- Actual height of the window
         """
-        w = np.float32(width)
-        h = np.float32(height)
+        w = float(width)
+        h = float(height)
         self.left = -w/h
         self.right = -self.left
         self.width = w
@@ -303,64 +116,232 @@ class GtkGLWidget(Gtk.GLArea):
         self.glcamera.viewport_aspect_ratio = w/h
         self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view,
              self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
-        self.queue_draw()
         return True
     
-    def create_gl_programs(self):
+    def key_pressed(self, k_name):
+        """ The key_pressed function serves, as the names states, to catch
+            events in the keyboard, e.g. letter 'l' pressed, 'backslash'
+            pressed. Note that there is a difference between 'A' and 'a'.
+            Here I use a specific handler for each key pressed after
+            discarding the CONTROL, ALT and SHIFT keys pressed (usefull
+            for customized actions) and maintained, i.e. it's the same as
+            using Ctrl+Z to undo an action.
+        """
+        func = getattr(self, '_pressed_' + k_name, None)
+        if func:
+            func()
+        return True
+    
+    def key_released(self, k_name):
+        """ Used to indicates a key has been released.
+        """
+        func = getattr(self, '_released_' + k_name, None)
+        if func:
+            func()
+        return True
+    
+    def mouse_pressed(self, button_number, mouse_x, mouse_y):
         """ Function doc
         """
-        print('OpenGL version: ',GL.glGetString(GL.GL_VERSION))
-        try:
-            print('OpenGL major version: ',GL.glGetDoublev(GL.GL_MAJOR_VERSION))
-            print('OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION))
-        except:
-            print('OpenGL major version not found')
-        self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
-        self.dots_program = self.load_shaders(vm_shader.vertex_shader_dots, vm_shader.fragment_shader_dots)
-        self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
-        self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
+        left   = int(button_number) == 1
+        middle = int(button_number) == 2
+        right  = int(button_number) == 3
+        self.mouse_rotate = left   and not (middle or right)
+        self.mouse_zoom   = right  and not (middle or left)
+        self.mouse_pan    = middle and not (right  or left)
+        self.mouse_x = float(mouse_x)
+        self.mouse_y = float(mouse_y)
+        self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(self.mouse_x, self.mouse_y)
+        self.dragging = False
+        if left:
+            pass
+        if middle:
+            pass
+            self.picking_x = mouse_x
+            self.picking_y = mouse_y
+            self.picking = True
+            self.parent_widget.queue_draw()
+            #self.queue_draw()
+        if right:
+            pass
+        return True
     
-    def load_shaders(self, vertex, fragment, geometry=None):
-        """ Here the shaders are loaded and compiled to an OpenGL program. By default
-            the constructor shaders will be used, if you want to change the shaders
-            use this function. The flag is used to create only one OpenGL program.
-            
-            Keyword arguments:
-            vertex -- The vertex shader to be used
-            fragment -- The fragment shader to be used
+    def mouse_released(self, button_number, mouse_x, mouse_y):
+        """ Function doc
         """
-        my_vertex_shader = self.create_shader(vertex, GL.GL_VERTEX_SHADER)
-        my_fragment_shader = self.create_shader(fragment, GL.GL_FRAGMENT_SHADER)
-        if geometry is not None:
-            my_geometry_shader = self.create_shader(geometry, GL.GL_GEOMETRY_SHADER)
-        program = GL.glCreateProgram()
-        GL.glAttachShader(program, my_vertex_shader)
-        GL.glAttachShader(program, my_fragment_shader)
-        if geometry is not None:
-            GL.glAttachShader(program, my_geometry_shader)
-        GL.glLinkProgram(program)
-        return program
+        left   = int(button_number) == 1
+        middle = int(button_number) == 2
+        right  = int(button_number) == 3
+        self.mouse_rotate = False
+        self.mouse_zoom = False
+        self.mouse_pan = False
+        if not self.dragging:
+            if left:
+                self.picking_x = mouse_x
+                self.picking_y = mouse_y
+                self.picking =  True
+                self.button = 1
+                self.parent_widget.queue_draw()
+                #self.queue_draw()
+            if middle:
+                if self.atom_picked is not None:
+                    self.button = 2
+                    self.center_on_atom(self.atom_picked)
+                    self.atom_picked = None
+            if right:
+                self.button = 3
+                #self.glMenu.open_gl_menu(event = event)
+        return True
+    
+    def mouse_motion(self, mouse_x, mouse_y):
+        """ Function doc
+        """
+        x = float(mouse_x)
+        y = float(mouse_y)
+        #state = event.state
+        dx = x - self.mouse_x
+        dy = y - self.mouse_y
+        if (dx==0 and dy==0):
+            return
+        self.mouse_x, self.mouse_y = x, y
+        changed = False
+        if self.mouse_rotate:
+            angle = math.sqrt(dx**2+dy**2)/float(self.width+1)*180.0
+            if self.ctrl:
+                if abs(dx) >= abs(dy):
+                    if (y-self.height/2.0) < 0:
+                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, dx])
+                    else:
+                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, -dx])
+                else:
+                    if (x-self.width/2.0) < 0:
+                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, -dy])
+                    else:
+                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, dy])
+            else:
+                rot_mat = mop.my_glRotatef(np.identity(4), angle, [-dy, -dx, 0.0])
+            if not self.editing_mols:
+                self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, rot_mat)
+                for visObj in self.vismolSession.vismol_objects:
+                    visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
+            else:
+                for visObj in self.vismolSession.vismol_objects:
+                    if visObj.editing:
+                        visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
+            if not self.editing_mols:
+                self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, -self.axis.zrp)
+                if self.ctrl:
+                    if abs(dx) >= abs(dy):
+                        if (y-self.height/2.0) < 0:
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, dx])
+                        else:
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, -dx])
+                    else:
+                        if (x-self.width/2.0) < 0:
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, -dy])
+                        else:
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, dy])
+                else:
+                    self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [dy, dx, 0.0])
+                self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, self.axis.zrp)
+            changed = True
         
-    def create_shader(self, shader_prog, shader_type):
-        """ Creates, links to a source, compiles and returns a shader.
-            
-            Keyword arguments:
-            shader -- The shader text to use
-            shader_type -- The OpenGL enum type of shader, it can be:
-                           GL.GL_VERTEX_SHADER, GL.GL_GEOMETRY_SHADER or GL.GL_FRAGMENT_SHADER
-            
-            Returns:
-            A shader object identifier or pops out an error
-        """
-        shader = GL.glCreateShader(shader_type)
-        GL.glShaderSource(shader, shader_prog)
-        GL.glCompileShader(shader)
-        if GL.glGetShaderiv(shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
-            print("Error compiling the shader: ", shader_type)
-            raise RuntimeError(GL.glGetShaderInfoLog(shader))
-        return shader
+        elif self.mouse_pan:
+            px, py, pz = self.pos(x, y)
+            pan_mat = mop.my_glTranslatef(np.identity(4, dtype=np.float32),
+                [(px-self.drag_pos_x)*self.glcamera.z_far/10.0, 
+                 (py-self.drag_pos_y)*self.glcamera.z_far/10.0, 
+                 (pz-self.drag_pos_z)*self.glcamera.z_far/10.0])
+            if not self.editing_mols:
+                self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, pan_mat)
+                for visObj in self.vismolSession.vismol_objects:
+                    visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
+            else:
+                for visObj in self.vismolSession.vismol_objects:
+                    if visObj.editing:
+                        visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
+            self.drag_pos_x = px
+            self.drag_pos_y = py
+            self.drag_pos_z = pz
+            changed = True
+        
+        elif self.mouse_zoom:
+            delta = (((self.glcamera.z_far-self.glcamera.z_near)/2.0)+self.glcamera.z_near)/200.0
+            move_z = dy * delta
+            moved_mat = mop.my_glTranslatef(self.glcamera.view_matrix, [0.0, 0.0, move_z])
+            moved_pos = mop.get_xyz_coords(moved_mat)
+            if moved_pos[2] > 0.101:
+                self.glcamera.set_view_matrix(moved_mat)
+                self.glcamera.z_near -= move_z
+                self.glcamera.z_far -= move_z
+                if self.glcamera.z_near >= self.glcamera.min_znear:
+                    self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
+                            self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
+                else:
+                    if self.glcamera.z_far < (self.glcamera.min_zfar+self.glcamera.min_znear):
+                        self.glcamera.z_near += move_z
+                        self.glcamera.z_far = self.glcamera.min_zfar+self.glcamera.min_znear
+                    self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
+                            self.glcamera.viewport_aspect_ratio, self.glcamera.min_znear, self.glcamera.z_far))
+                self.glcamera.update_fog()
+                self.dist_cam_zrp += -move_z
+                changed = True
+            else:
+                pass
+        self.dragging = True
+        if changed:
+            self.parent_widget.queue_draw()
+            #self.queue_draw()
+        return True
     
-    def render(self, area, context):
+    def mouse_scroll(self, direction):
+        """ Function doc
+        """
+        up = int(direction) == 1
+        down = int(direction) == -1
+        if self.ctrl:
+            if not self.editing_mols:
+                if up:
+                    self.model_mat = mop.my_glTranslatef(self.model_mat, [0.0, 0.0, -self.scroll])
+                if down:
+                    self.model_mat = mop.my_glTranslatef(self.model_mat, [0.0, 0.0, self.scroll])
+                for visObj in self.vismolSession.vismol_objects:
+                    if up:
+                        visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, -self.scroll])
+                    if down:
+                        visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, self.scroll])
+            else:
+                for visObj in self.vismolSession.vismol_objects:
+                    if visObj.editing:
+                        if up:
+                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, -self.scroll])
+                        if down:
+                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, self.scroll])
+        else:
+            pos_z = self.glcamera.get_position()[2]
+            if up:
+                self.glcamera.z_near -= self.scroll
+                self.glcamera.z_far += self.scroll
+            if down:
+                if (self.glcamera.z_far-self.scroll) >= (self.glcamera.min_zfar):
+                    if (self.glcamera.z_far-self.scroll) > (self.glcamera.z_near+self.scroll):
+                        self.glcamera.z_near += self.scroll
+                        self.glcamera.z_far -= self.scroll
+            if (self.glcamera.z_near >= self.glcamera.min_znear):
+                self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
+                        self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
+            else:
+                if self.glcamera.z_far < (self.glcamera.min_zfar+self.glcamera.min_znear):
+                    self.glcamera.z_near -= self.scroll
+                    self.glcamera.z_far = self.glcamera.min_clip+self.glcamera.min_znear
+                self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
+                        self.glcamera.viewport_aspect_ratio, self.glcamera.min_znear, self.glcamera.z_far))
+            self.glcamera.update_fog()
+        self.parent_widget.queue_draw()
+        #self.queue_draw()
+        return True
+    
+    def render(self):
         """ This is the function that will be called everytime the window
             needs to be re-drawed.
         """
@@ -372,8 +353,7 @@ class GtkGLWidget(Gtk.GLArea):
         if self.picking:
             self._pick()
         
-        GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1],
-                        self.bckgrnd_color[2],self.bckgrnd_color[3])
+        GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1], self.bckgrnd_color[2],self.bckgrnd_color[3])
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         
         for visObj in self.vismolSession.vismol_objects:
@@ -418,11 +398,10 @@ class GtkGLWidget(Gtk.GLArea):
                         GL.glEnable(GL.GL_DEPTH_TEST)
                         GL.glUseProgram(self.circles_program)
                         self.load_matrices(self.circles_program, visObj.model_mat)
-                        self.load_fog(self.lines_program)
+                        self.load_fog(self.circles_program)
                         self._draw_circles(visObj = visObj, indexes = False)
                         GL.glUseProgram(0)
                         GL.glDisable(GL.GL_DEPTH_TEST)
-        
         
         # Selection 
         #-------------------------------------------------------------------------------
@@ -500,6 +479,61 @@ class GtkGLWidget(Gtk.GLArea):
             self._draw_axis(False)
             GL.glUseProgram(0)
             GL.glDisable(GL.GL_DEPTH_TEST)
+        return True
+    
+    def create_gl_programs(self):
+        """ Function doc
+        """
+        print('OpenGL version: ',GL.glGetString(GL.GL_VERSION))
+        try:
+            print('OpenGL major version: ',GL.glGetDoublev(GL.GL_MAJOR_VERSION))
+            print('OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION))
+        except:
+            print('OpenGL major version not found')
+        self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
+        self.dots_program = self.load_shaders(vm_shader.vertex_shader_dots, vm_shader.fragment_shader_dots)
+        self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
+        self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
+    
+    def load_shaders(self, vertex, fragment, geometry=None):
+        """ Here the shaders are loaded and compiled to an OpenGL program. By default
+            the constructor shaders will be used, if you want to change the shaders
+            use this function. The flag is used to create only one OpenGL program.
+            
+            Keyword arguments:
+            vertex -- The vertex shader to be used
+            fragment -- The fragment shader to be used
+        """
+        my_vertex_shader = self.create_shader(vertex, GL.GL_VERTEX_SHADER)
+        my_fragment_shader = self.create_shader(fragment, GL.GL_FRAGMENT_SHADER)
+        if geometry is not None:
+            my_geometry_shader = self.create_shader(geometry, GL.GL_GEOMETRY_SHADER)
+        program = GL.glCreateProgram()
+        GL.glAttachShader(program, my_vertex_shader)
+        GL.glAttachShader(program, my_fragment_shader)
+        if geometry is not None:
+            GL.glAttachShader(program, my_geometry_shader)
+        GL.glLinkProgram(program)
+        return program
+        
+    def create_shader(self, shader_prog, shader_type):
+        """ Creates, links to a source, compiles and returns a shader.
+            
+            Keyword arguments:
+            shader -- The shader text to use
+            shader_type -- The OpenGL enum type of shader, it can be:
+                           GL.GL_VERTEX_SHADER, GL.GL_GEOMETRY_SHADER or GL.GL_FRAGMENT_SHADER
+            
+            Returns:
+            A shader object identifier or pops out an error
+        """
+        shader = GL.glCreateShader(shader_type)
+        GL.glShaderSource(shader, shader_prog)
+        GL.glCompileShader(shader)
+        if GL.glGetShaderiv(shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
+            print("Error compiling the shader: ", shader_type)
+            raise RuntimeError(GL.glGetShaderInfoLog(shader))
+        return shader
     
     def _pick(self):
         """ Function doc
@@ -720,10 +754,6 @@ class GtkGLWidget(Gtk.GLArea):
         #GL.glDrawArrays(GL.GL_LINES, 0, len(self.vismolSession.vismol_objects[0].index_bonds)*2)
         #GL.glBindVertexArray(0)
     
-    def make_lines (self, vismol_object):
-        """ Function doc """
-        shapes._make_gl_lines(self.lines_program, vismol_object = vismol_object)
-    
     def _draw_axis(self, flag):
         """ Function doc
         """
@@ -742,45 +772,6 @@ class GtkGLWidget(Gtk.GLArea):
             GL.glDrawArrays(GL.GL_LINES, 0, len(self.axis.lines_vertices))
             GL.glBindVertexArray(0)
     
-    def key_pressed(self, widget, event):
-        """ The mouse_button function serves, as the names states, to catch
-            events in the keyboard, e.g. letter 'l' pressed, 'backslash'
-            pressed. Note that there is a difference between 'A' and 'a'.
-            Here I use a specific handler for each key pressed after
-            discarding the CONTROL, ALT and SHIFT keys pressed (usefull
-            for customized actions) and maintained, i.e. it's the same as
-            using Ctrl+Z to undo an action.
-        """
-        k_name = Gdk.keyval_name(event.keyval)
-        func = getattr(self, '_pressed_' + k_name, None)
-        #print(k_name, 'key Pressed')
-        if func:
-            func()
-        return True
-    
-    def key_released(self, widget, event):
-        """ Used to indicates a key has been released.
-        """
-        k_name = Gdk.keyval_name(event.keyval)
-        func = getattr(self, '_released_' + k_name, None)
-        #print(k_name, 'key released')
-        if func:
-            func()
-        if k_name == 'Right':
-            self.frame +=1
-            print (self.frame)
-        if k_name == 'Left':
-            self.frame -=1
-            print (self.frame)
-        self.queue_draw()
-        return True
-    
-    def _pressed_p(self):
-        """ Function doc
-        """
-        self.glcamera.print_parms()
-        return True
-    
     def _pressed_Control_L(self):
         """ Function doc
         """
@@ -793,191 +784,15 @@ class GtkGLWidget(Gtk.GLArea):
         self.ctrl = False
         return True
     
-    def mouse_pressed(self, widget, event):
-        """ Function doc
-        """
-        left   = event.button == 1
-        middle = event.button == 2
-        right  = event.button == 3
-        self.mouse_rotate = left   and not (middle or right)
-        self.mouse_zoom   = right  and not (middle or left)
-        self.mouse_pan    = middle and not (right  or left)
-        self.mouse_x = event.x
-        self.mouse_y = event.y
-        self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(self.mouse_x, self.mouse_y)
-        self.dragging = False
-        if event.button == 1:
-            pass
-        if event.button == 2:
-            pass
-            self.picking_x = event.x
-            self.picking_y = event.y
-            self.picking = True
-            self.queue_draw()
-        if event.button == 3:
-            pass
     
-    def mouse_released(self, widget, event):
-        """ Function doc
-        """
-        self.mouse_rotate = self.mouse_zoom = self.mouse_pan = False
-        if not self.dragging:
-            if event.button == 1:
-                self.picking_x = event.x
-                self.picking_y = event.y
-                self.picking =  True
-                self.button = 1
-                self.queue_draw()
-            if event.button == 2:
-                if self.atom_picked is not None:
-                    self.button = 2
-                    self.center_on_atom(self.atom_picked)
-                    self.atom_picked = None
-            if event.button == 3:
-                self.button = 3
-                self.glMenu.open_gl_menu(event = event)
     
-    def mouse_motion(self, widget, event):
-        """ Function doc
-        """
-        x = event.x
-        y = event.y
-        state = event.state
-        dx = x - self.mouse_x
-        dy = y - self.mouse_y
-        if (dx==0 and dy==0):
-            return
-        self.mouse_x, self.mouse_y = x, y
-        changed = False
-        if self.mouse_rotate:
-            angle = math.sqrt(dx**2+dy**2)/float(self.width+1)*180.0
-            if self.ctrl:
-                if abs(dx) >= abs(dy):
-                    if (y-self.height/2) < 0:
-                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0, 0, dx])
-                    else:
-                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0, 0, -dx])
-                else:
-                    if (x-self.width/2) < 0:
-                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0, 0, -dy])
-                    else:
-                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0, 0, dy])
-            else:
-                rot_mat = mop.my_glRotatef(np.identity(4), angle, [-dy, -dx, 0])
-            if not self.editing_mols:
-                self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, rot_mat)
-                for visObj in self.vismolSession.vismol_objects:
-                    visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
-            else:
-                for visObj in self.vismolSession.vismol_objects:
-                    if visObj.editing:
-                        visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
-            if not self.editing_mols:
-                self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, -self.axis.zrp)
-                if self.ctrl:
-                    if abs(dx) >= abs(dy):
-                        if (y-self.height/2) < 0:
-                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0, 0, dx])
-                        else:
-                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0, 0, -dx])
-                    else:
-                        if (x-self.width/2) < 0:
-                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0, 0, -dy])
-                        else:
-                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0, 0, dy])
-                else:
-                    self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [dy, dx, 0])
-                self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, self.axis.zrp)
-            changed = True
-        
-        elif self.mouse_pan:
-            px, py, pz = self.pos(x, y)
-            pan_mat = mop.my_glTranslatef(np.identity(4,dtype=np.float32),
-                [(px-self.drag_pos_x)*self.glcamera.z_far/10, 
-                 (py-self.drag_pos_y)*self.glcamera.z_far/10, 
-                 (pz-self.drag_pos_z)*self.glcamera.z_far/10])
-            if not self.editing_mols:
-                self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, pan_mat)
-                for visObj in self.vismolSession.vismol_objects:
-                    visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
-            else:
-                for visObj in self.vismolSession.vismol_objects:
-                    if visObj.editing:
-                        visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
-            self.drag_pos_x = px
-            self.drag_pos_y = py
-            self.drag_pos_z = pz
-            changed = True
-        
-        elif self.mouse_zoom:
-            delta = (((self.glcamera.z_far-self.glcamera.z_near)/2)+self.glcamera.z_near)/200
-            move_z = dy * delta
-            moved_mat = mop.my_glTranslatef(self.glcamera.view_matrix, [0.0, 0.0, move_z])
-            moved_pos = mop.get_xyz_coords(moved_mat)
-            if moved_pos[2] > 0.101:
-                self.glcamera.set_view_matrix(moved_mat)
-                self.glcamera.z_near -= move_z
-                self.glcamera.z_far -= move_z
-                if self.glcamera.z_near >= self.glcamera.min_znear:
-                    self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
-                            self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
-                else:
-                    if self.glcamera.z_far < (self.glcamera.min_zfar+self.glcamera.min_znear):
-                        self.glcamera.z_near += move_z
-                        self.glcamera.z_far = self.glcamera.min_zfar+self.glcamera.min_znear
-                    self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
-                            self.glcamera.viewport_aspect_ratio, self.glcamera.min_znear, self.glcamera.z_far))
-                self.glcamera.update_fog()
-                self.dist_cam_zrp += -move_z
-                changed = True
-            else:
-                pass
-        self.dragging = True
-        if changed:
-            self.queue_draw()
     
-    def mouse_scroll(self, widget, event):
-        """ Function doc
-        """
-        if self.ctrl:
-            if not self.editing_mols:
-                if event.direction == Gdk.ScrollDirection.UP:
-                    self.model_mat = mop.my_glTranslatef(self.model_mat, [0.0, 0.0, -self.scroll])
-                if event.direction == Gdk.ScrollDirection.DOWN:
-                    self.model_mat = mop.my_glTranslatef(self.model_mat, [0.0, 0.0, self.scroll])
-                for visObj in self.vismolSession.vismol_objects:
-                    if event.direction == Gdk.ScrollDirection.UP:
-                        visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, -self.scroll])
-                    if event.direction == Gdk.ScrollDirection.DOWN:
-                        visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, self.scroll])
-            else:
-                for visObj in self.vismolSession.vismol_objects:
-                    if visObj.editing:
-                        if event.direction == Gdk.ScrollDirection.UP:
-                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, -self.scroll])
-                        if event.direction == Gdk.ScrollDirection.DOWN:
-                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, self.scroll])
-        else:
-            pos_z = self.glcamera.get_position()[2]
-            if event.direction == Gdk.ScrollDirection.UP:
-                self.glcamera.z_near -= self.scroll
-                self.glcamera.z_far += self.scroll
-            if event.direction == Gdk.ScrollDirection.DOWN:
-                if (self.glcamera.z_far-self.scroll) >= (self.glcamera.min_zfar):
-                    if (self.glcamera.z_far-self.scroll) > (self.glcamera.z_near+self.scroll):
-                        self.glcamera.z_near += self.scroll
-                        self.glcamera.z_far -= self.scroll
-            if (self.glcamera.z_near >= self.glcamera.min_znear):
-                self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
-                        self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
-            else:
-                if self.glcamera.z_far < (self.glcamera.min_zfar+self.glcamera.min_znear):
-                    self.glcamera.z_near -= self.scroll
-                    self.glcamera.z_far = self.glcamera.min_clip+self.glcamera.min_znear
-                self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
-                        self.glcamera.viewport_aspect_ratio, self.glcamera.min_znear, self.glcamera.z_far))
-            self.glcamera.update_fog()
-        self.queue_draw()
+    
+    
+    
+    
+    
+    
     
     def pos(self, x, y):
         """
@@ -1026,10 +841,13 @@ class GtkGLWidget(Gtk.GLArea):
             self.model_mat = mop.my_glTranslatef(self.model_mat, -to_move[:3])
             for visObj in self.vismolSession.vismol_objects:
                 visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move[:3])
-            self.get_window().invalidate_rect(None, False)
-            self.get_window().process_updates(False)
+            self.parent_widget.get_window().invalidate_rect(None, False)
+            self.parent_widget.get_window().process_updates(False)
+            #self.get_window().invalidate_rect(None, False)
+            #self.get_window().process_updates(False)
             time.sleep(0.02)
-        self.queue_draw()
+        self.parent_widget.queue_draw()
+        #self.queue_draw()
     
     def _print_matrices(self):
         """ Function doc
