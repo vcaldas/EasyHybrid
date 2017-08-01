@@ -275,6 +275,7 @@ class GtkGLWidget(Gtk.GLArea):
             using Ctrl+Z to undo an action.
         """
         k_name = Gdk.keyval_name(event.keyval)
+        #print(k_name)
         self.vm_widget.key_pressed(k_name)
     
     def key_released(self, widget, event):

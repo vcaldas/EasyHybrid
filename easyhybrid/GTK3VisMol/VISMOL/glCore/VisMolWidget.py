@@ -34,6 +34,7 @@ import VISMOL.glCore.operations as op
 import VISMOL.glCore.sphere_data as sph_d
 import VISMOL.glCore.vismol_shaders as vm_shader
 import VISMOL.glCore.matrix_operations as mop
+import VISMOL.glCore.selection_box as sb
 
 class VisMolWidget():
     
@@ -74,6 +75,7 @@ class VisMolWidget():
         self.button = None
         self.mouse_x = 0.0
         self.mouse_y = 0.0
+        self.selection_box = sb.SelectionBox()
         self.bckgrnd_color = [0.0,0.0,0.0,1.0]
         self.light_position = np.array([-2.5,-2.5,3.0],dtype=np.float32)
         self.light_color = np.array([1.0,1.0,1.0,1.0],dtype=np.float32)
@@ -95,6 +97,7 @@ class VisMolWidget():
         self.shift = False
         self.atom_picked = None
         self.picking = False
+        self.show_selection_box = False
         return True
     
     def resize_window(self, width, height):
@@ -154,9 +157,12 @@ class VisMolWidget():
         self.drag_pos_x, self.drag_pos_y, self.drag_pos_z = self.pos(self.mouse_x, self.mouse_y)
         self.dragging = False
         if left:
-            pass
+            if self.shift:
+                self.show_selection_box = True
+                self.selection_box.start = self.get_viewport_pos(float(mouse_x), float(mouse_y))
+                self.selection_box.end = self.get_viewport_pos(float(mouse_x), float(mouse_y))
+                self.selection_box.update_points()
         if middle:
-            pass
             self.picking_x = mouse_x
             self.picking_y = mouse_y
             self.picking = True
@@ -191,6 +197,13 @@ class VisMolWidget():
             if right:
                 self.button = 3
                 #self.glMenu.open_gl_menu(event = event)
+        else:
+            if left:
+                if self.shift:
+                    self.show_selection_box = False
+                    self.selection_box.start = None
+                    self.selection_box.end = None
+                    self.parent_widget.queue_draw()
         return True
     
     def mouse_motion(self, mouse_x, mouse_y):
@@ -205,45 +218,52 @@ class VisMolWidget():
             return
         self.mouse_x, self.mouse_y = x, y
         changed = False
+        
         if self.mouse_rotate:
             angle = math.sqrt(dx**2+dy**2)/float(self.width+1)*180.0
-            if self.ctrl:
-                if abs(dx) >= abs(dy):
-                    if (y-self.height/2.0) < 0:
-                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, dx])
-                    else:
-                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, -dx])
-                else:
-                    if (x-self.width/2.0) < 0:
-                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, -dy])
-                    else:
-                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, dy])
+            if self.shift:
+                self.selection_box.end = self.get_viewport_pos(float(mouse_x), float(mouse_y))
+                self.selection_box.update_points()
             else:
-                rot_mat = mop.my_glRotatef(np.identity(4), angle, [-dy, -dx, 0.0])
-            if not self.editing_mols:
-                self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, rot_mat)
-                for visObj in self.vismolSession.vismol_objects:
-                    visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
-            else:
-                for visObj in self.vismolSession.vismol_objects:
-                    if visObj.editing:
-                        visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
-            if not self.editing_mols:
-                self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, -self.axis.zrp)
                 if self.ctrl:
                     if abs(dx) >= abs(dy):
                         if (y-self.height/2.0) < 0:
-                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, dx])
+                            rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, dx])
                         else:
-                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, -dx])
+                            rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, -dx])
                     else:
                         if (x-self.width/2.0) < 0:
-                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, -dy])
+                            rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, -dy])
                         else:
-                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, dy])
+                            rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, dy])
                 else:
-                    self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [dy, dx, 0.0])
-                self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, self.axis.zrp)
+                    rot_mat = mop.my_glRotatef(np.identity(4), angle, [-dy, -dx, 0.0])
+                if not self.editing_mols:
+                    self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, rot_mat)
+                    for visObj in self.vismolSession.vismol_objects:
+                        visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
+                else:
+                    for visObj in self.vismolSession.vismol_objects:
+                        if visObj.editing:
+                            visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
+                # Axis operations, this code only affects the gizmo axis
+                if not self.editing_mols:
+                    self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, -self.axis.zrp)
+                    if self.ctrl:
+                        if abs(dx) >= abs(dy):
+                            if (y-self.height/2.0) < 0:
+                                self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, dx])
+                            else:
+                                self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, -dx])
+                        else:
+                            if (x-self.width/2.0) < 0:
+                                self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, -dy])
+                            else:
+                                self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, dy])
+                    else:
+                        self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [dy, dx, 0.0])
+                    self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, self.axis.zrp)
+                # Axis operations, this code only affects the gizmo axis
             changed = True
         
         elif self.mouse_pan:
@@ -362,46 +382,17 @@ class VisMolWidget():
                     if visObj.lines_vao is None:
                         shapes._make_gl_lines(self.lines_program, vismol_object = visObj)
                     else:
-                        GL.glEnable(GL.GL_DEPTH_TEST)
-                        #GL.glEnable(GL.GL_BLEND)
-                        #GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
-                        #GL.glEnable(GL.GL_LINE_SMOOTH)
-                        #GL.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST)
-                        GL.glUseProgram(self.lines_program)
-                        GL.glLineWidth(80/abs(self.dist_cam_zrp))
-                        self.load_matrices(self.lines_program, visObj.model_mat)
-                        self.load_fog(self.lines_program)
                         self._draw_lines(visObj = visObj)
-                        GL.glUseProgram(0)
-                        #GL.glDisable(GL.GL_LINE_SMOOTH)
-                        #GL.glDisable(GL.GL_BLEND)
-                        GL.glDisable(GL.GL_DEPTH_TEST)
                 if visObj.dots_actived:
                     if visObj.dots_vao is None:
                         shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
                     else:
-                        pass
-                        GL.glEnable(GL.GL_DEPTH_TEST)
-                        GL.glUseProgram(self.dots_program)
-                        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                        self.load_matrices(self.dots_program, visObj.model_mat)
-                        self.load_fog(self.dots_program)
-                        self.load_dot_params(self.dots_program)
                         self._draw_dots(visObj = visObj, indexes = False)
-                        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-                        GL.glUseProgram(0)
-                        GL.glDisable(GL.GL_DEPTH_TEST)
                 if visObj.circles_actived:
                     if visObj.circles_vao is None:
                         shapes._make_gl_circles(self.circles_program, vismol_object = visObj)
                     else:
-                        GL.glEnable(GL.GL_DEPTH_TEST)
-                        GL.glUseProgram(self.circles_program)
-                        self.load_matrices(self.circles_program, visObj.model_mat)
-                        self.load_fog(self.circles_program)
                         self._draw_circles(visObj = visObj, indexes = False)
-                        GL.glUseProgram(0)
-                        GL.glDisable(GL.GL_DEPTH_TEST)
         
         # Selection 
         #-------------------------------------------------------------------------------
@@ -468,17 +459,14 @@ class VisMolWidget():
         #-------------------------------------------------------------------------------
         
         if self.show_axis:
-            GL.glEnable(GL.GL_DEPTH_TEST)
-            GL.glUseProgram(self.axis.gl_axis_program)
-            self.axis.load_params()
             self._draw_axis(True)
-            GL.glUseProgram(0)
-            GL.glUseProgram(self.axis.gl_lines_program)
-            GL.glLineWidth(3)
-            self.axis.load_lines_params()
             self._draw_axis(False)
-            GL.glUseProgram(0)
-            GL.glDisable(GL.GL_DEPTH_TEST)
+        
+        if self.show_selection_box and self.shift:
+            if self.selection_box.vao is None:
+                shapes._make_gl_selection_box(self.selection_box_program, self.selection_box)
+            else:
+                self._draw_selection_box(self.selection_box)
         return True
     
     def create_gl_programs(self):
@@ -490,10 +478,11 @@ class VisMolWidget():
             print('OpenGL minor version: ',GL.glGetDoublev(GL.GL_MINOR_VERSION))
         except:
             print('OpenGL major version not found')
-        self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
         self.dots_program = self.load_shaders(vm_shader.vertex_shader_dots, vm_shader.fragment_shader_dots)
-        self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
         self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
+        self.selection_box_program = self.load_shaders(vm_shader.vertex_shader_selection_box, vm_shader.fragment_shader_selection_box)
+        self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
+        self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
     
     def load_shaders(self, vertex, fragment, geometry=None):
         """ Here the shaders are loaded and compiled to an OpenGL program. By default
@@ -626,6 +615,10 @@ class VisMolWidget():
     def _draw_circles(self, visObj = None, indexes = False):
         """ Function doc
         """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.circles_program)
+        self.load_matrices(self.circles_program, visObj.model_mat)
+        self.load_fog(self.circles_program)
         if visObj.circles_vao is not None:
             GL.glBindVertexArray(visObj.circles_vao)
             if self.modified_view:
@@ -645,10 +638,18 @@ class VisMolWidget():
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
     
     def _draw_dots(self, visObj = None,  indexes = False):
         """ Function doc
         """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.dots_program)
+        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+        self.load_matrices(self.dots_program, visObj.model_mat)
+        self.load_fog(self.dots_program)
+        self.load_dot_params(self.dots_program)
         if visObj.dots_vao is not None:
             GL.glBindVertexArray(visObj.dots_vao)
             if self.modified_view:
@@ -668,6 +669,9 @@ class VisMolWidget():
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
+        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+        GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
     
     def _draw_picking_dots(self, visObj = None,  indexes = False):
         """ Function doc
@@ -696,6 +700,15 @@ class VisMolWidget():
     def _draw_lines(self, visObj = None):
         """ Function doc
         """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        #GL.glEnable(GL.GL_BLEND)
+        #GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        #GL.glEnable(GL.GL_LINE_SMOOTH)
+        #GL.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST)
+        GL.glUseProgram(self.lines_program)
+        GL.glLineWidth(80/abs(self.dist_cam_zrp))
+        self.load_matrices(self.lines_program, visObj.model_mat)
+        self.load_fog(self.lines_program)
         if visObj.lines_vao is not None:
             GL.glBindVertexArray(visObj.lines_vao)
             if self.modified_view:
@@ -734,30 +747,19 @@ class VisMolWidget():
                 #GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
                 GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
-
-            
-        #for visObj in self.vismolSession.vismol_objects:
-        #    if visObj.lines_vao is not None:
-        #        GL.glBindVertexArray(visObj.lines_vao)
-        #        if self.modified_view:
-        #            pass
-        #            #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[0])
-        #            #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
-        #            #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_INT, None)
-        #            #GL.glBindVertexArray(0)
-        #            #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-        #            #self.modified_data = False
-        #        else:
-        #            GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
-        #assert(len(self.lines_vao)>0)
-        #GL.glBindVertexArray(self.lines_vao[0])
-        #GL.glDrawArrays(GL.GL_LINES, 0, len(self.vismolSession.vismol_objects[0].index_bonds)*2)
-        #GL.glBindVertexArray(0)
+        GL.glLineWidth(1)
+        GL.glUseProgram(0)
+        #GL.glDisable(GL.GL_LINE_SMOOTH)
+        #GL.glDisable(GL.GL_BLEND)
+        GL.glDisable(GL.GL_DEPTH_TEST)
     
     def _draw_axis(self, flag):
         """ Function doc
         """
+        GL.glEnable(GL.GL_DEPTH_TEST)
         if flag:
+            GL.glUseProgram(self.axis.gl_axis_program)
+            self.axis.load_params()
             GL.glBindVertexArray(self.axis.x_vao)
             GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_INT, None)
             GL.glBindVertexArray(0)
@@ -767,10 +769,29 @@ class VisMolWidget():
             GL.glBindVertexArray(self.axis.z_vao)
             GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_INT, None)
             GL.glBindVertexArray(0)
+            GL.glUseProgram(0)
         else:
+            GL.glUseProgram(self.axis.gl_lines_program)
+            GL.glLineWidth(3)
+            self.axis.load_lines_params()
             GL.glBindVertexArray(self.axis.lines_vao)
             GL.glDrawArrays(GL.GL_LINES, 0, len(self.axis.lines_vertices))
             GL.glBindVertexArray(0)
+            GL.glLineWidth(1)
+            GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    def _draw_selection_box(self, sel_box):
+        """ Function doc """
+        GL.glUseProgram(self.selection_box_program)
+        GL.glLineWidth(1)
+        GL.glBindVertexArray(sel_box.vao)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, sel_box.buffers[1])
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, sel_box.points.itemsize*int(len(sel_box.points)), sel_box.points, GL.GL_STATIC_DRAW)
+        GL.glDrawElements(GL.GL_LINE_STRIP, int(len(sel_box.points)/2), GL.GL_UNSIGNED_INT, None)
+        GL.glBindVertexArray(0)
+        GL.glLineWidth(1)
+        GL.glUseProgram(0)
     
     def _pressed_Control_L(self):
         """ Function doc
@@ -784,6 +805,17 @@ class VisMolWidget():
         self.ctrl = False
         return True
     
+    def _pressed_Shift_L(self):
+        """ Function doc
+        """
+        self.shift = True
+        return True
+    
+    def _released_Shift_L(self):
+        """ Function doc
+        """
+        self.shift = False
+        return True
     
     
     
@@ -793,6 +825,11 @@ class VisMolWidget():
     
     
     
+    def get_viewport_pos(self, x, y):
+        """ Function doc """
+        px = (2.0*x - self.width)/self.width
+        py = (2.0*y - self.height)/self.height
+        return [px, -py]
     
     def pos(self, x, y):
         """
