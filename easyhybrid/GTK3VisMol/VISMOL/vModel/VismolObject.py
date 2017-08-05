@@ -63,14 +63,19 @@ class VismolObject:
 
         self.atom_unique_id_dic = {}
         self.index_bonds        = None
-       
+        self.non_bonded_atoms   = None
+		
+		
         self._generate_chain_structure()
         self._generate_atom_unique_color_id()
         self._generate_bonds()
+        self._generate_non_bonded_list()
+        
         #self._generate_colors()
         
         """   L I N E S   """
-        self.lines_actived = True
+        self.lines_actived   = True
+        self.lines_show_list = True
         
         #self.line_representation = LineRepresentation(self)
         #self.line_representation.update()
@@ -79,7 +84,7 @@ class VismolObject:
         self.dots_actived = False
 
         """   C I R C L E S   """
-        self.circles_actived = True
+        self.circles_actived = False
 
         #self.flat_sphere_representation = FlatSphereRepresentation(self)
         
@@ -219,6 +224,18 @@ class VismolObject:
         self.index_bonds = C_generate_bonds(self.atoms)
         final = time.time() 
         print ('generate_bonds end -  total time: ', final - initial, '\n')
+
+    def _generate_non_bonded_list (self):
+        """ Function doc """
+        self.non_bonded_atoms   =  []
+        for atom in self.atoms:
+            if atom.index -1 in self.index_bonds:
+                pass
+            else:
+                self.non_bonded_atoms.append(atom.index -1)
+        self.non_bonded_atoms = np.array(self.non_bonded_atoms, dtype=np.uint32)
+
+
 
     def _generate_atom_unique_color_id (self):
         self.color_indexes  = []

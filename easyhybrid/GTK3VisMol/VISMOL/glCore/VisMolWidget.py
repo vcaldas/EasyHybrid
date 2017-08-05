@@ -383,11 +383,13 @@ class VisMolWidget():
                         shapes._make_gl_lines(self.lines_program, vismol_object = visObj)
                     else:
                         self._draw_lines(visObj = visObj)
+                
                 if visObj.dots_actived:
                     if visObj.dots_vao is None:
                         shapes._make_gl_dots (self.dots_program,  vismol_object = visObj)
                     else:
                         self._draw_dots(visObj = visObj, indexes = False)
+                
                 if visObj.circles_actived:
                     if visObj.circles_vao is None:
                         shapes._make_gl_circles(self.circles_program, vismol_object = visObj)
@@ -426,7 +428,64 @@ class VisMolWidget():
             GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
             GL.glUseProgram(0)
             GL.glDisable(GL.GL_DEPTH_TEST)
-        
+
+        #-------------------------------------------------------------------------------
+        #                               NON BONDED ATOMS
+        #-------------------------------------------------------------------------------        
+        for visObj in self.vismolSession.vismol_objects:
+            if visObj.circles_vao is None:
+                shapes._make_gl_circles(self.circles_program, vismol_object = visObj)
+            
+            #GL.glEnable(GL.GL_DEPTH_TEST)
+            GL.glUseProgram(self.circles_program)
+            GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+            self.load_matrices(self.circles_program, visObj.model_mat)
+            
+            indexes = visObj.non_bonded_atoms
+            colors  = visObj.colors
+
+            #self._draw_picking_dots(visObj = visObj, indexes = False)
+            GL.glBindVertexArray(visObj.circles_vao)
+            
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.circles_buffers[0])
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), 
+                            indexes, GL.GL_STATIC_DRAW)
+            
+            
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.circles_buffers[1])
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                            visObj.frames[self.frame], GL.GL_STATIC_DRAW)
+
+
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.circles_buffers[2])
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*len(colors), colors, GL.GL_STATIC_DRAW)
+
+
+            #rad_vbo = GL.glGenBuffers(1)
+            #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, rad_vbo)
+            #GL.glBufferData(GL.GL_ARRAY_BUFFER, radios.itemsize*len(radios), radios, GL.GL_STATIC_DRAW)
+            #gl_rad = GL.glGetAttribLocation(program, 'vert_rad')
+            #GL.glEnableVertexAttribArray(gl_rad)
+            #GL.glVertexAttribPointer(gl_rad, 1, GL.GL_FLOAT, GL.GL_FALSE, colors.itemsize, ctypes.c_void_p(0))
+
+
+
+
+
+
+
+
+            #GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_INT, None)
+            GL.glBindVertexArray(0)
+            
+            GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+            GL.glUseProgram(0)
+            GL.glDisable(GL.GL_DEPTH_TEST)
+        #-------------------------------------------------------------------------------
+
+
+
         
         
         #for visObj in self.vismolSession.selections[self.vismolSession.current_selection].selected_objects:
