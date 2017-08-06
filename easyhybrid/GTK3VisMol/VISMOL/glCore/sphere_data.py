@@ -5504,6 +5504,3 @@ sphere_triangles = {'level_0':np.array(
   2557,   641,  2561,  2560,   340,  1360,  2561,  2560,  2561,  1360],dtype=np.uint16)
 }
 
-
-
-

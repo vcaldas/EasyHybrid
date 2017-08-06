@@ -27,6 +27,8 @@ import math, copy
 import ctypes
 from OpenGL import GL
 
+#import matrix_operations as mop
+#import sphere_data as sphd
 import VISMOL.glCore.sphere_data as sphd
 import VISMOL.glCore.cylinder_data as cyd
 import VISMOL.glCore.matrix_operations as mop
@@ -94,9 +96,9 @@ def get_icosahedron(radius):
 def get_sphere(pos, rad, color, level='level_1'):
     """ Function doc
     """
-    vertices = copy.copy(sphd.sphere_vertices[level])
-    indices = copy.copy(sphd.sphere_triangles[level])
-    colors = np.array(color*len(vertices),dtype=np.float32)
+    vertices = np.copy(sphd.sphere_vertices[level])
+    indices = np.copy(sphd.sphere_triangles[level])
+    colors = np.array(color*len(vertices), dtype=np.float32)
     for i in range(int(len(vertices)/3)):
         vertices[i*3:(i+1)*3] = (vertices[i*3:(i+1)*3] * rad) + pos
     return vertices, indices, colors

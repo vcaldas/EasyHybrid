@@ -218,98 +218,14 @@ class VisMolWidget():
             return
         self.mouse_x, self.mouse_y = x, y
         changed = False
-        
         if self.mouse_rotate:
-            angle = math.sqrt(dx**2+dy**2)/float(self.width+1)*180.0
-            if self.shift:
-                self.selection_box.end = self.get_viewport_pos(float(mouse_x), float(mouse_y))
-                self.selection_box.update_points()
-            else:
-                if self.ctrl:
-                    if abs(dx) >= abs(dy):
-                        if (y-self.height/2.0) < 0:
-                            rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, dx])
-                        else:
-                            rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, -dx])
-                    else:
-                        if (x-self.width/2.0) < 0:
-                            rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, -dy])
-                        else:
-                            rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, dy])
-                else:
-                    rot_mat = mop.my_glRotatef(np.identity(4), angle, [-dy, -dx, 0.0])
-                if not self.editing_mols:
-                    self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, rot_mat)
-                    for visObj in self.vismolSession.vismol_objects:
-                        visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
-                else:
-                    for visObj in self.vismolSession.vismol_objects:
-                        if visObj.editing:
-                            visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
-                # Axis operations, this code only affects the gizmo axis
-                if not self.editing_mols:
-                    self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, -self.axis.zrp)
-                    if self.ctrl:
-                        if abs(dx) >= abs(dy):
-                            if (y-self.height/2.0) < 0:
-                                self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, dx])
-                            else:
-                                self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, -dx])
-                        else:
-                            if (x-self.width/2.0) < 0:
-                                self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, -dy])
-                            else:
-                                self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, dy])
-                    else:
-                        self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [dy, dx, 0.0])
-                    self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, self.axis.zrp)
-                # Axis operations, this code only affects the gizmo axis
-            changed = True
-        
+            changed = self._rotate_view(dx, dy, x, y)
         elif self.mouse_pan:
-            px, py, pz = self.pos(x, y)
-            pan_mat = mop.my_glTranslatef(np.identity(4, dtype=np.float32),
-                [(px-self.drag_pos_x)*self.glcamera.z_far/10.0, 
-                 (py-self.drag_pos_y)*self.glcamera.z_far/10.0, 
-                 (pz-self.drag_pos_z)*self.glcamera.z_far/10.0])
-            if not self.editing_mols:
-                self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, pan_mat)
-                for visObj in self.vismolSession.vismol_objects:
-                    visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
-            else:
-                for visObj in self.vismolSession.vismol_objects:
-                    if visObj.editing:
-                        visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
-            self.drag_pos_x = px
-            self.drag_pos_y = py
-            self.drag_pos_z = pz
-            changed = True
-        
+            changed = self._pan_view(x, y)
         elif self.mouse_zoom:
-            delta = (((self.glcamera.z_far-self.glcamera.z_near)/2.0)+self.glcamera.z_near)/200.0
-            move_z = dy * delta
-            moved_mat = mop.my_glTranslatef(self.glcamera.view_matrix, [0.0, 0.0, move_z])
-            moved_pos = mop.get_xyz_coords(moved_mat)
-            if moved_pos[2] > 0.101:
-                self.glcamera.set_view_matrix(moved_mat)
-                self.glcamera.z_near -= move_z
-                self.glcamera.z_far -= move_z
-                if self.glcamera.z_near >= self.glcamera.min_znear:
-                    self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
-                            self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
-                else:
-                    if self.glcamera.z_far < (self.glcamera.min_zfar+self.glcamera.min_znear):
-                        self.glcamera.z_near += move_z
-                        self.glcamera.z_far = self.glcamera.min_zfar+self.glcamera.min_znear
-                    self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
-                            self.glcamera.viewport_aspect_ratio, self.glcamera.min_znear, self.glcamera.z_far))
-                self.glcamera.update_fog()
-                self.dist_cam_zrp += -move_z
-                changed = True
-            else:
-                pass
-        self.dragging = True
+            changed = self._zoom_view(dy)
         if changed:
+            self.dragging = True
             self.parent_widget.queue_draw()
             #self.queue_draw()
         return True
@@ -360,6 +276,99 @@ class VisMolWidget():
         self.parent_widget.queue_draw()
         #self.queue_draw()
         return True
+    
+    def _rotate_view(self, dx, dy, x, y):
+        """ Function doc """
+        angle = math.sqrt(dx**2+dy**2)/float(self.width+1)*180.0
+        if self.shift:
+            self.selection_box.end = self.get_viewport_pos(float(self.mouse_x), float(self.mouse_y))
+            self.selection_box.update_points()
+        else:
+            if self.ctrl:
+                if abs(dx) >= abs(dy):
+                    if (y-self.height/2.0) < 0:
+                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, dx])
+                    else:
+                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, -dx])
+                else:
+                    if (x-self.width/2.0) < 0:
+                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, -dy])
+                    else:
+                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, dy])
+            else:
+                rot_mat = mop.my_glRotatef(np.identity(4), angle, [-dy, -dx, 0.0])
+            if not self.editing_mols:
+                self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, rot_mat)
+                for visObj in self.vismolSession.vismol_objects:
+                    visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
+            else:
+                for visObj in self.vismolSession.vismol_objects:
+                    if visObj.editing:
+                        visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
+            # Axis operations, this code only affects the gizmo axis
+            if not self.editing_mols:
+                self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, -self.axis.zrp)
+                if self.ctrl:
+                    if abs(dx) >= abs(dy):
+                        if (y-self.height/2.0) < 0:
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, dx])
+                        else:
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, -dx])
+                    else:
+                        if (x-self.width/2.0) < 0:
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, -dy])
+                        else:
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, dy])
+                else:
+                    self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [dy, dx, 0.0])
+                self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, self.axis.zrp)
+            # Axis operations, this code only affects the gizmo axis
+        return True
+    
+    def _pan_view(self, x, y):
+        """ Function doc """
+        px, py, pz = self.pos(x, y)
+        pan_mat = mop.my_glTranslatef(np.identity(4, dtype=np.float32),
+            [(px-self.drag_pos_x)*self.glcamera.z_far/10.0, 
+             (py-self.drag_pos_y)*self.glcamera.z_far/10.0, 
+             (pz-self.drag_pos_z)*self.glcamera.z_far/10.0])
+        if not self.editing_mols:
+            self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, pan_mat)
+            for visObj in self.vismolSession.vismol_objects:
+                visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
+        else:
+            for visObj in self.vismolSession.vismol_objects:
+                if visObj.editing:
+                    visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
+        self.drag_pos_x = px
+        self.drag_pos_y = py
+        self.drag_pos_z = pz
+        return True
+    
+    def _zoom_view(self, dy):
+        """ Function doc """
+        delta = (((self.glcamera.z_far-self.glcamera.z_near)/2.0)+self.glcamera.z_near)/200.0
+        move_z = dy * delta
+        moved_mat = mop.my_glTranslatef(self.glcamera.view_matrix, [0.0, 0.0, move_z])
+        moved_pos = mop.get_xyz_coords(moved_mat)
+        if moved_pos[2] > 0.101:
+            self.glcamera.set_view_matrix(moved_mat)
+            self.glcamera.z_near -= move_z
+            self.glcamera.z_far -= move_z
+            if self.glcamera.z_near >= self.glcamera.min_znear:
+                self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
+                        self.glcamera.viewport_aspect_ratio, self.glcamera.z_near, self.glcamera.z_far))
+            else:
+                if self.glcamera.z_far < (self.glcamera.min_zfar+self.glcamera.min_znear):
+                    self.glcamera.z_near += move_z
+                    self.glcamera.z_far = self.glcamera.min_zfar+self.glcamera.min_znear
+                self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
+                        self.glcamera.viewport_aspect_ratio, self.glcamera.min_znear, self.glcamera.z_far))
+            self.glcamera.update_fog()
+            self.dist_cam_zrp += -move_z
+            return True
+        return False
+        
     
     def render(self):
         """ This is the function that will be called everytime the window

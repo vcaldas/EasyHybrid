@@ -192,6 +192,7 @@ class GLMenu:
         if widget == self.builder.get_object('menuitem9'):
             print ('Charlitos, seu lindo4')
             
+
 class GtkGLWidget(Gtk.GLArea):
     """ Object that contains the GLArea from GTK3+.
         It needs a vertex and shader to be created, maybe later I'll
