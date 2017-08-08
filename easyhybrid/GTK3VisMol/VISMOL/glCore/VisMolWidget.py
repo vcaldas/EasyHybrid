@@ -526,15 +526,15 @@ class VisMolWidget():
         #        #GL.glDisable(GL.GL_DEPTH_TEST)
         #-------------------------------------------------------------------------------
         
-        if self.show_axis:
-            self._draw_axis(True)
-            self._draw_axis(False)
-        
         if self.show_selection_box and self.shift:
             if self.selection_box.vao is None:
                 shapes._make_gl_selection_box(self.selection_box_program, self.selection_box)
             else:
                 self._draw_selection_box(self.selection_box)
+        
+        if self.show_axis:
+            self._draw_axis(True)
+            self._draw_axis(False)
         return True
     
     def create_gl_programs(self):
@@ -855,10 +855,19 @@ class VisMolWidget():
         GL.glLineWidth(1)
         GL.glBindVertexArray(sel_box.vao)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, sel_box.buffers[1])
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, sel_box.points.itemsize*int(len(sel_box.points)), sel_box.points, GL.GL_STATIC_DRAW)
-        GL.glDrawElements(GL.GL_LINE_STRIP, int(len(sel_box.points)/2), GL.GL_UNSIGNED_INT, None)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, sel_box.points.itemsize*int(len(sel_box.points)), sel_box.points, GL.GL_DYNAMIC_DRAW)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, sel_box.buffers[0])
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, sel_box.indexes.itemsize*int(len(sel_box.indexes)), sel_box.indexes, GL.GL_DYNAMIC_DRAW)
+        GL.glDrawElements(GL.GL_LINE_STRIP, int(len(sel_box.indexes)), GL.GL_UNSIGNED_INT, None)
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_SRC_ALPHA)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, sel_box.buffers[0])
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, sel_box.triangles.itemsize*int(len(sel_box.triangles)), sel_box.triangles, GL.GL_DYNAMIC_DRAW)
+        GL.glDrawElements(GL.GL_TRIANGLE_STRIP, int(len(sel_box.triangles)), GL.GL_UNSIGNED_INT, None)
+        GL.glDisable(GL.GL_BLEND)
+        GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glBindVertexArray(0)
-        GL.glLineWidth(1)
         GL.glUseProgram(0)
     
     def _pressed_Control_L(self):

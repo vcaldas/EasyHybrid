@@ -593,7 +593,7 @@ def _make_gl_selection_box(program, sel_box):
     
     coord_vbo = GL.glGenBuffers(1)
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, coord_vbo)
-    GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.itemsize*int(len(coords)), coords, GL.GL_STATIC_DRAW)
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.itemsize*int(len(coords)), coords, GL.GL_DYNAMIC_DRAW)
     att_position = GL.glGetAttribLocation(program, 'vert_coord')
     GL.glEnableVertexAttribArray(att_position)
     GL.glVertexAttribPointer(att_position, 2, GL.GL_FLOAT, GL.GL_FALSE, 2*coords.itemsize, ctypes.c_void_p(0))

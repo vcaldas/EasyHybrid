@@ -35,7 +35,7 @@ class GtkGLWidget(Gtk.GLArea):
         add a function to change the shaders.
     """
     
-    def __init__(self, width=640, height=420):
+    def __init__(self, vismolSession = None, width=640, height=420):
         """ Constructor of the class, needs two String objects,
             the vertex and fragment shaders.
             
@@ -62,7 +62,7 @@ class GtkGLWidget(Gtk.GLArea):
                        | Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK
                        | Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.POINTER_MOTION_HINT_MASK
                        | Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK )
-        self.vm_widget = vmdw.VisMolDrawWidget(self, np.float32(width), np.float32(height))
+        self.vm_widget = vmdw.VisMolDrawWidget(self, vismolSession, np.float32(width), np.float32(height))
     
     def initialize(self, widget):
         """ Enables the buffers and other charasteristics of the OpenGL context.

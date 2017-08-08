@@ -38,9 +38,10 @@ from OpenGL import GL
 
 class VisMolDrawWidget(Gtk.GLArea):
     
-    def __init__(self, widget, width=640.0, height=420.0):
+    def __init__(self, widget, vismolSession = None, width=640.0, height=420.0):
         """ Function doc """
         self.parent_widget = widget
+        self.vismolSession = vismolSession
         self.width = np.float32(width)
         self.height = np.float32(height)
     

@@ -34,9 +34,9 @@ class SelectionBox:
         self.start = None
         self.end = None
         self.points = None
-        self.color = np.array([ 0.0, 0.5, 0.5, 0.0, 0.5, 0.5, 0.0, 0.5, 0.5,
-                                0.0, 0.5, 0.5, 0.0, 0.5, 0.5],dtype=np.float32)
-        self.indexes = np.array([ 0, 1, 2, 3, 4],dtype=np.uint32)
+        self.color = np.array([0.0, 0.5, 0.5]*5, dtype=np.float32)
+        self.indexes = np.array([ 0, 1, 2, 3, 4], dtype=np.uint32)
+        self.triangles = np.array([1, 0, 2, 3], dtype=np.uint32)
     
     def update_points(self):
         """ Function doc """
