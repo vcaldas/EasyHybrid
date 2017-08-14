@@ -550,6 +550,7 @@ class VisMolWidget():
         self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
         self.selection_box_program = self.load_shaders(vm_shader.vertex_shader_selection_box, vm_shader.fragment_shader_selection_box)
         self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
+        #self.lines_program = self.load_shaders(vm_shader.vertex_shader_antialias, vm_shader.fragment_shader_antialias, vm_shader.geometry_shader_antialias)
         self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
     
     def load_shaders(self, vertex, fragment, geometry=None):
@@ -680,6 +681,13 @@ class VisMolWidget():
         GL.glUniform1fv(uni_dot_size, 1, dot_factor)
         return True
     
+    def load_antialias_params(self, program):
+        """ Function doc """
+        a_length = GL.glGetUniformLocation(program, 'antialias_length')
+        GL.glUniform1fv(a_length, 1, 0.05)
+        bck_col = GL.glGetUniformLocation(program, 'alias_color')
+        GL.glUniform3fv(bck_col, 1, self.bckgrnd_color[:3])
+    
     def _draw_circles(self, visObj = None, indexes = False):
         """ Function doc
         """
@@ -700,9 +708,9 @@ class VisMolWidget():
             else:
                 GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.circles_buffers[1])
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
-                                visObj.frames[self.frame], GL.GL_STATIC_DRAW)   
+                                visObj.frames[self.frame], GL.GL_STATIC_DRAW)
                 if  indexes:
-                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.circles_buffers[2])            
+                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.circles_buffers[2])
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
@@ -731,9 +739,9 @@ class VisMolWidget():
             else:
                 GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dot_buffers[1])
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
-                                visObj.frames[self.frame], GL.GL_STATIC_DRAW)   
+                                visObj.frames[self.frame], GL.GL_STATIC_DRAW)
                 if  indexes:
-                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dot_buffers[2])            
+                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dot_buffers[2])
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
@@ -760,7 +768,7 @@ class VisMolWidget():
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
                                 visObj.frames[self.frame], GL.GL_STATIC_DRAW)
                 if indexes:
-                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.picking_dot_buffers[2])            
+                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.picking_dot_buffers[2])
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
@@ -777,6 +785,7 @@ class VisMolWidget():
         GL.glLineWidth(80/abs(self.dist_cam_zrp))
         self.load_matrices(self.lines_program, visObj.model_mat)
         self.load_fog(self.lines_program)
+        #self.load_antialias_params(self.lines_program)
         if visObj.lines_vao is not None:
             GL.glBindVertexArray(visObj.lines_vao)
             if self.modified_view:
