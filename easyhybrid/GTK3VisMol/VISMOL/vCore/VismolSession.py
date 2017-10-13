@@ -181,14 +181,15 @@ class VisMolSession (ShowHideVisMol):
         #---------------------------------------------------------------------------
         self.gl_parameters      =     {
                                       
-                                      'dot_size'                   : 5      ,
-                                      'line_width'                 : 3      ,
-                                      'sphere_scale'               : 0.85    ,
-                                      'stick_scale'                : 1.5    ,
-                                      'ball_and_sick_sphere_scale' : 1      ,
-                                      'antialias'                  : False  ,
+                                      'dot_size'                   : 5        ,
+                                      'line_width'                 : 3        ,
+                                      'sphere_scale'               : 0.85     ,
+                                      'stick_scale'                : 1.5      ,
+                                      'ball_and_sick_sphere_scale' : 1        ,
+                                      'antialias'                  : False    ,
                                       'bg_color'                   : [0,0,0,1],
-                                      }
+                                      'center_on_coord_sleep_time' : 0.001    ,
+				      }
         
         
 

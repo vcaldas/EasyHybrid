@@ -968,7 +968,7 @@ class VisMolWidget():
             self.parent_widget.get_window().process_updates(False)
             #self.get_window().invalidate_rect(None, False)
             #self.get_window().process_updates(False)
-            time.sleep(0.02)
+            time.sleep(self.vismolSession.gl_parameters['center_on_coord_sleep_time'])
         self.parent_widget.queue_draw()
         #self.queue_draw()
     
