@@ -161,6 +161,7 @@ class GLMenu:
         
         # Check if right mouse button was preseed
         if event.button == 3:
+        
         #self.popup.popup(None, None, None, None, event.button, event.time)
         #return True # event has been handled        
             widget = self.builder.get_object('menu1')
@@ -293,8 +294,9 @@ class GtkGLWidget(Gtk.GLArea):
     def mouse_released(self, widget, event):
         """ Function doc
         """
-        self.vm_widget.mouse_released(int(event.button), event.x, event.y)
-    
+        #self.vm_widget.mouse_released(int(event.button), event.x, event.y)
+        self.vm_widget.mouse_released(event, event.x, event.y)
+        
     def mouse_motion(self, widget, event):
         """ Function doc
         """

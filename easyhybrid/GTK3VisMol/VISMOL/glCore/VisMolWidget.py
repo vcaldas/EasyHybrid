@@ -172,9 +172,13 @@ class VisMolWidget():
             pass
         return True
     
-    def mouse_released(self, button_number, mouse_x, mouse_y):
+    def mouse_released(self, event, mouse_x, mouse_y):
         """ Function doc
+        int(event.button)
+        
         """
+        button_number = int(event.button)
+        
         left   = int(button_number) == 1
         middle = int(button_number) == 2
         right  = int(button_number) == 3
@@ -196,7 +200,7 @@ class VisMolWidget():
                     self.atom_picked = None
             if right:
                 self.button = 3
-                #self.glMenu.open_gl_menu(event = event)
+                self.parent_widget.glMenu.open_gl_menu(event = event)
         else:
             if left:
                 if self.shift:
@@ -782,7 +786,12 @@ class VisMolWidget():
         #GL.glEnable(GL.GL_LINE_SMOOTH)
         #GL.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST)
         GL.glUseProgram(self.lines_program)
+        
+        
+        #GL.glLineWidth(self.vismolSession.gl_parameters['line_width']*80/abs(self.dist_cam_zrp))
         GL.glLineWidth(80/abs(self.dist_cam_zrp))
+
+        
         self.load_matrices(self.lines_program, visObj.model_mat)
         self.load_fog(self.lines_program)
         #self.load_antialias_params(self.lines_program)

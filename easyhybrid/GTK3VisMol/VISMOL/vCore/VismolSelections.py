@@ -189,7 +189,7 @@ class VisMolViewingSelection:
         
         #print  (self.viewing_selections_coords)      
         #for vobject in     self.selected_objects:
-            print(vobject.name,self.selected_objects[vobject] )
+            print(vobject.name,self.selected_objects[vobject], 'selection_function_viewing' )
             
         
             
