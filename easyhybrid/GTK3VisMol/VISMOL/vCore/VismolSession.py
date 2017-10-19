@@ -47,7 +47,7 @@ class ShowHideVisMol:
     def __init__ (self):
         """ Class initialiser """
         pass
-    
+#'''
     def _hide_dots (self, Vobjects ):
         for Vobject in Vobjects:
             Vobject.flat_sphere_representation.actived = False
@@ -84,42 +84,84 @@ class ShowHideVisMol:
             Vobject.show_ribbons = True
             #self.glwidget.draw_ribbon(Vobject)
         
-    def _hide_lines (self, Vobjects ):
-        """ Function doc """
-        for Vobject in Vobjects:
-            #Vobject.show_lines = False
-            Vobject.line_representation.actived = False
-
-    def _show_lines (self, Vobjects ):
-        """ Function doc """
-        for Vobject in Vobjects:
-            #Vobject.show_lines = True
-            Vobject.line_representation.actived = True
-            Vobject.line_representation.update()
-
-    def _hide_ball_and_stick (self, Vobjects ):
-        """ Function doc """
-        for Vobject in Vobjects:
-            Vobject.show_ball_and_stick = False
+    def _hide_lines (self, visObj = None, indexes = []):
+        """ Function doc 
         
-    def _show_ball_and_stick(self, Vobjects):
-        """ Function doc """
-        for Vobject in Vobjects:
-            Vobject.show_ball_and_stick = True
-            #self.glwidget.draw_ball_and_stick(Vobject)
-    
-    def _hide_spheres (self, Vobjects ):
-        """ Function doc """
-        for Vobject in Vobjects:
-            Vobject.show_spheres = False
+        _hide_lines
+        visObj  = object
+        indexes = [] list
         
-    def _show_spheres (self, Vobjects):
-        """ Function doc """
-        for Vobject in Vobjects:
-            Vobject.show_spheres = True
-            #self.glwidget.draw_spheres(Vobject)
+        """
+        if indexes == []:
+            for atom in visObj.atoms:
+                atom.lines =  False        
+        else:
+            for index in indexes:
+                visObj.atoms[index].lines = False
+
+        visObj.index_bonds = []
+        
+        for bond_pairs in visObj.index_bonds_pairs:
+            if visObj.atoms[bond_pairs[0]].lines and  visObj.atoms[bond_pairs[1]].lines:
+                visObj.index_bonds.append(visObj.atoms[bond_pairs[0]].index-1)
+                visObj.index_bonds.append(visObj.atoms[bond_pairs[1]].index-1)
+
+        shapes.change_vbo_indexes (ind_vbo = visObj.line_buffers[0], indexes = visObj.index_bonds)
     
-    def hide (self, _type = 'lines', Vobjects =  []):
+
+    
+    def _show_lines (self, visObj = None, indexes = [] ):
+        """ Function doc 
+        
+        visObj  = object
+        indexes = [] list
+        
+        
+        """
+        
+        if indexes == []:
+            for atom in visObj.atoms:
+                atom.lines =  True        
+        else:
+            for index in indexes:
+                visObj.atoms[index].lines = True
+
+        visObj.index_bonds = []
+        
+        for bond_pairs in visObj.index_bonds_pairs:
+            if visObj.atoms[bond_pairs[0]].lines and  visObj.atoms[bond_pairs[1]].lines:
+                visObj.index_bonds.append(visObj.atoms[bond_pairs[0]].index-1)
+                visObj.index_bonds.append(visObj.atoms[bond_pairs[1]].index-1)
+
+        shapes.change_vbo_indexes (ind_vbo = visObj.line_buffers[0], indexes = visObj.index_bonds)
+    
+    
+    
+    
+    
+    #def _hide_ball_and_stick (self, Vobjects ):
+    #    """ Function doc """
+    #    for Vobject in Vobjects:
+    #        Vobject.show_ball_and_stick = False
+    #    
+    #def _show_ball_and_stick(self, Vobjects):
+    #    """ Function doc """
+    #    for Vobject in Vobjects:
+    #        Vobject.show_ball_and_stick = True
+    #        #self.glwidget.draw_ball_and_stick(Vobject)
+    #
+    #def _hide_spheres (self, Vobjects ):
+    #    """ Function doc """
+    #    for Vobject in Vobjects:
+    #        Vobject.show_spheres = False
+    #    
+    #def _show_spheres (self, Vobjects):
+    #    """ Function doc """
+    #    for Vobject in Vobjects:
+    #        Vobject.show_spheres = True
+    #        #self.glwidget.draw_spheres(Vobject)
+    
+    def hide (self, Vobjects =  [], _type = 'lines', indexes = [] ):
         """ Function doc """    
         if _type == 'dots':
             self._hide_dots (Vobjects )
@@ -157,7 +199,7 @@ class ShowHideVisMol:
     
         self.glwidget.updateGL()
 
-
+#'''
 
 class VisMolSession (ShowHideVisMol):
     """ Class doc """
@@ -275,7 +317,7 @@ class VisMolSession (ShowHideVisMol):
         self.vismol_objects.pop(index)
         #self.glwidget.updateGL()
         
-    def select (self, obj =  None):
+    def select (self, obj =  None, indexes = []):
         """ Function doc """
 
     def orient (self, obj =  None):

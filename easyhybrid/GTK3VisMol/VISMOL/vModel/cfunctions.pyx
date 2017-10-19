@@ -10,6 +10,8 @@ cpdef C_generate_bonds(atoms, _limit = 50):
     
     bonds       = []
     index_bonds = []
+    index_bonds2 = []
+
     arr1  = np.array([0,0,1])
     cdef int i
     cdef int j
@@ -54,7 +56,7 @@ cpdef C_generate_bonds(atoms, _limit = 50):
                     angle = 0
                     vec_o = 0
                     
-                    #index_bonds.append([i, j])
+                    index_bonds2.append([i, j])
                     index_bonds.append(i)
                     index_bonds.append(j)
                     
@@ -64,7 +66,7 @@ cpdef C_generate_bonds(atoms, _limit = 50):
                 else:
                     pass
 
-    return index_bonds
+    return index_bonds, index_bonds2
 
 
 

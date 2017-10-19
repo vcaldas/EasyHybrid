@@ -577,6 +577,23 @@ def _make_gl_lines(program, vismol_object = None):
     vismol_object.line_buffers   = (ind_vbo, coord_vbo, col_vbo)
     #return vao, (ind_vbo, coord_vbo, col_vbo)
 
+def change_vbo_indexes (ind_vbo = None, indexes = []):
+    """ Function doc """
+    indexes = np.array(indexes,dtype=np.uint32)
+    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
+    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), indexes, GL.GL_DYNAMIC_DRAW)
+
+
+def change_vbo_colors  (col_vbo = None, colors = [], program = None):
+    """ Function doc """
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*int(len(colors)), colors, GL.GL_STATIC_DRAW)
+    att_colors = GL.glGetAttribLocation(program, 'vert_color')
+    GL.glEnableVertexAttribArray(att_colors)
+    GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+
+
+
 def _make_gl_selection_box(program, sel_box):
     """ Function doc
     """

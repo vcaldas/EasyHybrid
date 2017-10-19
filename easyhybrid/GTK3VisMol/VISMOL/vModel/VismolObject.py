@@ -32,6 +32,8 @@ import multiprocessing as mp
 from VISMOL.vModel.Chain      import Chain
 from VISMOL.vModel.Residue    import Residue
 from VISMOL.vModel.cfunctions import C_generate_bonds
+#from VISMOL.glCore.VismolRepresentations import LineRepresetation
+
 #import VISMOL.Model as model
 
 
@@ -63,6 +65,7 @@ class VismolObject:
 
         self.atom_unique_id_dic = {}
         self.index_bonds        = None
+        self.index_bonds_rep    = None
         self.non_bonded_atoms   = None
 		
 		
@@ -74,8 +77,10 @@ class VismolObject:
         #self._generate_colors()
         
         """   L I N E S   """
-        self.lines_actived   = True
-        self.lines_show_list = True
+        self.lines_actived       = True
+        self.lines_show_list     = True
+        #self.line_representation = LineRepresetation (visObj = self)
+        
         
         #self.line_representation = LineRepresentation(self)
         #self.line_representation.update()
@@ -106,23 +111,23 @@ class VismolObject:
         
         
         # OpenGL attributes
-        self.dots_vao       = None
-        self.lines_vao      = None
-        self.circles_vao = None
-        self.dot_buffers    = None
-        self.line_buffers   = None
+        self.dots_vao        = None
+        self.lines_vao       = None
+        self.circles_vao     = None
+        self.dot_buffers     = None
+        self.line_buffers    = None
         self.circles_buffers = None
-        self.dot_indexes    = None
+        self.dot_indexes     = None
         
         self.selection_dots_vao      = None
         self.selection_dot_buffers   = None
         
         self.model_mat = np.identity(4, dtype=np.float32)
         self.trans_mat = np.identity(4, dtype=np.float32)
-        self.target = None
-        self.unit_vec = None
-        self.distance = None
-        self.step = None
+        self.target    = None
+        self.unit_vec  = None
+        self.distance  = None
+        self.step      = None
 
         self.picking_dots_vao      = None
         self.picking_dot_buffers   = None
@@ -221,15 +226,34 @@ class VismolObject:
         """ Function doc """
         print ('\ngenerate_bonds starting')
         initial          = time.time()
-        self.index_bonds = C_generate_bonds(self.atoms)
+        
+        self.index_bonds, self.index_bonds_pairs = C_generate_bonds(self.atoms)
+        
+        #print (self.index_bonds)
+        #print (self.index_bonds2)
+        #print (np.array(self.index_bonds2, dtype=np.uint32))
         final = time.time() 
-        print ('generate_bonds end -  total time: ', final - initial, '\n')
-
+        #print ('generate_bonds end -  total time: ', final - initial, '\n')
+        
+        #self.index_bonds3 = []
+        #for bond in self.index_bonds2:
+        #    self.index_bonds3.append(bond[0])
+        #    self.index_bonds3.append(bond[1])
+        
+        #print (np.array(self.index_bonds3, dtype=np.uint32))  
+        
+        
+        final = time.time() 
+        print ('generate_bonds II end -  total time: ', final - initial, '\n')
+        
+        
+        
     def _generate_non_bonded_list (self):
         """ Function doc """
         self.non_bonded_atoms   =  []
         for atom in self.atoms:
-            if atom.index -1 in self.index_bonds:
+            if atom.connected != []:
+            #if atom.index -1 in self.index_bonds:
                 pass
             else:
                 self.non_bonded_atoms.append(atom.index -1)
