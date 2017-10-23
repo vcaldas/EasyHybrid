@@ -229,6 +229,14 @@
                 </child>
               </object>
             </child>
+            <child>
+              <object class="GtkMenuItem" id="menuitem5">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">menuitem5</property>
+                <property name="use_underline">True</property>
+              </object>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -609,7 +617,45 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkNotebook" id="notebook2">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <child>
+                  <object class="GtkPaned" id="paned2">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                  </object>
+                </child>
+                <child type="tab">
+                  <object class="GtkLabel" id="label4">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Viewer</property>
+                  </object>
+                  <packing>
+                    <property name="tab_fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child type="tab">
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child type="tab">
+                  <placeholder/>
+                </child>
+              </object>
+              <packing>
+                <property name="resize">True</property>
+                <property name="shrink">True</property>
+              </packing>
             </child>
           </object>
           <packing>
@@ -794,22 +840,6 @@
       <object class="GtkSeparatorMenuItem" id="menuitem6_separator2">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-      </object>
-    </child>
-  </object>
-  <object class="GtkWindow" id="window2">
-    <property name="can_focus">False</property>
-    <child>
-      <object class="GtkPaned" id="paned_bg">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="orientation">vertical</property>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
       </object>
     </child>
   </object>

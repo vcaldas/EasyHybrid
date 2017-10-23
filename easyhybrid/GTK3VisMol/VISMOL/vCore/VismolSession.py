@@ -266,7 +266,28 @@ class VisMolSession (ShowHideVisMol):
         #---------------------------------------------------------------
         self.picking_selections =  vPick()
         
-
+    def command_line (self, entry = None):
+        """ Function doc """
+        cmd = entry.split()
+        print (cmd)
+        obj     = int(cmd[1]            )
+        _indexes = cmd[2].split('+')
+        indexes = []
+        for index in _indexes:
+            indexes.append(int(index))
+        
+        if cmd[0] == 'show':
+            self._show_lines (visObj = self.vismol_objects[obj], 
+                                       indexes = indexes)       
+        
+        if cmd[0] == 'hide':
+            self._hide_lines (visObj = self.vismol_objects[obj], 
+                                       indexes = indexes)  
+        
+        self.ctrl = True
+        
+        
+        print (entry)
 
     def load (self, infile):
         """ Function doc """

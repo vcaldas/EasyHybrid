@@ -6,10 +6,62 @@ import cython
 import numpy as np
 
 
-cpdef C_generate_bonds(atoms, _limit = 50):
+
+cpdef C_generate_bonds_between_sectors(sector_atoms_1 = None, sector_atoms_2 = None):
     
     bonds       = []
     index_bonds = []
+    index_bonds2 = []
+
+    arr1  = np.array([0,0,1])
+    cdef int i
+    cdef int j
+    
+    for atom1 in sector_atoms_1:
+        for atom2 in sector_atoms_2:
+            #print ('aqui!!!!', atom1.index ,atom2.index )
+            if (atom1.pos[0] - atom2.pos[0] >= 2.0 or 
+                atom1.pos[1] - atom2.pos[1] >= 2.0 or 
+                atom1.pos[2] - atom2.pos[2] >= 2.0):
+                pass
+            
+            else:
+                v_dist =  [atom1.pos[0] - atom2.pos[0],
+                           atom1.pos[1] - atom2.pos[1],
+                           atom1.pos[2] - atom2.pos[2]]
+                
+                dist2 = v_dist[0]**2 + v_dist[1]**2 + v_dist[2]**2
+
+                if dist2 <= ((atom1.cov_rad + atom2.cov_rad)**2) *1.1:
+
+                    #distance = dist2**0.5
+                    #midpoint = [(atom1.pos[0] + atom2.pos[0])/2.0,
+                    #            (atom1.pos[1] + atom2.pos[1])/2.0,
+                    #            (atom1.pos[2] + atom2.pos[2])/2.0]
+                    #
+                    angle = 0
+                    vec_o = 0
+                    
+                    #index_bonds2.append([i, j])
+                    #index_bonds. append( i    )
+                    #index_bonds. append( j    )
+                    
+                    index_bonds2.append([atom1.index -1, atom2.index -1])
+                    index_bonds. append( atom1.index -1    )
+                    index_bonds. append( atom2.index -1    )
+
+
+                    atom1.connected.append(atom2)
+                    atom2.connected.append(atom1)
+              
+                else:
+                    pass
+    return index_bonds, index_bonds2
+
+
+cpdef C_generate_bonds(atoms, _limit = 50):
+    bonds        = []
+    index_bonds  = []
     index_bonds2 = []
 
     arr1  = np.array([0,0,1])
@@ -56,9 +108,9 @@ cpdef C_generate_bonds(atoms, _limit = 50):
                     angle = 0
                     vec_o = 0
                     
-                    index_bonds2.append([i, j])
-                    index_bonds.append(i)
-                    index_bonds.append(j)
+                    index_bonds2.append([atoms[i].index -1 , atoms[j].index - 1])
+                    index_bonds .append( atoms[i].index -1 )
+                    index_bonds .append( atoms[j].index -1 )
                     
                     atoms[i].connected.append(atoms[j])
                     atoms[j].connected.append(atoms[i])
@@ -69,6 +121,153 @@ cpdef C_generate_bonds(atoms, _limit = 50):
     return index_bonds, index_bonds2
 
 
+
+cpdef C_generate_bonds2(atoms):
+    bonds        = []
+    index_bonds  = []
+    index_bonds2 = []
+
+    cdef int i
+    cdef int j
+
+    size =  len(atoms)
+    for i in range (0, size-1):
+        for j in range (i+1, size):    
+            
+            if (atoms[i].pos[0] - atoms[j].pos[0] >= 2.0 or 
+                atoms[i].pos[1] - atoms[j].pos[1] >= 2.0 or 
+                atoms[i].pos[2] - atoms[j].pos[2] >= 2.0):
+                pass
+            
+            else:
+                v_dist =  [atoms[i].pos[0] - atoms[j].pos[0],
+                           atoms[i].pos[1] - atoms[j].pos[1],
+                           atoms[i].pos[2] - atoms[j].pos[2]]
+                
+                dist2 = v_dist[0]**2 + v_dist[1]**2 + v_dist[2]**2
+
+                if dist2 <= ((atoms[i].cov_rad + atoms[j].cov_rad)**2) *1.1:
+                   
+                    index_bonds2.append([atoms[i].index -1 , atoms[j].index - 1])
+                    index_bonds .append( atoms[i].index -1 )
+                    index_bonds .append( atoms[j].index -1 )
+
+                    atoms[i].connected.append(atoms[j])
+                    atoms[j].connected.append(atoms[i])
+              
+                else:
+                    pass
+
+    return index_bonds, index_bonds2
+
+
+
+
+
+
+
+
+cpdef C_generate_bonds_by_sector(sector_atoms_1 = None, sector_atoms_2 = None):
+    
+    bonds       = []
+    index_bonds = []
+    index_bonds2 = []
+
+    arr1  = np.array([0,0,1])
+    cdef int i
+    cdef int j
+    cdef int num_threads
+    
+    if sector_atoms_2 is None:
+        size =  len(sector_atoms_1)
+        for i in range (0, size):    
+            for j in range (i+1, size):    
+                if (sector_atoms_1[i].pos[0] - sector_atoms_1[j].pos[0] >= 2.0 or 
+                    sector_atoms_1[i].pos[1] - sector_atoms_1[j].pos[1] >= 2.0 or 
+                    sector_atoms_1[i].pos[2] - sector_atoms_1[j].pos[2] >= 2.0):
+                    pass
+                
+                else:
+                    v_dist =  [sector_atoms_1[i].pos[0] - sector_atoms_1[j].pos[0],
+                               sector_atoms_1[i].pos[1] - sector_atoms_1[j].pos[1],
+                               sector_atoms_1[i].pos[2] - sector_atoms_1[j].pos[2]]
+                    
+                    dist2 = v_dist[0]**2 + v_dist[1]**2 + v_dist[2]**2
+
+                    
+                    
+                    if dist2 <= ((sector_atoms_1[i].cov_rad + sector_atoms_1[j].cov_rad)**2) *1.1:
+
+                        distance = dist2**0.5
+                        midpoint = [(sector_atoms_1[i].pos[0] + sector_atoms_1[j].pos[0])/2.0,
+                                    (sector_atoms_1[i].pos[1] + sector_atoms_1[j].pos[1])/2.0,
+                                    (sector_atoms_1[i].pos[2] + sector_atoms_1[j].pos[2])/2.0]
+                        
+                        angle = 0
+                        vec_o = 0
+                        
+                        #index_bonds2.append([i, j])
+                        #index_bonds. append( i    )
+                        #index_bonds. append( j    )
+                        
+                        index_bonds2.append([sector_atoms_1[i].index -1, sector_atoms_1[j].index -1])
+                        index_bonds. append( sector_atoms_1[i].index -1    )
+                        index_bonds. append( sector_atoms_1[j].index -1    )
+
+
+                        sector_atoms_1[i].connected.append(sector_atoms_1[j])
+                        sector_atoms_1[j].connected.append(sector_atoms_1[i])
+                  
+                    else:
+                        pass
+
+        return index_bonds, index_bonds2
+    
+    
+    
+    else:
+        for atom1 in sector_atoms_1:
+            for atom2 in sector_atoms_2:
+                print ('aqui!!!!', atom1.index ,atom2.index )
+                if (atom1.pos[0] - atom2.pos[0] >= 2.0 or 
+                    atom1.pos[1] - atom2.pos[1] >= 2.0 or 
+                    atom1.pos[2] - atom2.pos[2] >= 2.0):
+                    pass
+                
+                else:
+                    v_dist =  [atom1.pos[0] - atom2.pos[0],
+                               atom1.pos[1] - atom2.pos[1],
+                               atom1.pos[2] - atom2.pos[2]]
+                    
+                    dist2 = v_dist[0]**2 + v_dist[1]**2 + v_dist[2]**2
+
+                    
+                    
+                    if dist2 <= ((atom1.cov_rad + atom2.cov_rad)**2) *1.1:
+
+                        #distance = dist2**0.5
+                        #midpoint = [(atom1.pos[0] + atom2.pos[0])/2.0,
+                        #            (atom1.pos[1] + atom2.pos[1])/2.0,
+                        #            (atom1.pos[2] + atom2.pos[2])/2.0]
+                        #
+                        angle = 0
+                        vec_o = 0
+                        
+                        #index_bonds2.append([i, j])
+                        #index_bonds. append( i    )
+                        #index_bonds. append( j    )
+                        
+                        index_bonds2.append([atom1.index -1, atom2.index -1])
+                        index_bonds. append( atom1.index -1    )
+                        index_bonds. append( atom2.index -1    )
+
+
+                        atom1.connected.append(atom2)
+                        atom2.connected.append(atom1)
+                  
+                    else:
+                        pass
+        return index_bonds, index_bonds2
 
 
 cpdef generate_bond (item ):

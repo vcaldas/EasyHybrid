@@ -27,12 +27,21 @@ import time
 import os
 import multiprocessing as mp
 
+from multiprocessing import Pool
+
+
+
 #import VISMOL.Model.cfunctions as cfunctions
 #import VISMOL.Model.Chain as Chain
 from VISMOL.vModel.Chain      import Chain
 from VISMOL.vModel.Residue    import Residue
-from VISMOL.vModel.cfunctions import C_generate_bonds
+from VISMOL.vModel.cfunctions import C_generate_bonds, C_generate_bonds2, C_generate_bonds_between_sectors
 #from VISMOL.glCore.VismolRepresentations import LineRepresetation
+
+#----------------------------------------------------
+from scipy.spatial import distance
+#import scipy as scipy
+#----------------------------------------------------
 
 #import VISMOL.Model as model
 
@@ -54,6 +63,22 @@ class VismolObject:
         self.Type               = 'molecule'
         self.name               = name#self._get_name(name)
 
+        # ------------- PDB size and cell ------------- 
+        
+        self.cell_max_x = None
+        self.cell_max_y = None
+        self.cell_max_z = None
+        self.cell_min_x = None
+        self.cell_min_y = None
+        self.cell_min_z = None
+
+        self.sector_size = 5 # (A) angtrons 
+        self.sectors = {
+                       # (0,0,0) : [atom1, atom2, ...] 
+                       }
+        #self.number_of_sectors = 0
+        # ---------------------------------------------- 
+
         
         self.atoms              = atoms
         self.residues           = []
@@ -64,8 +89,8 @@ class VismolObject:
         self.mass_center        = np.array([0.0, 0.0, 0.0])
 
         self.atom_unique_id_dic = {}
-        self.index_bonds        = None
-        self.index_bonds_rep    = None
+        self.index_bonds        = []
+        self.index_bonds_rep    = []
         self.non_bonded_atoms   = None
 		
 		
@@ -148,7 +173,13 @@ class VismolObject:
         parser_resi  = None
         parser_resn  = None
         chains_m     = {}
-
+        
+        
+        xyz_coords = []
+        x_coords   = []
+        y_coords   = []
+        z_coords   = []
+        
         sum_x   = 0
         sum_y   = 0
         sum_z   = 0
@@ -194,12 +225,73 @@ class VismolObject:
 
             self.vismol_session.atom_dic_id[self.vismol_session.atom_id_counter] = atom
             
+            x_coords.append(atom.pos[0])
+            y_coords.append(atom.pos[1])
+            z_coords.append(atom.pos[2])
+            
+            xyz_coords.append(
+                               (atom.pos[0],
+                                atom.pos[1],
+                                atom.pos[2])
+                              )
+            
+            
             sum_x += atom.pos[0]
             sum_y += atom.pos[1]
             sum_z += atom.pos[2]
             index   +=1
             self.vismol_session.atom_id_counter +=1
-            
+        
+        '''
+        #-------------------------------------------------------------------------
+        #print (xyz_coords)
+        initial = time.time() 
+        print ('generate_bonds euclidean')
+        distances  = distance.cdist(xyz_coords, xyz_coords, 'euclidean')
+        final = time.time() 
+        print ('generate_bonds euclidean -  total time: ', final - initial, '\n')
+        #-------------------------------------------------------------------------
+        '''
+        #print (distances[0])
+        
+        #-----------------------------------------------------------------
+        self.cell_max_x = max(x_coords)   
+        self.cell_max_y = max(y_coords)   
+        self.cell_max_z = max(z_coords)   
+        self.cell_min_x = min(x_coords)  
+        self.cell_min_y = min(y_coords)  
+        self.cell_min_z = min(z_coords)  
+        
+        nx_windows = int((self.cell_max_x - self.cell_min_x)/ self.sector_size) +1 
+        ny_windows = int((self.cell_max_y - self.cell_min_y)/ self.sector_size) +1 
+        nz_windows = int((self.cell_max_z - self.cell_min_z)/ self.sector_size) +1 
+
+        for i in range(0, nx_windows):
+            for j in range(0, ny_windows):
+                for k in range(0, nz_windows):
+                    self.sectors[(i,j,k)] = []
+        
+        print ('- - - - - - Sectors - - - - - - ')
+        print ('Sectors size = ', self.sector_size)
+        print ('cell_max_x =', self.cell_max_x )   
+        print ('cell_max_y =', self.cell_max_y )   
+        print ('cell_max_z =', self.cell_max_z )   
+        print ('cell_min_x =', self.cell_min_x )  
+        print ('cell_min_y =', self.cell_min_y )  
+        print ('cell_min_z =', self.cell_min_z )  
+        print ('nx_windows = ', nx_windows)
+        print ('ny_windows = ', ny_windows)
+        print ('nz_windows = ', nz_windows)
+        print ('Number of sectors = ', len(self.sectors))
+
+
+        for atom in self.atoms:
+            a = int((atom.pos[0]  - self.cell_min_x) / self.sector_size)
+            b = int((atom.pos[1]  - self.cell_min_y) / self.sector_size)
+            c = int((atom.pos[2]  - self.cell_min_z) / self.sector_size)
+            self.sectors[(a,b,c)].append(atom)
+        #-----------------------------------------------------------------
+
         #self.frames.append(frame)
         total = len(self.atoms)
         self.list_atom_lines          = [True ]*total
@@ -224,30 +316,68 @@ class VismolObject:
     
     def _generate_bonds (self):
         """ Function doc """
-        print ('\ngenerate_bonds starting')
+        
+        
+        #'''
+        #print ('\ngenerate_bonds starting')
         initial          = time.time()
-        
+        #self.index_bonds        = []
+        #self.index_bonds_pairs  = []
         self.index_bonds, self.index_bonds_pairs = C_generate_bonds(self.atoms)
-        
-        #print (self.index_bonds)
-        #print (self.index_bonds2)
-        #print (np.array(self.index_bonds2, dtype=np.uint32))
         final = time.time() 
-        #print ('generate_bonds end -  total time: ', final - initial, '\n')
-        
-        #self.index_bonds3 = []
-        #for bond in self.index_bonds2:
-        #    self.index_bonds3.append(bond[0])
-        #    self.index_bonds3.append(bond[1])
-        
-        #print (np.array(self.index_bonds3, dtype=np.uint32))  
-        
-        
+        print ('generate_bonds I end -  total time: ', final - initial, '\n')
+
+        #--------------------------------------------------------------------------------
+        '''
+        print ('\ngenerate_bonds  euclidian per sector starting')
+        initial          = time.time()
+        #self.compute_distances(self.atoms)
+        for key in self.sectors:
+            self.compute_distances(self.sectors[key])
         final = time.time() 
-        print ('generate_bonds II end -  total time: ', final - initial, '\n')
-        
-        
-        
+        print ('generate_bonds  euclidian per sector finished -  total time: ', final - initial, '\n')
+        #index_bonds2 = []
+        initial          = time.time()
+        for key in self.sectors:
+           
+            #  1 1 1
+            distances = None
+            if (key[0]+1, key[1]+1, key[2]+1) in self.sectors:
+                self.compute_distances_between_sectors (self.sectors[key]   , 
+                                                        self.sectors[(key[0]+1,key[1]+1,key[2]+1)])
+            #  0 1 1
+            if (key[0],key[1]+1,key[2]+1) in self.sectors:
+                self.compute_distances_between_sectors (self.sectors[key]   , 
+                                                        self.sectors[(key[0],key[1]+1,key[2]+1)])
+            #  0 0 1
+            if (key[0],key[1],key[2]+1) in self.sectors:
+                self.compute_distances_between_sectors (self.sectors[key]   , 
+                                                        self.sectors[(key[0],key[1],key[2]+1)])
+            #  1 0 1
+            if (key[0]+1, key[1], key[2]+1) in self.sectors:
+                #print (key,(key[0], key[1]+1, key[2]))
+                self.compute_distances_between_sectors (self.sectors[key]   , 
+                                                        self.sectors[ (key[0]+1 , key[1], key[2]+1) ])
+            
+            #  1 1 0
+            if (key[0]+1,key[1]+1,key[2]) in self.sectors:
+                self.compute_distances_between_sectors (self.sectors[key]   , 
+                                                        self.sectors[(key[0]+1,key[1]+1,key[2])])
+            #  1 0 0
+            if (key[0]+1,key[1],key[2]) in self.sectors:
+                self.compute_distances_between_sectors (self.sectors[key]   , 
+                                                        self.sectors[(key[0]+1,key[1],key[2])])
+            #  0 1 0
+            if (key[0],key[1]+1,key[2]) in self.sectors:
+                self.compute_distances_between_sectors (self.sectors[key]   , 
+                                                        self.sectors[(key[0],key[1]+1,key[2])])
+        final = time.time()    
+        print ('_compute_bonds_scipy  between sectors total time: ', final - initial, '\n')
+        #--------------------------------------------------------------------------------
+        #'''
+
+    
+    
     def _generate_non_bonded_list (self):
         """ Function doc """
         self.non_bonded_atoms   =  []
@@ -258,8 +388,6 @@ class VismolObject:
             else:
                 self.non_bonded_atoms.append(atom.index -1)
         self.non_bonded_atoms = np.array(self.non_bonded_atoms, dtype=np.uint32)
-
-
 
     def _generate_atom_unique_color_id (self):
         self.color_indexes  = []
@@ -283,7 +411,7 @@ class VismolObject:
             self.color_indexes.append(b/255.0)
             
             pickedID = r + g * 256 + b * 256*256
-            print (pickedID)
+            #print (pickedID)
             self.vismol_session.atom_dic_id[pickedID] = atom
             
             #-------------------------------------------------------
@@ -306,32 +434,6 @@ class VismolObject:
 
     def _generate_colors  (self):
         """ Function doc """
-        #self.bond_colors           = []
-        #for bond in self.index_bonds:
-        #    atom1    = self.atoms[bond[0]]
-        #    atom2    = self.atoms[bond[1]]
-        #    # checking if the selection is actived
-        #    if  atom1.lines and atom2.lines:
-        #        ## colors
-        #        self.bond_colors.append(atom1.color[0])        
-        #        self.bond_colors.append(atom1.color[1])        
-        #        self.bond_colors.append(atom1.color[2])  
-        #        
-        #        self.bond_colors.append(atom1.color[0])        
-        #        self.bond_colors.append(atom1.color[1])        
-        #        self.bond_colors.append(atom1.color[2])
-        #        
-        #        self.bond_colors.append(atom2.color[0])        
-        #        self.bond_colors.append(atom2.color[1])        
-        #        self.bond_colors.append(atom2.color[2])
-        #        
-        #        self.bond_colors.append(atom2.color[0])        
-        #        self.bond_colors.append(atom2.color[1])        
-        #        self.bond_colors.append(atom2.color[2])
-        #
-        #self.bond_colors  = np.array(self.bond_colors, dtype=np.float32)
-    
-        
         self.colors = []        
         for atom in self.atoms:
             #if atom.dots:
@@ -353,7 +455,101 @@ class VismolObject:
     
     def pos (self, frame = None):
         """ Function doc """
+
+    
+
+    def compute_distances (self, atoms):
+        """ Function doc """
         
+        xyz_coords = []
+
+        for atom in atoms:
+            xyz_coords.append(
+                               (atom.pos[0],
+                                atom.pos[1],
+                                atom.pos[2])
+                              )
+        if xyz_coords == []:
+            pass
+        else:
+            distances  = distance.cdist(xyz_coords, xyz_coords, 'euclidean')
+            
+            for i in range(0, len(xyz_coords)):
+                 
+                for j in range(i+1, len(xyz_coords)):
+                    
+                    if distances[i][j] <= ((atoms[i].cov_rad + atoms[j].cov_rad)*1.5):
+                        #self.index_bonds2.append([atom1.index -1, atom2.index -1])
+                        self.index_bonds. append( atoms[i].index -1    )
+                        self.index_bonds. append( atoms[j].index -1    )
+                        atoms[i].connected.append(atoms[j])
+                        atoms[j].connected.append(atoms[i])
+
+
+    def compute_distances_between_sectors (self, atoms1, atoms2):
+        """ Function doc """
+        xyz_coords1 = []
+        xyz_coords2 = []
+
+        for atom1 in atoms1:
+            xyz_coords1.append(
+                               (atom1.pos[0],
+                                atom1.pos[1],
+                                atom1.pos[2])
+                              )
+
+        for atom2 in atoms2:
+            xyz_coords2.append(
+                               (atom2.pos[0],
+                                atom2.pos[1],
+                                atom2.pos[2])
+                              )        
         
+
+
+        if xyz_coords1 == [] or xyz_coords2 == []:
+            pass
         
-        
+        else:
+            distances  = distance.cdist(xyz_coords1, xyz_coords2, 'euclidean')
+            if distances.min() <= 1.5:
+                for i in range(0, len(distances)):   
+                    for j in  range(0, len(distances[i])):
+                        #if distances[i][j] <=  1.5:   
+                        #    index_bonds2.append([i,j])
+                        if distances[i][j] <= (atoms1[i].cov_rad + atoms2[j].cov_rad)*1.5:
+                            #print (atoms1[i].index -1,atoms2[j].index -1,distances[i][j])
+                            #self.index_bonds_pairs.append([atom1.index -1, atom2.index -1])
+                            self.index_bonds. append( atoms1[i].index -1    )
+                            self.index_bonds. append( atoms2[j].index -1    )
+                            atoms1[i].connected.append(atoms2[j])
+                            atoms2[j].connected.append(atoms1[i])
+
+
+
+
+
+
+
+
+
+
+
+
+            #for i in range(0, len(xyz_coords1)):
+            #     
+            #    for j in range(i+1, len(xyz_coords2)):
+            #        
+            #        if distances[i][j] <= (((atoms1[i].cov_rad + atoms2[j].cov_rad)**2)**0.5)*1.5:
+            #            #print (atoms1[i].index -1,atoms2[j].index -1,distances[i][j])
+            #            #self.index_bonds_pairs.append([atom1.index -1, atom2.index -1])
+            #            self.index_bonds. append( atoms1[i].index -1    )
+            #            self.index_bonds. append( atoms2[j].index -1    )
+            #            atoms1[i].connected.append(atoms2[j])
+            #            atoms2[j].connected.append(atoms1[i])
+            #
+
+def C_generate_bonds2_parallel(atoms):
+    index_bonds, index_bonds_pairs = C_generate_bonds2(self.atoms)
+    return [index_bonds, index_bonds_pairs]
+    

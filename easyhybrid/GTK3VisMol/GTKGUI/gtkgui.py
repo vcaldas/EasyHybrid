@@ -64,8 +64,32 @@ class AnimatedWindow:
 
 
 
+class GTKTerminalGUI():
+    def __init__ (self, vismolSession = None):
+        self.builder = Gtk.Builder()
+        self.builder.add_from_file('GTK3VisMol/GTKGUI/GTKTerminalGUI.glade')
+        self.builder.connect_signals(self)
+        self.TerminalLabel = Gtk.Label('Terminal')
+        self.TerminalBox   = self.builder.get_object('box4')
+        self.vismolSession = vismolSession
+        
+        
+        self.command_list  = [] 
+        self.counter       = 0
+        
+    def on_entry1_activate (self, widget, click=None):
+        """ Function doc """
+        text =  self.builder.get_object('entry1').get_text()
+        self.command_list.append(text)
 
+        self.vismolSession.command_line(text)
+        self.builder.get_object('entry1').set_text('')
+        self.counter       += 1
 
+    def on_key_pressed (self, widget, click=None):
+        print (click)
+        
+        
 class GTKGUI ():
     """ Class doc """
     
@@ -183,6 +207,9 @@ class GTKGUI ():
                     self.vismolSession.glwidget.queue_draw()
     
     
+
+        
+    
     def on_main_toolbar_open_animate_trajectory (self, widget):
         """ Function doc """
         #animated_window = AnimatedWindow(self)
@@ -228,7 +255,7 @@ class GTKGUI ():
 
         #self.glarea  = glarea
         self.builder = Gtk.Builder()
-        self.builder.add_from_file('GTK3EasyMol/GTKGUI/MainWindow.glade')
+        self.builder.add_from_file('GTK3VisMol/GTKGUI/MainWindow.glade')
         self.builder.connect_signals(self)
         
         self.window    = self.builder.get_object('window1')
@@ -237,8 +264,9 @@ class GTKGUI ():
     
         self.vismolSession = vismolSession
         if self.vismolSession is not None:
-            self.container = self.builder.get_object('paned1')
-            #self.container = self.builder.get_object('box4')
+            #self.container = self.builder.get_object('paned1')
+            
+            self.container = self.builder.get_object('paned2')
 
             self.container.add(self.vismolSession.glwidget)
             self.window.connect("key-press-event", self.vismolSession.glwidget.key_pressed)
@@ -254,6 +282,11 @@ class GTKGUI ():
         #self.builder.get_object('notebook1').hide()
         #self.builder.get_object('statusbar1').hide()
         
+        
+        #  -------------- GTK Terminal GUI --------------
+        self.gtkTerminalGui = GTKTerminalGUI(vismolSession)
+        self.builder.get_object('notebook2').append_page(self.gtkTerminalGui.TerminalBox, 
+                                                         self.gtkTerminalGui.TerminalLabel)
         #print (a ,b, " <----------aqui oh")
         Gtk.main()
         
