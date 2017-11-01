@@ -72,7 +72,7 @@ class VismolObject:
         self.cell_min_y = None
         self.cell_min_z = None
 
-        self.sector_size = 5 # (A) angtrons 
+        self.sector_size = 10 # (A) angtrons 
         self.sectors = {
                        # (0,0,0) : [atom1, atom2, ...] 
                        }
@@ -318,7 +318,7 @@ class VismolObject:
         """ Function doc """
         
         
-        #'''
+        '''
         #print ('\ngenerate_bonds starting')
         initial          = time.time()
         #self.index_bonds        = []
@@ -326,9 +326,51 @@ class VismolObject:
         self.index_bonds, self.index_bonds_pairs = C_generate_bonds(self.atoms)
         final = time.time() 
         print ('generate_bonds I end -  total time: ', final - initial, '\n')
-
+        #'''
         #--------------------------------------------------------------------------------
-        '''
+        #'''
+        
+        sectors_arrond = [
+                         [ 1, 1, 1], # level above
+                         [ 0, 1, 1], # level above
+                         [-1, 1, 1], # level above
+                                     # level above
+                         [-1, 0, 1], # level above
+                         [ 0, 0, 1], # level above
+                         [ 1, 0, 1], # level above
+                                     # level above
+                         [-1,-1, 1], # level above
+                         [ 0,-1, 1], # level above
+                         [ 1,-1, 1], # level above
+
+                         #-------------------------
+                         [ 1, 1, 0], # level ground
+                         [ 0, 1, 0], # level ground
+                         [-1, 0, 0], # level ground
+                         [-1, 1, 0], # level ground
+
+                        #[ 0, 0, 0], # level ground
+                        
+                         [ 1, 0, 0], # level ground
+                         [-1,-1, 0], # level ground
+                         [ 0,-1, 0], # level ground
+                         [ 1,-1, 0], # level ground
+                         #-------------------------
+                         
+                         [ 1, 1,-1], # level behind
+                         [ 0, 1,-1], # level behind
+                         [-1, 1,-1], # level behind
+                         [-1, 0,-1], # level behind
+                         [ 0, 0,-1], # level behind
+                         [ 1, 0,-1], # level behind
+                         [-1,-1,-1], # level behind
+                         [ 0,-1,-1], # level behind
+                         [ 1,-1,-1], # level behind
+
+                         ]
+        
+        
+        
         print ('\ngenerate_bonds  euclidian per sector starting')
         initial          = time.time()
         #self.compute_distances(self.atoms)
@@ -338,39 +380,96 @@ class VismolObject:
         print ('generate_bonds  euclidian per sector finished -  total time: ', final - initial, '\n')
         #index_bonds2 = []
         initial          = time.time()
+        
+        
         for key in self.sectors:
-           
-            #  1 1 1
             distances = None
-            if (key[0]+1, key[1]+1, key[2]+1) in self.sectors:
-                self.compute_distances_between_sectors (self.sectors[key]   , 
-                                                        self.sectors[(key[0]+1,key[1]+1,key[2]+1)])
-            #  0 1 1
-            if (key[0],key[1]+1,key[2]+1) in self.sectors:
-                self.compute_distances_between_sectors (self.sectors[key]   , 
-                                                        self.sectors[(key[0],key[1]+1,key[2]+1)])
-            #  0 0 1
-            if (key[0],key[1],key[2]+1) in self.sectors:
-                self.compute_distances_between_sectors (self.sectors[key]   , 
-                                                        self.sectors[(key[0],key[1],key[2]+1)])
-            #  1 0 1
-            if (key[0]+1, key[1], key[2]+1) in self.sectors:
-                #print (key,(key[0], key[1]+1, key[2]))
-                self.compute_distances_between_sectors (self.sectors[key]   , 
-                                                        self.sectors[ (key[0]+1 , key[1], key[2]+1) ])
+            for sector in sectors_arrond:
+                if (key[0]+sector[0], 
+                    key[1]+sector[1], 
+                    key[2]+sector[2]) in self.sectors:
+                        
+                    self.compute_distances_between_sectors (self.sectors[key]   , 
+                                                            self.sectors[(key[0]+sector[0],
+                                                                          key[1]+sector[1],
+                                                                          key[2]+sector[2])])
+         
+         
+         
+         
+         
             
-            #  1 1 0
-            if (key[0]+1,key[1]+1,key[2]) in self.sectors:
-                self.compute_distances_between_sectors (self.sectors[key]   , 
-                                                        self.sectors[(key[0]+1,key[1]+1,key[2])])
-            #  1 0 0
-            if (key[0]+1,key[1],key[2]) in self.sectors:
-                self.compute_distances_between_sectors (self.sectors[key]   , 
-                                                        self.sectors[(key[0]+1,key[1],key[2])])
-            #  0 1 0
-            if (key[0],key[1]+1,key[2]) in self.sectors:
-                self.compute_distances_between_sectors (self.sectors[key]   , 
-                                                        self.sectors[(key[0],key[1]+1,key[2])])
+            ##  1 1 1
+            #if (key[0]+1, key[1]+1, key[2]+1) in self.sectors:
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[(key[0]+1,key[1]+1,key[2]+1)])
+            ##  0 1 1
+            #if (key[0],key[1]+1,key[2]+1) in self.sectors:
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[(key[0],key[1]+1,key[2]+1)])
+            ##  0 0 1
+            #if (key[0],key[1],key[2]+1) in self.sectors:
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[(key[0],key[1],key[2]+1)])
+            ##  1 0 1
+            #if (key[0]+1, key[1], key[2]+1) in self.sectors:
+            #    #print (key,(key[0], key[1]+1, key[2]))
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[ (key[0]+1 , key[1], key[2]+1) ])
+            #
+            ##  1 1 0
+            #if (key[0]+1,key[1]+1,key[2]) in self.sectors:
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[(key[0]+1,key[1]+1,key[2])])
+            ##  1 0 0
+            #if (key[0]+1,key[1],key[2]) in self.sectors:
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[(key[0]+1,key[1],key[2])])
+            ##  0 1 0
+            #if (key[0],key[1]+1,key[2]) in self.sectors:
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[(key[0],key[1]+1,key[2])])
+            #
+#-----------#----------------------------------------------------------------------------------------------
+            #
+            ##  -1 -1 -1
+            #if (key[0]-1,key[1]-1,key[2]-1) in self.sectors:
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[(key[0]-1,key[1]-1,key[2]-1)])
+            #
+            ##  0 -1 0
+            #if (key[0],key[1]-1,key[2]) in self.sectors:
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[(key[0],key[1]-1,key[2])])
+            #
+            #
+            ##  -1 0 0
+            #if (key[0]-1,key[1],key[2]) in self.sectors:
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[(key[0]-1,key[1],key[2])])
+            #
+            ##  0 0 -1
+            #if (key[0],key[1],key[2]-1) in self.sectors: 
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[(key[0],key[1],key[2]-1)])
+            #
+            ##  -1 -1 0
+            #if (key[0]-1,key[1]-1,key[2]) in self.sectors:
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[(key[0]-1,key[1]-1,key[2])])
+            #
+            ##  0 -1 -1
+            #if (key[0],key[1]-1,key[2]-1) in self.sectors:
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[(key[0],key[1]-1,key[2]-1)])
+            #
+            ##  -1 0 -1
+            #if (key[0]-1,key[1],key[2]-1) in self.sectors:
+            #    self.compute_distances_between_sectors (self.sectors[key]   , 
+            #                                            self.sectors[(key[0]-1,key[1],key[2]-1)])
+
+#---------------------------------------------------------------------------------------------------------
+        
         final = time.time()    
         print ('_compute_bonds_scipy  between sectors total time: ', final - initial, '\n')
         #--------------------------------------------------------------------------------
@@ -512,12 +611,12 @@ class VismolObject:
         
         else:
             distances  = distance.cdist(xyz_coords1, xyz_coords2, 'euclidean')
-            if distances.min() <= 1.5:
+            if distances.min() <= 3.0:
                 for i in range(0, len(distances)):   
                     for j in  range(0, len(distances[i])):
                         #if distances[i][j] <=  1.5:   
                         #    index_bonds2.append([i,j])
-                        if distances[i][j] <= (atoms1[i].cov_rad + atoms2[j].cov_rad)*1.5:
+                        if distances[i][j] <=  (atoms1[i].cov_rad + atoms2[j].cov_rad)*1.5:
                             #print (atoms1[i].index -1,atoms2[j].index -1,distances[i][j])
                             #self.index_bonds_pairs.append([atom1.index -1, atom2.index -1])
                             self.index_bonds. append( atoms1[i].index -1    )
