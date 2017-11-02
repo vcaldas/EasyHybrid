@@ -577,7 +577,7 @@ class VismolObject:
                  
                 for j in range(i+1, len(xyz_coords)):
                     
-                    if distances[i][j] <= ((atoms[i].cov_rad + atoms[j].cov_rad)*1.5):
+                    if distances[i][j] <= ((atoms[i].cov_rad + atoms[j].cov_rad)*1.3):
                         #self.index_bonds2.append([atom1.index -1, atom2.index -1])
                         self.index_bonds. append( atoms[i].index -1    )
                         self.index_bonds. append( atoms[j].index -1    )
@@ -616,7 +616,7 @@ class VismolObject:
                     for j in  range(0, len(distances[i])):
                         #if distances[i][j] <=  1.5:   
                         #    index_bonds2.append([i,j])
-                        if distances[i][j] <=  (atoms1[i].cov_rad + atoms2[j].cov_rad)*1.5:
+                        if distances[i][j] <=  (atoms1[i].cov_rad + atoms2[j].cov_rad)*1.3:
                             #print (atoms1[i].index -1,atoms2[j].index -1,distances[i][j])
                             #self.index_bonds_pairs.append([atom1.index -1, atom2.index -1])
                             self.index_bonds. append( atoms1[i].index -1    )
