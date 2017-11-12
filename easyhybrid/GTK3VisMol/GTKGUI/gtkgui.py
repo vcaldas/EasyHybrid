@@ -16,7 +16,7 @@ class AnimatedWindow:
         """ Function doc """
         if self.actived  ==  False:
             self.builder = Gtk.Builder()
-            self.builder.add_from_file('GTK3EasyMol/GTKGUI/AnimateTrajectory.glade')
+            self.builder.add_from_file('GTK3VisMol/GTKGUI/AnimateTrajectory.glade')
             
             self.window = self.builder.get_object('animate_window')
             self.builder.connect_signals(self)

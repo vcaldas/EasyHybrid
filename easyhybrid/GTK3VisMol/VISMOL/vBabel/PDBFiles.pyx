@@ -22,6 +22,7 @@
 #  
 #  
 #try:
+import cython 
 
 from VISMOL.vModel.Atom          import Atom
 #from VISMOL.Model.Molecule      import Molecule
@@ -50,12 +51,12 @@ def load_pdb_files (infile = None):
         #    print ('multiple frames')
         frames =  pdbtext.split('ENDMDL')
         # retunr a single frame for PDB with no ENDMDL label - standard pdbfiles
-        atoms  =  get_atom_list_from_pdb_frame(frames[0])
+        atoms, coords  =  get_atom_list_from_pdb_frame(frames[0])
         frames =  get_trajectory_coordinates_from_pdb_frames (raw_frames = frames)
     
     final   = time.time() 
     print ('ending parse_pdb: ', final - initial, '\n')
-    return atoms, frames
+    return atoms, frames, coords
 
     	
 def get_trajectory_coordinates_from_pdb_frames (raw_frames = None):
@@ -85,7 +86,7 @@ def get_pdb_frame_coordinates (frame):
             #at_pos   = np.array([float(line[30:38]), float(line[38:46]), float(line[46:54])])
 
     frame_coordinates = np.array(frame_coordinates, dtype=np.float32)
-    print ('Frame size: ', len(frame_coordinates)/3)
+    #print ('Frame size: ', len(frame_coordinates)/3)
     
     if len(frame_coordinates) == 0:
         return None
@@ -98,7 +99,12 @@ def get_atom_list_from_pdb_frame (frame):
     #print ('\nstarting: parse_pdb - building atom list')
     #initial          = time.time()
     pdb_file_lines  = frame.split('\n')
-    atoms = []
+    atoms  = []
+    xyz_coords = []
+    x_coords   = []
+    y_coords   = []
+    z_coords   = []
+    
     for line in pdb_file_lines:
 	
         if line[:4] == 'ATOM' or line[:6] == 'HETATM':
@@ -107,7 +113,7 @@ def get_atom_list_from_pdb_frame (frame):
             at_res_i = int(line[22:26])
             at_res_n = line[17:20].strip()
             at_ch    = line[21]             
-            
+        
             atom     = Atom(name      =  at_name, 
                             #index    =  index, 
                             pos       =  at_pos, 
@@ -116,13 +122,17 @@ def get_atom_list_from_pdb_frame (frame):
                             chain     =  at_ch, 
                             #atom_id  =  counter, 
                             )
-            #Vobject.atoms.append(atom)
+            x_coords.append(at_pos[0])
+            y_coords.append(at_pos[1])
+            z_coords.append(at_pos[2])
+            xyz_coords.append(at_pos)
             atoms.append(atom)
+
     print ('Numeber of atoms: ', len(atoms))
-    #print ('ending parse_pdb: - building atom list', final - initial, '\n')
-    return atoms
+    coords = [x_coords, y_coords, z_coords, xyz_coords]
+    return atoms, coords
 
-
+'''
 def parse_pdb (infile = None):
     """ Function doc """
     print ('\nstarting: parse_pdb')
@@ -164,6 +174,6 @@ def parse_pdb (infile = None):
     print ('ending parse_pdb: ', final - initial, '\n')
     return atoms
 
-
+'''
 
     
