@@ -379,7 +379,7 @@ cpdef C_generate_bonds_between_sectors2(atoms1, atoms2):
 
     return index_bonds2#, index_bonds
 
-
+'''
 cpdef pairwise_grid_elements(atomic_grid):
     
     pair_of_sectors2 = []
@@ -439,7 +439,7 @@ cpdef pairwise_grid_elements(atomic_grid):
                     #                         atomic_grid[element2]])
     
     return pair_of_sectors2
-
+'''
 
 
 

@@ -189,7 +189,7 @@ def get_color(name):
             color = ATOM_TYPES['S'][1]
         else:
             color = ATOM_TYPES['X'][1]
-            print(name)
+            #print(name)
     return color
 
 def get_cov_rad(name):

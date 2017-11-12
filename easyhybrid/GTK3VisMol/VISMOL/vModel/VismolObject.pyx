@@ -28,7 +28,10 @@ import os
 #import multiprocessing as mp
 
 
-from multiprocessing import Pool
+#from multiprocessing import Pool
+import multiprocessing
+
+
 import threading
 
 
@@ -44,7 +47,7 @@ class VismolObject:
     def __init__ (self, 
                   name       = 'UNK', 
                   atoms      = []   ,
-                  coords     = None ,
+                  #coords     = None ,
                   VMSession  = None , 
                   trajectory = None):
         
@@ -56,19 +59,14 @@ class VismolObject:
         self.name           = name #self._get_name(name)
         
         #-----------------------------------------------------------------
-        self.x_coords   = coords[0]
-        self.y_coords   = coords[1]
-        self.z_coords   = coords[2]
-        self.xyz_coords = coords[3]
-
-        sum_x = sum(self.x_coords)
-        sum_y = sum(self.y_coords)
-        sum_z = sum(self.z_coords)
-        total = len(self.x_coords)
+        self.x_coords   = None
+        self.y_coords   = None
+        self.z_coords   = None
+        self.xyz_coords = None
+        self.mass_center= None
         #-----------------------------------------------------------------
-        self.mass_center    = np.array([sum_x / total,
-                                        sum_y / total, 
-                                        sum_z / total])
+        
+
         
         
         
@@ -86,7 +84,6 @@ class VismolObject:
         Contains all pairs of neighboring sectors that will be used to 
         calculate distances between atoms from  different sectors (this 
         list does not contain any pairs of repeated sectors)
-        '''
         #--------------------------------------------------------------
         
         
@@ -125,7 +122,8 @@ class VismolObject:
                                [ 1,-1,-1], # ground level
                                ]
         #-----------------------------------------------------------------
-        
+        '''
+
         
         
         
@@ -147,10 +145,10 @@ class VismolObject:
         self.non_bonded_atoms   = None
 		
 		
-        self._generate_atomtree_structure()
-        self._generate_atom_unique_color_id()
-        self._generate_bonds()
-        self._generate_non_bonded_list()
+        #self._generate_atomtree_structure()
+        #self._generate_atom_unique_color_id()
+        #self._generate_bonds()
+        #self._generate_non_bonded_list()
                 
         """   L I N E S   """
         self.lines_actived       = True
@@ -211,43 +209,65 @@ class VismolObject:
         
         self.atoms2  = [] 
         
-        for atom in self.atoms:
-            atom.index   = index
-            atom.atom_id = self.vismol_session.atom_id_counter
-            atom.Vobject =  self
-            
-            if atom.chain in self.chains.keys():
-                ch = self.chains[atom.chain]
-           
-            else:
-                ch = Chain(name = atom.chain, label = 'UNK')
-                self.chains[atom.chain] = ch
-            
-            if atom.resi == parser_resi:# and at_res_n == parser_resn:
-                atom.residue = ch.residues[-1]
-                ch.residues[-1].atoms.append(atom)
-                frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
-
-            else:
-                residue = Residue(name=atom.resn, index=atom.resi, chain=atom.chain)
-                atom.residue     = residue
-                residue.atoms.append(atom)
-                
-                ch.residues.append(residue)
-                frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
-                parser_resi  = atom.resi
-                parser_resn  = atom.resn
-
-
-            if atom.name == 'CA':
-                ch.backbone.append(atom)
-            
-            self.atoms2.append([atom.index-1, atom.name, atom.cov_rad,  atom.pos])
-            
-            self.vismol_session.atom_dic_id[self.vismol_session.atom_id_counter] = atom
-            index +=1
-            self.vismol_session.atom_id_counter +=1
+        #self.x_coords = 0.0
+        #self.y_coords = 0.0
+        #self.z_coords = 0.0
+        sum_x = 0.0 
+        sum_y = 0.0 
+        sum_z = 0.0 
         
+        for atom in self.atoms:
+            if atom == None:
+                self.atoms.remove()
+                pass
+            else:
+                atom.index   = index
+                atom.atom_id = self.vismol_session.atom_id_counter
+                atom.Vobject =  self
+                
+                if atom.chain in self.chains.keys():
+                    ch = self.chains[atom.chain]
+               
+                else:
+                    ch = Chain(name = atom.chain, label = 'UNK')
+                    self.chains[atom.chain] = ch
+                
+                if atom.resi == parser_resi:# and at_res_n == parser_resn:
+                    atom.residue = ch.residues[-1]
+                    ch.residues[-1].atoms.append(atom)
+                    frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
+
+                else:
+                    residue = Residue(name=atom.resn, index=atom.resi, chain=atom.chain)
+                    atom.residue     = residue
+                    residue.atoms.append(atom)
+                    
+                    ch.residues.append(residue)
+                    frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
+                    parser_resi  = atom.resi
+                    parser_resn  = atom.resn
+
+
+                if atom.name == 'CA':
+                    ch.backbone.append(atom)
+                
+                self.atoms2.append([atom.index-1, atom.name, atom.cov_rad,  atom.pos])
+                #self.x_coords += atom.pos[0]
+                #self.y_coords += atom.pos[1]
+                #self.z_coords += atom.pos[2]
+                sum_x += atom.pos[0]
+                sum_y += atom.pos[1]
+                sum_z += atom.pos[2]
+                
+                self.vismol_session.atom_dic_id[self.vismol_session.atom_id_counter] = atom
+                index +=1
+                self.vismol_session.atom_id_counter +=1
+        
+
+        total = len(self.atoms2)        
+        self.mass_center = np.array([sum_x / total,
+                                     sum_y / total, 
+                                     sum_z / total])
 
         final = time.time() 
         print ('_generate_atomtree_structure end -  total time: ', final - initial, '\n')
@@ -275,32 +295,17 @@ class VismolObject:
                
         self.index_bonds_pairs = []
         self.index_bonds       = []
-       
-        '''
-        #----------------------------------------------------------------------
-        #      S E R I A L     Calculate distances between atoms in a sector
-        #----------------------------------------------------------------------
-        initial     =  time.time()
-        for key in self.atomic_grid:
-            #index_bonds = C_generate_bonds(self.sectors[key])
-            index_bonds = C_generate_bonds2(self.atomic_grid[key])
-            for pair_of_indexes in index_bonds:
-                self.index_bonds.append(pair_of_indexes[0])
-                self.index_bonds.append(pair_of_indexes[1]) 
-                self.index_bonds_pairs.append(pair_of_indexes)
+        nCPUs  =  multiprocessing.cpu_count()
         
-        final = time.time()    
-        print ('Cython  C_generate_bonds per sector finished total time: ', final - initial, '\n')
-        #----------------------------------------------------------------------
-        '''
         
+        print ('Delta compression using up to', nCPUs ,'threads.')
         #'''
         #-------------------------------------------------------------------------------------------------------------------------------
 
         #         P A R A L L E L      Calculate distances between atoms in a sector
         #-------------------------------------------------------------------------------------------------------------------------------
         initial       = time.time()
-        pool          = Pool(8)        
+        pool          = multiprocessing.Pool(nCPUs)        
         grid_elements = self.atomic_grid.values()
         
         pool_of_index_bonds = (pool.map(C_generate_bonds2, grid_elements))
@@ -312,6 +317,7 @@ class VismolObject:
                 self.index_bonds_pairs.append(pair_of_indexes)      
         final = time.time()    
         print ('Cython PARALLEL C_generate_bonds in sectors finished total time: ', final - initial, '\n')
+
         #-------------------------------------------------------------------------------------------------------------------------------
         #'''
         
@@ -363,10 +369,7 @@ class VismolObject:
 
         #-----------------------------------------------------------------------------------------
         initial = time.time()
-
-        pool    = Pool(8)
         pool_of_index_bonds = (pool.map(calculate_distances_between_sectors_parallel2, pair_of_sectors2))
-        
         for index_bonds in pool_of_index_bonds:
             for pair_of_indexes in index_bonds:
                 self.index_bonds.append(pair_of_indexes[0])
@@ -377,86 +380,6 @@ class VismolObject:
         print ('Cython PARALLEL C_generate_bonds between sectors total time: ', final - initial, '\n')  
         #-----------------------------------------------------------------------------------------
 
-        '''
-        #-----------------------------------------------------------------------------------------
-        #          S E R I A L        Calculate distances between atoms in neighboring sectors  
-        #-----------------------------------------------------------------------------------------
-        initial     =  time.time()
-        done = []
-        for key in self.sectors:
-            for sector in self.grid_offset:              
-                #neighboring sector
-                sector1  = (key[0]+sector[0], key[1]+sector[1], key[2]+sector[2])
-                sector2  = (key[0]          , key[1]          , key[2]          )
-                
-                
-                if [sector1, sector2] in done or [sector2, sector1] in done:
-                    pass
-        
-                else: 
-                    done.append([sector1, sector2])
-                    if sector1 in self.sectors:                        
-                        pass
-                        indexes_bonds = C_generate_bonds_between_sectors(self.sectors[sector1], 
-                                                                self.sectors[sector2])
-                        for pair_of_indexes in indexes_bonds:
-                            self.index_bonds.append(pair_of_indexes[0])
-                            self.index_bonds.append(pair_of_indexes[1]) 
-                            self.index_bonds_pairs.append(pair_of_indexes)
-        #print (done)
-        final = time.time()    
-        print ('Cython  C_generate_bonds between sectors total time: ', final - initial, '\n')       
-        #-----------------------------------------------------------------------------------------
-        #'''
-        
-        '''        
-        #-------------------------------------------------------------------------------------------------------------------------------
-        #          P A R A L L E L        Calculate distances between atoms in neighboring sectors  
-        #-------------------------------------------------------------------------------------------------------------------------------
-        initial = time.time()
-        #pair_of_sectors2 = pairwise_grid_elements(self.atomic_grid)
-        """
-        pair_of_sectors2 = []
-        done             = []
-        
-        for element in self.atomic_grid.keys():
-            for offset_element in self.grid_offset:              
-                
-                element1  = (element[0]                  , element[1]                  , element[2]                  ) 
-                element2  = (element[0]+offset_element[0], element[1]+offset_element[1], element[2]+offset_element[2]) 
-                
-                if [element1, element2] in done or [element2, element1] in done:
-                    pass                
-                
-                else: 
-                    if element2 in self.atomic_grid:                        
-                        done.append([element1,
-                                     element2])
-                        
-                        #print (element1, element2, len(self.atomic_grid[element1]), len(self.atomic_grid[element2]) )
-                        pair_of_sectors2.append([self.atomic_grid[element1],
-                                                 self.atomic_grid[element2]])
-        """
-        final = time.time()    
-        print ('building pair_of_sectors2 total time: ', final - initial, '\n')  
-        
-        
-        
-        initial = time.time()
-        pool    = Pool(8)
-        pool_of_index_bonds = (pool.map(calculate_distances_between_sectors_parallel2, pair_of_sectors2))
-        
-        for index_bonds in pool_of_index_bonds:
-            for pair_of_indexes in index_bonds:
-                self.index_bonds.append(pair_of_indexes[0])
-                self.index_bonds.append(pair_of_indexes[1]) 
-                self.index_bonds_pairs.append(pair_of_indexes)
-        
-        final = time.time()    
-        print ('Cython PARALLEL C_generate_bonds between sectors total time: ', final - initial, '\n')       
-        #-------------------------------------------------------------------------------------------------------------------------------
-        #'''    
-        
     
     def _generate_non_bonded_list (self):
         """ Function doc """

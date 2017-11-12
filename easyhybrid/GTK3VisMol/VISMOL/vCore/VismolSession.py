@@ -321,13 +321,20 @@ class VisMolSession (ShowHideVisMol):
     def _load_pdb_file (self, infile):
         """ Function doc """
         print(infile)
-        atoms, frames, coords  = PDBFiles.load_pdb_files (infile = infile)
+        #atoms, frames, coords  = PDBFiles.load_pdb_files (infile = infile)
+        atoms, frames  = PDBFiles.load_pdb_files (infile = infile)
         name = os.path.basename(infile)
         vismol_object  = VismolObject.VismolObject(name        = name, 
                                                    atoms       = atoms, 
                                                    VMSession   = self, 
-                                                   coords      = coords,
+                                                   #coords      = None,
                                                    trajectory  = frames)
+        
+        vismol_object._generate_atomtree_structure()
+        vismol_object._generate_atom_unique_color_id()
+        vismol_object._generate_bonds()
+        vismol_object._generate_non_bonded_list()
+        
         
         vismol_object.set_model_matrix(self.glwidget.vm_widget.model_mat)
         
