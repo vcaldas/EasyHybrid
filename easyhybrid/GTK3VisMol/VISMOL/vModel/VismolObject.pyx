@@ -59,70 +59,14 @@ class VismolObject:
         self.name           = name #self._get_name(name)
         
         #-----------------------------------------------------------------
-        self.x_coords   = None
-        self.y_coords   = None
-        self.z_coords   = None
-        self.xyz_coords = None
         self.mass_center= None
         #-----------------------------------------------------------------
         
-
-        
-        
-        
-        # ------------------------------------ Model size and cell --------------------------------------------
-        
-        self.grid_size   = 3  # It's the size of each grid element - size of a sector (A) angtrons
+        # ------------------------------------ Model size and cell --------------------------------------------        
+        self.grid_size   = 3  # It's the size of each grid element - size of a sector (A) angtrons 
         self.atomic_grid = {}
+        #------------------------------------------------------------------------------------------------------
 
-        self.sectors = {
-                       # (0,0,0) : [atom1, atom2, ...] 
-                       }
-
-        #--------------------------------------------------------------
-        '''
-        Contains all pairs of neighboring sectors that will be used to 
-        calculate distances between atoms from  different sectors (this 
-        list does not contain any pairs of repeated sectors)
-        #--------------------------------------------------------------
-        
-        
-        #-----------------------------------------------------------------
-        self.grid_offset = [
-                               [ 1, 1, 1], # top level
-                               [ 0, 1, 1], # top level
-                               [-1, 1, 1], # top level
-                               [-1, 0, 1], # top level
-                               [ 0, 0, 1], # top level
-                               [ 1, 0, 1], # top level
-                               [-1,-1, 1], # top level
-                               [ 0,-1, 1], # top level
-                               [ 1,-1, 1], # top level
-                               
-                               #-------------------------
-                               [ 1, 1, 0], # middle level 
-                               [ 0, 1, 0], # middle level 
-                               [-1, 0, 0], # middle level 
-                               [-1, 1, 0], # middle level 
-                              #[ 0, 0, 0], # middle level 
-                               [ 1, 0, 0], # middle level 
-                               [-1,-1, 0], # middle level 
-                               [ 0,-1, 0], # middle level 
-                               [ 1,-1, 0], # middle level 
-                               #-------------------------
-                               
-                               [ 1, 1,-1], # ground level
-                               [ 0, 1,-1], # ground level
-                               [-1, 1,-1], # ground level
-                               [-1, 0,-1], # ground level
-                               [ 0, 0,-1], # ground level
-                               [ 1, 0,-1], # ground level
-                               [-1,-1,-1], # ground level
-                               [ 0,-1,-1], # ground level
-                               [ 1,-1,-1], # ground level
-                               ]
-        #-----------------------------------------------------------------
-        '''
 
         
         
@@ -208,60 +152,50 @@ class VismolObject:
         index        = 1
         
         self.atoms2  = [] 
-        
-        #self.x_coords = 0.0
-        #self.y_coords = 0.0
-        #self.z_coords = 0.0
+
         sum_x = 0.0 
         sum_y = 0.0 
         sum_z = 0.0 
         
         for atom in self.atoms:
-            if atom == None:
-                self.atoms.remove()
-                pass
+            atom.index   = index
+            atom.atom_id = self.vismol_session.atom_id_counter
+            atom.Vobject = self
+            
+            if atom.chain in self.chains.keys():
+                ch = self.chains[atom.chain]
+           
             else:
-                atom.index   = index
-                atom.atom_id = self.vismol_session.atom_id_counter
-                atom.Vobject =  self
-                
-                if atom.chain in self.chains.keys():
-                    ch = self.chains[atom.chain]
-               
-                else:
-                    ch = Chain(name = atom.chain, label = 'UNK')
-                    self.chains[atom.chain] = ch
-                
-                if atom.resi == parser_resi:# and at_res_n == parser_resn:
-                    atom.residue = ch.residues[-1]
-                    ch.residues[-1].atoms.append(atom)
-                    frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
+                ch = Chain(name = atom.chain, label = 'UNK')
+                self.chains[atom.chain] = ch
+            
+            if atom.resi == parser_resi:# and at_res_n == parser_resn:
+                atom.residue = ch.residues[-1]
+                ch.residues[-1].atoms.append(atom)
+                frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
 
-                else:
-                    residue = Residue(name=atom.resn, index=atom.resi, chain=atom.chain)
-                    atom.residue     = residue
-                    residue.atoms.append(atom)
-                    
-                    ch.residues.append(residue)
-                    frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
-                    parser_resi  = atom.resi
-                    parser_resn  = atom.resn
+            else:
+                residue = Residue(name=atom.resn, index=atom.resi, chain=atom.chain)
+                atom.residue     = residue
+                residue.atoms.append(atom)
+                
+                ch.residues.append(residue)
+                frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
+                parser_resi  = atom.resi
+                parser_resn  = atom.resn
 
 
-                if atom.name == 'CA':
-                    ch.backbone.append(atom)
-                
-                self.atoms2.append([atom.index-1, atom.name, atom.cov_rad,  atom.pos])
-                #self.x_coords += atom.pos[0]
-                #self.y_coords += atom.pos[1]
-                #self.z_coords += atom.pos[2]
-                sum_x += atom.pos[0]
-                sum_y += atom.pos[1]
-                sum_z += atom.pos[2]
-                
-                self.vismol_session.atom_dic_id[self.vismol_session.atom_id_counter] = atom
-                index +=1
-                self.vismol_session.atom_id_counter +=1
+            if atom.name == 'CA':
+                ch.backbone.append(atom)
+            
+            self.atoms2.append([atom.index-1, atom.name, atom.cov_rad,  atom.pos])
+            sum_x += atom.pos[0]
+            sum_y += atom.pos[1]
+            sum_z += atom.pos[2]
+            
+            self.vismol_session.atom_dic_id[self.vismol_session.atom_id_counter] = atom
+            index +=1
+            self.vismol_session.atom_id_counter +=1
         
 
         total = len(self.atoms2)        
@@ -276,12 +210,12 @@ class VismolObject:
         #-----------------------------------------------------------------
         #                 distribute_atoms_by_sectors
         #-----------------------------------------------------------------
-        #self._distribute_atoms_by_sectors(self.x_coords, self.y_coords, self.z_coords)
+        #self.build_atomic_grid(self.x_coords, self.y_coords, self.z_coords)
         #-----------------------------------------------------------------
         initial          = time.time()
-        self._distribute_atoms_by_sectors(self.x_coords, self.y_coords, self.z_coords)
+        self.build_atomic_grid()
         final = time.time() 
-        print ('_distribute_atoms_by_sectors end -  total time: ', final - initial, '\n')
+        print ('build_atomic_grid end -  total time: ', final - initial, '\n')
         return True
 
     def _get_name (self, name):
@@ -291,7 +225,43 @@ class VismolObject:
         #self.name  = self.name[0]
     
     def _generate_bonds (self):
-        """ Function doc """
+        """ Function doc 
+
+        (1)Calculate the distances and bonds 
+        between atoms within a single element 
+        of the atomic grid
+        |-------|-------|-------|
+        |       |       |       |
+        |       |       |       |
+        |       |       |       |
+        |-------|-------|-------|
+        |       |       |       |
+        |       | i<->j |       |
+        |       |       |       |
+        |-------|-------|-------|
+        |       |       |       |
+        |       |       |       |
+        |       |       |       |
+        |-------|-------|-------|
+        
+        (2)Calculate the distances and connections 
+        between atoms between different elements 
+        of the atomic grid
+        |-------|-------|-------|
+        |       |       |       |
+        |       |       |       |
+        |       |       |       |
+        |-------|-------|-------|
+        |       |   i   |       |
+        |       |    \  |       |
+        |       |     \ |       |
+        |-------|------\|-------|
+        |       |       \       |
+        |       |       |\      |
+        |       |       | j     |
+        |-------|-------|-------|
+        
+        """
                
         self.index_bonds_pairs = []
         self.index_bonds       = []
@@ -300,10 +270,9 @@ class VismolObject:
         
         print ('Delta compression using up to', nCPUs ,'threads.')
         #'''
-        #-------------------------------------------------------------------------------------------------------------------------------
-
-        #         P A R A L L E L      Calculate distances between atoms in a sector
-        #-------------------------------------------------------------------------------------------------------------------------------
+        #--------------------------------------------------------------------------------------------------
+        #  (1)      P A R A L L E L        Calculate distances between atoms in a sector
+        #--------------------------------------------------------------------------------------------------
         initial       = time.time()
         pool          = multiprocessing.Pool(nCPUs)        
         grid_elements = self.atomic_grid.values()
@@ -316,15 +285,28 @@ class VismolObject:
                 self.index_bonds.append(pair_of_indexes[1]) 
                 self.index_bonds_pairs.append(pair_of_indexes)      
         final = time.time()    
-        print ('Cython PARALLEL C_generate_bonds in sectors finished total time: ', final - initial, '\n')
-
-        #-------------------------------------------------------------------------------------------------------------------------------
+        print ('Cython PARALLEL C_generate connections between atoms within a single element of the atomic grid total time: ', final - initial, '\n')
+        #--------------------------------------------------------------------------------------------------
         #'''
         
-        #-------------------------------------------------------------------------------------------------------------------------------
-        #          P A R A L L E L        Calculate distances between atoms in neighboring sectors  
-        #-------------------------------------------------------------------------------------------------------------------------------
-        
+        #--------------------------------------------------------------------------------------------------
+        #  (2)      P A R A L L E L        Calculate distances between atoms in neighboring sectors  
+        #--------------------------------------------------------------------------------------------------
+        pair_of_sectors2 = self.determine_the_paired_atomic_grid_elements()
+        #-----------------------------------------------------------------------------------------
+        initial = time.time()
+        pool_of_index_bonds = (pool.map(calculate_distances_between_sectors_parallel2, pair_of_sectors2))
+        for index_bonds in pool_of_index_bonds:
+            for pair_of_indexes in index_bonds:
+                self.index_bonds.append(pair_of_indexes[0])
+                self.index_bonds.append(pair_of_indexes[1]) 
+                self.index_bonds_pairs.append(pair_of_indexes)
+        final = time.time()    
+        print ('Cython PARALLEL C_generate connections between atoms between different elements of the atomic grid total time: ', final - initial, '\n')  
+        #--------------------------------------------------------------------------------------------------
+
+    
+    def determine_the_paired_atomic_grid_elements(self):
         '''
         There is also an array vOff that specifies the offsets of each of the 14 neighbor
         cells. The array covers half the neighboring cells, together with the cell itself; its
@@ -335,7 +317,6 @@ class VismolObject:
         {-1,-1,1}, {0,-1,1}, {1,-1,1}}
         
         '''
-        #-----------------------------------------------------------------------------------------
         initial = time.time()
         pair_of_sectors2 = []
         grid_offset = [[ 0, 0, 0], 
@@ -357,8 +338,13 @@ class VismolObject:
         for element in self.atomic_grid.keys():
             for offset_element in  grid_offset:              
                 
-                element1  = (element[0]                  , element[1]                  , element[2]                  ) 
-                element2  = (element[0]+offset_element[0], element[1]+offset_element[1], element[2]+offset_element[2]) 
+                element1  = (element[0], 
+                             element[1], 
+                             element[2])
+                              
+                element2  = (element[0]+offset_element[0], 
+                             element[1]+offset_element[1], 
+                             element[2]+offset_element[2]) 
                         
                 if element2 in self.atomic_grid:                        
                     pair_of_sectors2.append([self.atomic_grid[element1],
@@ -366,20 +352,18 @@ class VismolObject:
 
         final = time.time()    
         print ('Pairwise grid elements time : ', final - initial, '\n')  
-
-        #-----------------------------------------------------------------------------------------
-        initial = time.time()
-        pool_of_index_bonds = (pool.map(calculate_distances_between_sectors_parallel2, pair_of_sectors2))
-        for index_bonds in pool_of_index_bonds:
-            for pair_of_indexes in index_bonds:
-                self.index_bonds.append(pair_of_indexes[0])
-                self.index_bonds.append(pair_of_indexes[1]) 
-                self.index_bonds_pairs.append(pair_of_indexes)
-        
-        final = time.time()    
-        print ('Cython PARALLEL C_generate_bonds between sectors total time: ', final - initial, '\n')  
-        #-----------------------------------------------------------------------------------------
-
+        return pair_of_sectors2
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     def _generate_non_bonded_list (self):
         """ Function doc """
@@ -403,16 +387,28 @@ class VismolObject:
         
         
     def _generate_atom_unique_color_id (self):
+        """ Function doc 
+        
+        (1) This method assigns to each atom of the system a 
+        unique identifier based on the RGB color standard. 
+        This identifier will be used in the selection function. 
+        There are no two atoms with the same color ID in the 
+        vismol.
+        
+        
+        (2) This method builds the "colors" np array that will 
+        be sent to the GPU and which contains the RGB values 
+        for each atom of the system.
+        
+        
+        """
         self.color_indexes  = []
         self.colors         = []        
         self.vdw_dot_sizes  = []
         self.cov_dot_sizes  = []
-#        self.atom_unique_id_dic     = {}
-
-        """ Function doc """
         for atom in self.atoms:
             #-------------------------------------------------------
-            #                     ID Colors
+            # (1)                  ID Colors
             #-------------------------------------------------------
             i = atom.atom_id
             r = (i & 0x000000FF) >>  0
@@ -428,14 +424,14 @@ class VismolObject:
             self.vismol_session.atom_dic_id[pickedID] = atom
             
             #-------------------------------------------------------
-            #                      Colors
+            # (2)                   Colors
             #-------------------------------------------------------
             self.colors.append(atom.color[0])        
             self.colors.append(atom.color[1])        
             self.colors.append(atom.color[2])   
 
             #-------------------------------------------------------
-            #                      VdW list
+            # (3)                  VdW list
             #-------------------------------------------------------
             self.vdw_dot_sizes.append(atom.vdw_rad)
             self.cov_dot_sizes.append(atom.cov_rad)
@@ -445,20 +441,6 @@ class VismolObject:
         self.vdw_dot_sizes = np.array(self.vdw_dot_sizes, dtype=np.float32)
         self.cov_dot_sizes = np.array(self.cov_dot_sizes, dtype=np.float32)
 
-    def _generate_colors  (self):
-        """ Function doc """
-        self.colors = []        
-        for atom in self.atoms:
-            #if atom.dots:
-            #-------------------------------------------------------
-            #                        D O T S
-            #-------------------------------------------------------
-            self.colors.append(atom.color[0])        
-            self.colors.append(atom.color[1])        
-            self.colors.append(atom.color[2])   
-            #self.colors.append(atom.color[3])   
-
-        self.colors  = np.array(self.colors, dtype=np.float32)
     
     def set_model_matrix(self, mat):
         """ Function doc
@@ -466,9 +448,15 @@ class VismolObject:
         self.model_mat = np.copy(mat)
         return True
     
-    def _distribute_atoms_by_sectors (self, x_coords, y_coords, z_coords, log= True):
-        """ Function doc 
+    def build_atomic_grid (self, log= True):
+        """  fucntion build_atomic_grid
+        
+        This function organizes the atoms in their respective position 
+        of the grid (atomic grid) - Nescessary to calculate distances between 
+        atoms in different elements of the grid
+        
         self.grid_size = is the size of a grid element - size of a sector
+        
         """
         initial = time.time() 
 
@@ -525,4 +513,94 @@ def calculate_distances_per_sectors_parallel2 (sector):
     index_bonds = C_generate_bonds2(sector)
     return index_bonds
 
+'''
+def determine_the_paired_atomic_grid_elements_parallel(atomic_grid):
+    """
+    There is also an array vOff that specifies the offsets of each of the 14 neighbor
+    cells. The array covers half the neighboring cells, together with the cell itself; its
+    size and contents are specified as
+    
+    {{0,0,0}, {1,0,0}, {1,1,0}, {0,1,0}, {-1,1,0}, {0,0,1},
+    {1,0,1}, {1,1,1}, {0,1,1}, {-1,1,1}, {-1,0,1},
+    {-1,-1,1}, {0,-1,1}, {1,-1,1}}
+    
+    """
+    initial = time.time()
+    pair_of_sectors2 = []
+    grid_offset = [[ 0, 0, 0], 
+                   [ 1, 0, 0], 
+                   [ 1, 1, 0], 
+                   [ 0, 1, 0], 
+                   [-1, 1, 0], 
+                   [ 0, 0, 1],
+                   [ 1, 0, 1], 
+                   [ 1, 1, 1], 
+                   [ 0, 1, 1], 
+                   [-1, 1, 1], 
+                   [-1, 0, 1],
+                   [-1,-1, 1], 
+                   [ 0,-1, 1], 
+                   [ 1,-1, 1]
+                   ]
+    
+    for element in atomic_grid.keys():
+        for offset_element in  grid_offset:              
+            
+            element1  = (element[0]                  , element[1]                  , element[2]                  ) 
+            element2  = (element[0]+offset_element[0], element[1]+offset_element[1], element[2]+offset_element[2]) 
+                    
+            if element2 in atomic_grid:                        
+                pair_of_sectors2.append([self.atomic_grid[element1],
+                                         self.atomic_grid[element2]])
 
+    
+    final = time.time()    
+    print ('Pairwise grid elements time : ', final - initial, '\n')  
+    return pair_of_sectors2
+'''
+
+
+
+'''
+Contains all pairs of neighboring sectors that will be used to 
+calculate distances between atoms from  different sectors (this 
+list does not contain any pairs of repeated sectors)
+#--------------------------------------------------------------
+
+
+#-----------------------------------------------------------------
+self.full_grid_offset = [
+                       [ 1, 1, 1], # top level
+                       [ 0, 1, 1], # top level
+                       [-1, 1, 1], # top level
+                       [-1, 0, 1], # top level
+                       [ 0, 0, 1], # top level
+                       [ 1, 0, 1], # top level
+                       [-1,-1, 1], # top level
+                       [ 0,-1, 1], # top level
+                       [ 1,-1, 1], # top level
+                       
+                       #-------------------------
+                       [ 1, 1, 0], # middle level 
+                       [ 0, 1, 0], # middle level 
+                       [-1, 0, 0], # middle level 
+                       [-1, 1, 0], # middle level 
+                      #[ 0, 0, 0], # middle level 
+                       [ 1, 0, 0], # middle level 
+                       [-1,-1, 0], # middle level 
+                       [ 0,-1, 0], # middle level 
+                       [ 1,-1, 0], # middle level 
+                       #-------------------------
+                       
+                       [ 1, 1,-1], # ground level
+                       [ 0, 1,-1], # ground level
+                       [-1, 1,-1], # ground level
+                       [-1, 0,-1], # ground level
+                       [ 0, 0,-1], # ground level
+                       [ 1, 0,-1], # ground level
+                       [-1,-1,-1], # ground level
+                       [ 0,-1,-1], # ground level
+                       [ 1,-1,-1], # ground level
+                       ]
+#-----------------------------------------------------------------
+'''

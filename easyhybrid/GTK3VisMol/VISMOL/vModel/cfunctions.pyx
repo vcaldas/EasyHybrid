@@ -281,13 +281,18 @@ cpdef C_generate_bonds2(atoms):
     cdef int i
     cdef int j
     cdef int size
-    
+    cdef int index_i
+
     cdef double atom_ix
     cdef double atom_iy
     cdef double atom_iz
     cdef double cov_rad_i, cov_rad_j
     
-    
+    cdef double r_ij
+    cdef double dX
+    cdef double dY
+    cdef double dZ
+
     size =  len(atoms)
     
     for i in range (0, size-1):
@@ -304,7 +309,7 @@ cpdef C_generate_bonds2(atoms):
             dZ              = (atom_iz - atoms[j][3][2])**2
             
             cov_rad_j       = atoms[j][2]
-            cov_rad_ij_sqrt = ((cov_rad_i + cov_rad_j)**2)*1.2
+            cov_rad_ij_sqrt = ((cov_rad_i + cov_rad_j)**2)*1.4
             
             
             if (dX > cov_rad_ij_sqrt or 
@@ -333,11 +338,16 @@ cpdef C_generate_bonds_between_sectors2(atoms1, atoms2):
     cdef int i
     cdef int j
     cdef int size1, size2
-    
+    cdef int index_i
     cdef double atom_ix
     cdef double atom_iy
     cdef double atom_iz
     cdef double cov_rad_i, cov_rad_j
+    cdef double r_ij
+    cdef double dX
+    cdef double dY
+    cdef double dZ
+    
     
     size1 =  len(atoms1)
     size2 =  len(atoms2)
@@ -356,7 +366,7 @@ cpdef C_generate_bonds_between_sectors2(atoms1, atoms2):
             dZ              = (atom_iz - atoms2[j][3][2])**2
 
             cov_rad_j       = atoms2[j][2]
-            cov_rad_ij_sqrt = ((cov_rad_i + cov_rad_j)**2)*1.2
+            cov_rad_ij_sqrt = ((cov_rad_i + cov_rad_j)**2)*1.4
             
             if (dX > cov_rad_ij_sqrt or 
                 dY > cov_rad_ij_sqrt or 

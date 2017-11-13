@@ -25,13 +25,6 @@
 import cython 
 
 from VISMOL.vModel.Atom          import Atom
-#from VISMOL.Model.Molecule      import Molecule
-#from VISMOL.Model.Chain         import Chain
-#from VISMOL.Model.VismolObject  import VismolObject
-
-#except:
-#    import molecular_model as mm
-    
 import os
 import numpy as np
 from   pprint import pprint
