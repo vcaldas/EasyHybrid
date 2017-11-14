@@ -273,8 +273,9 @@ class GTKGUI ():
             self.window.connect("key-release-event", self.vismolSession.glwidget.key_released)
 
         self.window.connect("delete-event",    Gtk.main_quit)
+        self.window.set_size_request(800,800)
+
         self.window.show_all()
-        
         #animated_window = AnimatedWindow(self)
         self.TrajectoryTool = AnimatedWindow(self)
         #self.window.set_keep_above (self.window)

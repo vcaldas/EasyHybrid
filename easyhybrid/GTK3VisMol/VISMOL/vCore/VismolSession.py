@@ -31,7 +31,9 @@
 #from pprint import pprint
 #from GLarea.GLWidget   import GLWidget
 from VISMOL.vModel import VismolObject
-from VISMOL.vBabel import PDBFiles
+#from VISMOL.vBabel import PDBFiles
+from VISMOL.vBabel import PDBFiles2
+
 from VISMOL.vBabel import MOL2Files
 
 from VISMOL.vCore.VismolSelections  import VisMolPickingSelection as vPick
@@ -323,47 +325,18 @@ class VisMolSession (ShowHideVisMol):
         return True
         
     def _load_pdb_file (self, infile):
-        """ Function doc """
+        """ Function doc """      
         print(infile)
-        #atoms, frames, coords  = PDBFiles.load_pdb_files (infile = infile)
-        atoms, frames  = PDBFiles.load_pdb_files (infile = infile)
-        name = os.path.basename(infile)
-        vismol_object  = VismolObject.VismolObject(name        = name, 
-                                                   atoms       = atoms, 
-                                                   VMSession   = self, 
-                                                   #coords      = None,
-                                                   trajectory  = frames)
-        
-        vismol_object._generate_atomtree_structure()
-        vismol_object._generate_atom_unique_color_id()
-        vismol_object._generate_bonds()
-        vismol_object._generate_non_bonded_list()
-        
-        
-        vismol_object.set_model_matrix(self.glwidget.vm_widget.model_mat)
-        
+        vismol_object  = PDBFiles2.load_pdb_files (infile = infile, VMSession = self)     
+        vismol_object.set_model_matrix(self.glwidget.vm_widget.model_mat)        
         self.vismol_objects.append(vismol_object)
-        
+     
+
     def _load_mol2_file (self, infile):
         """ Function doc """
         print(infile)
-        #atoms, frames, coords  = PDBFiles.load_pdb_files (infile = infile)
-        atoms, frames  = MOL2Files.load_mol2_files (infile = infile)
-        name = os.path.basename(infile)
-        vismol_object  = VismolObject.VismolObject(name        = name, 
-                                                   atoms       = atoms, 
-                                                   VMSession   = self, 
-                                                   #coords      = None,
-                                                   trajectory  = frames)
-        
-        vismol_object._generate_atomtree_structure()
-        vismol_object._generate_atom_unique_color_id()
-        vismol_object._generate_bonds()
-        vismol_object._generate_non_bonded_list()
-        
-        
-        vismol_object.set_model_matrix(self.glwidget.vm_widget.model_mat)
-        
+        vismol_object  = MOL2Files.load_mol2_files (infile = infile, VMSession = self)
+        vismol_object.set_model_matrix(self.glwidget.vm_widget.model_mat)        
         self.vismol_objects.append(vismol_object)
         
     

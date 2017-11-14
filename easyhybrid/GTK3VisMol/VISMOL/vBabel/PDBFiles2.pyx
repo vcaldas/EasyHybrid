@@ -20,19 +20,22 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #  
-#  
-#try:
-import cython 
 
-from VISMOL.vModel.Atom          import Atom
 import os
-import numpy as np
-from   pprint import pprint
 import time
 import multiprocessing
+import numpy as np
+import VISMOL.vModel.atom_types as at 
+from   VISMOL.vModel.cfunctions import  * #calculate_distances, calculate_distances_offset#, C_generate_bonds #C_generate_bonds, C_generate_bonds2, C_generate_bonds_between_sectors
+from   VISMOL.vModel import VismolObject
 
 
-def load_pdb_files (infile = None):
+def build_vismol_object ():
+    """ Function doc """
+    
+
+
+def load_pdb_files (infile = None, VMSession =  None):
     """ Function doc """
     print ('\nstarting: parse_pdb')
     initial = time.time()
@@ -44,14 +47,29 @@ def load_pdb_files (infile = None):
 
         atoms  =  get_atom_list_from_pdb_frame(frames[0])
         frames =  get_trajectory_coordinates_from_pdb_frames (raw_frames = frames)
-        
+        bonds_indexes, bonds_pair_of_indexes  =  full_generate_bonds(atoms)
     
     final   = time.time() 
-    
     print ('ending parse_pdb: ', final - initial, '\n')
-    bonds = None
-    return atoms, frames, bonds
 
+    
+    name = os.path.basename(infile)
+    
+    vismol_object  = VismolObject.VismolObject(name        = name, 
+                                               atoms       = atoms, 
+                                               VMSession   = VMSession, 
+                                               #coords      = None,
+                                               trajectory  = frames)
+    
+    
+    vismol_object._generate_atomtree_structure()
+    vismol_object._generate_atom_unique_color_id()
+    vismol_object.index_bonds       = bonds_indexes
+    vismol_object.index_bonds_pairs = bonds_pair_of_indexes
+    
+    vismol_object._generate_non_bonded_list()
+
+    return vismol_object
     	
 def get_trajectory_coordinates_from_pdb_frames (raw_frames = None):
     """ Function doc """
@@ -90,11 +108,13 @@ def get_pdb_frame_coordinates (frame):
 	
 def get_atom_list_from_pdb_frame (frame):
     """ Function doc """
-    nCPUs =  multiprocessing.cpu_count()
+    nCPUs = multiprocessing.cpu_count()
     pool  = multiprocessing.Pool(nCPUs)
+    
     pdb_file_lines  = frame.split('\n')   
     #atoms = (pool.map(parse_pdb_line, pdb_file_lines))
     atoms = []
+    index = 0
     for line in pdb_file_lines:
     #'''
         if line[:4] == 'ATOM' or line[:6] == 'HETATM':
@@ -103,16 +123,21 @@ def get_atom_list_from_pdb_frame (frame):
             at_res_i = int(line[22:26])
             at_res_n = line[17:20].strip()
             at_ch    = line[21]             
-        
-            atom     = Atom(name      =  at_name, 
-                            #index    =  index, 
-                            pos       =  at_pos, 
-                            resi      =  at_res_i, 
-                            resn      =  at_res_n, 
-                            chain     =  at_ch, 
-                            #atom_id  =  counter, 
-                            )
-            atoms.append(atom)
+            
+            cov_rad      = at.get_cov_rad (at_name)
+            
+            atoms.append([index, at_name, cov_rad,  at_pos, at_res_i, at_res_n, at_ch])
+            
+            index += 1
+            #atom     = Atom(name      =  at_name, 
+            #                #index    =  index, 
+            #                pos       =  at_pos, 
+            #                resi      =  at_res_i, 
+            #                resn      =  at_res_n, 
+            #                chain     =  at_ch, 
+            #                #atom_id  =  counter, 
+            #                )
+            #atoms.append(atom)
     return atoms#, coords
 
 

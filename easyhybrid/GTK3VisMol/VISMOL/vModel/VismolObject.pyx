@@ -25,75 +25,110 @@
 import numpy as np
 import time
 import os
-#import multiprocessing as mp
-
-
-#from multiprocessing import Pool
 import multiprocessing
+#import threading
 
-
-import threading
-
-
+from VISMOL.vModel.Atom       import Atom
 from VISMOL.vModel.Chain      import Chain
 from VISMOL.vModel.Residue    import Residue
-from VISMOL.vModel.cfunctions import * #calculate_distances, calculate_distances_offset#, C_generate_bonds #C_generate_bonds, C_generate_bonds2, C_generate_bonds_between_sectors
-
 
 
 class VismolObject:
-    """ Class doc """
+    """ Class doc 
+    
+    
+    Visual Object contains the information necessary for openGL to draw 
+    a model on the screen. Everything that is represented in the graphical 
+    form is stored in the form of a VismolObject.
+    
+    Arguments
+    
+    name       = string  - Label that describes the object  
+    atoms      = list of atoms  - [index, at_name, cov_rad,  at_pos, at_res_i, at_res_n, at_ch]
+    VMSession  = Vismol Session - Necessary to build the "atomtree_structure"
+                 VMSession contains the atom_id_counter (self.vismol_session.atom_id_counter)
+    
+    trajectory = A list of coordinates - eg [ [x1,y1,z1, x2,y2,z2...], [x1,y1,z1, x2,y2,z2...]...]
+                 One frame is is required at last.
+    
+    
+    Attributes 
+    
+    self.actived            = False
+    self.editing            = False
+    self.Type               = 'molecule'
+    self.name               = name #self._get_name(name)
+    self.mass_center        = Center of mass <- necessary to center the object on the screen
+                              calculated on _generate_atomtree_structure
+    
+    self.atoms2             = [[index, at_name, cov_rad,  at_pos, at_res_i, at_res_n, at_ch], ...]
+    self.atoms              = [Atom1, atom2, ...] <--- Atom objects (from VISMOL.vModel.Atom       import Atom)
+    
+    self.residues           = []
+    self.chains             = {}
+    self.frames             = trajectory    
+    self.atom_unique_id_dic = {}    
+    
+    
+    #-----------------------#
+    #         Bonds         #
+    #-----------------------#
+    
+    self.index_bonds        = []
+    self.index_bonds_rep    = []
+    self.index_bonds_pairs  = [] 
+    
+    self.non_bonded_atoms   = None    
+    """
     
     def __init__ (self, 
                   name       = 'UNK', 
                   atoms      = []   ,
-                  #coords     = None ,
                   VMSession  = None , 
                   trajectory = None):
         
         """ Class initialiser """
-        self.vismol_session = VMSession
-        self.actived        = False
-        self.editing        = False
-        self.Type           = 'molecule'
-        self.name           = name #self._get_name(name)
+        #-----------------------------------------------------------------
+        #                V I S M O L   a t t r i b u t e s
+        #----------------------------------------------------------------- 
+        self.vismol_session = VMSession     #
+        self.actived        = False         # for "show and hide"   enable/disable
+        self.editing        = False         # for translate and rotate  xyz coords 
+        self.Type           = 'molecule'    # Not used yet
+        self.name           = name          # 
         
         #-----------------------------------------------------------------
         self.mass_center= None
         #-----------------------------------------------------------------
-        
-        # ------------------------------------ Model size and cell --------------------------------------------        
-        self.grid_size   = 3  # It's the size of each grid element - size of a sector (A) angtrons 
-        self.atomic_grid = {}
-        #------------------------------------------------------------------------------------------------------
 
-
-        
-        
-        
-        
-        
+       
         #-----------------------------------------------------------------
-        # 
-        #-----------------------------------------------------------------
-        self.atoms              = atoms
+        self.atoms2             = atoms
+        self.atoms              = []
         self.residues           = []
         self.chains             = {}
                                 
-        self.bonds              = []
+        
         self.frames             = trajectory
-
         self.atom_unique_id_dic = {}
+        
+        #-----------------------#
+        #         Bonds         #
+        #-----------------------#
         self.index_bonds        = []
         self.index_bonds_rep    = []
+        self.index_bonds_pairs  = []
+        
         self.non_bonded_atoms   = None
-		
-		
-        #self._generate_atomtree_structure()
-        #self._generate_atom_unique_color_id()
-        #self._generate_bonds()
-        #self._generate_non_bonded_list()
-                
+        #-----------------------------------------------------------------
+
+
+
+
+
+        #-----------------------------------------------------------------
+        #                O p e n G L   a t t r i b u t e s
+        #-----------------------------------------------------------------                
         """   L I N E S   """
         self.lines_actived       = True
         self.lines_show_list     = True
@@ -106,10 +141,7 @@ class VismolObject:
 
         print ('frames:     ', len(self.frames))
         print ('frame size: ', len(self.frames[0]))
-        
-        
-    
-        # OpenGL attributes
+        #-----------------------------------------------------------------
         self.dots_vao        = None
         self.lines_vao       = None
         self.circles_vao     = None
@@ -130,7 +162,9 @@ class VismolObject:
 
         self.picking_dots_vao      = None
         self.picking_dot_buffers   = None
-
+        #-----------------------------------------------------------------
+    
+    
     def generate_dot_indexes(self):
         """ Function doc
         """
@@ -144,24 +178,41 @@ class VismolObject:
         
         print ('\ngenerate_chain_structure starting')
         initial          = time.time()
-        
+
         parser_resi  = None
         parser_resn  = None
         chains_m     = {}
         frame        = []
-        index        = 1
+        #index        = 1
         
-        self.atoms2  = [] 
-
+        self.atoms   = [] 
+            
         sum_x = 0.0 
         sum_y = 0.0 
         sum_z = 0.0 
         
-        for atom in self.atoms:
-            atom.index   = index
+        for atom2 in self.atoms2:
+            #[index, at_name, cov_rad,  at_pos], at_res_i, at_res_n, at_ch]
+            index    = atom2[0]
+            at_name  = atom2[1]
+            cov_rad  = atom2[2]
+            at_pos   = atom2[3]
+            at_res_i = atom2[4]
+            at_res_n = atom2[5]
+            at_ch    = atom2[6]
+            
+            atom      = Atom(name      =  at_name, 
+                             index     =  index+1, 
+                             pos       =  at_pos, 
+                             resi      =  at_res_i, 
+                             resn      =  at_res_n, 
+                             chain     =  at_ch, 
+                             #atom_id  =  counter, 
+                             )
+            
             atom.atom_id = self.vismol_session.atom_id_counter
             atom.Vobject = self
-            
+
             if atom.chain in self.chains.keys():
                 ch = self.chains[atom.chain]
            
@@ -188,7 +239,8 @@ class VismolObject:
             if atom.name == 'CA':
                 ch.backbone.append(atom)
             
-            self.atoms2.append([atom.index-1, atom.name, atom.cov_rad,  atom.pos])
+            self.atoms.append(atom)
+            
             sum_x += atom.pos[0]
             sum_y += atom.pos[1]
             sum_z += atom.pos[2]
@@ -205,166 +257,13 @@ class VismolObject:
 
         final = time.time() 
         print ('_generate_atomtree_structure end -  total time: ', final - initial, '\n')
-        
-        
-        #-----------------------------------------------------------------
-        #                 distribute_atoms_by_sectors
-        #-----------------------------------------------------------------
-        #self.build_atomic_grid(self.x_coords, self.y_coords, self.z_coords)
-        #-----------------------------------------------------------------
-        initial          = time.time()
-        self.build_atomic_grid()
-        final = time.time() 
-        print ('build_atomic_grid end -  total time: ', final - initial, '\n')
         return True
+
 
     def _get_name (self, name):
         """ Function doc """
         self.name  = os.path.basename(name)
-        #self.name  = name.split('.')
-        #self.name  = self.name[0]
-    
-    def _generate_bonds (self):
-        """ Function doc 
 
-        (1)Calculate the distances and bonds 
-        between atoms within a single element 
-        of the atomic grid
-        |-------|-------|-------|
-        |       |       |       |
-        |       |       |       |
-        |       |       |       |
-        |-------|-------|-------|
-        |       |       |       |
-        |       | i<->j |       |
-        |       |       |       |
-        |-------|-------|-------|
-        |       |       |       |
-        |       |       |       |
-        |       |       |       |
-        |-------|-------|-------|
-        
-        (2)Calculate the distances and connections 
-        between atoms between different elements 
-        of the atomic grid
-        |-------|-------|-------|
-        |       |       |       |
-        |       |       |       |
-        |       |       |       |
-        |-------|-------|-------|
-        |       |   i   |       |
-        |       |    \  |       |
-        |       |     \ |       |
-        |-------|------\|-------|
-        |       |       \       |
-        |       |       |\      |
-        |       |       | j     |
-        |-------|-------|-------|
-        
-        """
-               
-        self.index_bonds_pairs = []
-        self.index_bonds       = []
-        nCPUs  =  multiprocessing.cpu_count()
-        
-        
-        print ('Delta compression using up to', nCPUs ,'threads.')
-        #'''
-        #--------------------------------------------------------------------------------------------------
-        #  (1)      P A R A L L E L        Calculate distances between atoms in a sector
-        #--------------------------------------------------------------------------------------------------
-        initial       = time.time()
-        pool          = multiprocessing.Pool(nCPUs)        
-        grid_elements = self.atomic_grid.values()
-        
-        pool_of_index_bonds = (pool.map(C_generate_bonds2, grid_elements))
-        
-        for index_bonds in pool_of_index_bonds:
-            for pair_of_indexes in index_bonds:
-                self.index_bonds.append(pair_of_indexes[0])
-                self.index_bonds.append(pair_of_indexes[1]) 
-                self.index_bonds_pairs.append(pair_of_indexes)      
-        final = time.time()    
-        print ('Cython PARALLEL C_generate connections between atoms within a single element of the atomic grid total time: ', final - initial, '\n')
-        #--------------------------------------------------------------------------------------------------
-        #'''
-        
-        #--------------------------------------------------------------------------------------------------
-        #  (2)      P A R A L L E L        Calculate distances between atoms in neighboring sectors  
-        #--------------------------------------------------------------------------------------------------
-        pair_of_sectors2 = self.determine_the_paired_atomic_grid_elements()
-        #-----------------------------------------------------------------------------------------
-        initial = time.time()
-        pool_of_index_bonds = (pool.map(calculate_distances_between_sectors_parallel2, pair_of_sectors2))
-        for index_bonds in pool_of_index_bonds:
-            for pair_of_indexes in index_bonds:
-                self.index_bonds.append(pair_of_indexes[0])
-                self.index_bonds.append(pair_of_indexes[1]) 
-                self.index_bonds_pairs.append(pair_of_indexes)
-        final = time.time()    
-        print ('Cython PARALLEL C_generate connections between atoms between different elements of the atomic grid total time: ', final - initial, '\n')  
-        #--------------------------------------------------------------------------------------------------
-
-    
-    def determine_the_paired_atomic_grid_elements(self):
-        '''
-        There is also an array vOff that specifies the offsets of each of the 14 neighbor
-        cells. The array covers half the neighboring cells, together with the cell itself; its
-        size and contents are specified as
-        
-        {{0,0,0}, {1,0,0}, {1,1,0}, {0,1,0}, {-1,1,0}, {0,0,1},
-        {1,0,1}, {1,1,1}, {0,1,1}, {-1,1,1}, {-1,0,1},
-        {-1,-1,1}, {0,-1,1}, {1,-1,1}}
-        
-        '''
-        initial = time.time()
-        pair_of_sectors2 = []
-        grid_offset = [[ 0, 0, 0], 
-                       [ 1, 0, 0], 
-                       [ 1, 1, 0], 
-                       [ 0, 1, 0], 
-                       [-1, 1, 0], 
-                       [ 0, 0, 1],
-                       [ 1, 0, 1], 
-                       [ 1, 1, 1], 
-                       [ 0, 1, 1], 
-                       [-1, 1, 1], 
-                       [-1, 0, 1],
-                       [-1,-1, 1], 
-                       [ 0,-1, 1], 
-                       [ 1,-1, 1]
-                       ]
-        
-        for element in self.atomic_grid.keys():
-            for offset_element in  grid_offset:              
-                
-                element1  = (element[0], 
-                             element[1], 
-                             element[2])
-                              
-                element2  = (element[0]+offset_element[0], 
-                             element[1]+offset_element[1], 
-                             element[2]+offset_element[2]) 
-                        
-                if element2 in self.atomic_grid:                        
-                    pair_of_sectors2.append([self.atomic_grid[element1],
-                                             self.atomic_grid[element2]])
-
-        final = time.time()    
-        print ('Pairwise grid elements time : ', final - initial, '\n')  
-        return pair_of_sectors2
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     def _generate_non_bonded_list (self):
         """ Function doc """
         self.non_bonded_atoms   =  []
@@ -384,7 +283,6 @@ class VismolObject:
         self.non_bonded_atoms = np.array(self.non_bonded_atoms, dtype=np.uint32)
         final = time.time()    
         print ('Cython PARALLEL _generate_non_bonded_list total time: ', final - initial, '\n') 
-        
         
     def _generate_atom_unique_color_id (self):
         """ Function doc 
@@ -441,77 +339,12 @@ class VismolObject:
         self.vdw_dot_sizes = np.array(self.vdw_dot_sizes, dtype=np.float32)
         self.cov_dot_sizes = np.array(self.cov_dot_sizes, dtype=np.float32)
 
-    
     def set_model_matrix(self, mat):
         """ Function doc
         """
         self.model_mat = np.copy(mat)
         return True
     
-    def build_atomic_grid (self, log= True):
-        """  fucntion build_atomic_grid
-        
-        This function organizes the atoms in their respective position 
-        of the grid (atomic grid) - Nescessary to calculate distances between 
-        atoms in different elements of the grid
-        
-        self.grid_size = is the size of a grid element - size of a sector
-        
-        """
-        initial = time.time() 
-
-        '''
-        for atom in self.atoms:
-            a = int((atom.pos[0]) / self.grid_size)
-            b = int((atom.pos[1]) / self.grid_size)
-            c = int((atom.pos[2]) / self.grid_size)
-            
-            if (a,b,c) in self.sectors:
-                #self.sectors[(a,b,c)].append(atom.index-1)
-                self.sectors [(a,b,c)].append(atom)
-            else:
-                self.sectors [(a,b,c)] = []
-                #self.sectors[(a,b,c)].append(atom.index-1) 
-                self.sectors [(a,b,c)].append(atom)
-        '''
-        for atom in self.atoms2:
-            a = int((atom[3][0]) / self.grid_size)
-            b = int((atom[3][1]) / self.grid_size)
-            c = int((atom[3][2]) / self.grid_size)
-            
-            if (a,b,c) in self.atomic_grid:
-                #self.sectors[(a,b,c)].append(atom.index-1)
-                self.atomic_grid[(a,b,c)].append(atom)
-            else:
-                self.atomic_grid[(a,b,c)] = []
-                #self.sectors[(a,b,c)].append(atom.index-1) 
-                self.atomic_grid[(a,b,c)].append(atom)
-
-        final = time.time() 
-        print ('building atomic grid total time: ', final - initial, '\n')
-        
-        if log:
-            print (
-'''
------------------------------------------------------------------        
-          V I S M O L   G R I D   P A R A M E T E R S
------------------------------------------------------------------        
-''')           
-            print ('grid size          = ', self.grid_size)
-            print ('Number of elements = ', len(self.atomic_grid))
-            #print (self.atomic_grid)
-            print ('''-----------------------------------------------------------------''')
-        
-
-
-def calculate_distances_between_sectors_parallel2(pair_of_sectors):
-    index_bonds = C_generate_bonds_between_sectors2(pair_of_sectors[0], 
-                                                    pair_of_sectors[1])
-    return index_bonds
-
-def calculate_distances_per_sectors_parallel2 (sector):
-    index_bonds = C_generate_bonds2(sector)
-    return index_bonds
 
 '''
 def determine_the_paired_atomic_grid_elements_parallel(atomic_grid):

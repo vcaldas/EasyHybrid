@@ -21,15 +21,15 @@
 #  MA 02110-1301, USA.
 #  
 #  
-#try:
-#import cython 
-#
-from VISMOL.vModel.Atom          import Atom
-#import os
+import os
+import time
+import multiprocessing
 import numpy as np
-from   pprint import pprint
-#import time
-#import multiprocessing
+import VISMOL.vModel.atom_types as at 
+from   VISMOL.vModel.cfunctions import  * #calculate_distances, calculate_distances_offset#, C_generate_bonds #C_generate_bonds, C_generate_bonds2, C_generate_bonds_between_sectors
+from   VISMOL.vModel import VismolObject
+
+
 '''
 @<TRIPOS>MOLECULE
 DCM Pose 1
@@ -109,7 +109,7 @@ USER_CHARGES
 @<TRIPOS>SUBSTRUCTURE
 '''
 
-def load_mol2_files (infile = None):
+def load_mol2_files (infile = None, VMSession =  None):
     """ Function doc """
     print ('\nstarting: parse_mol2')
 
@@ -128,22 +128,119 @@ def load_mol2_files (infile = None):
     header    = header.split('\n')
     raw_atoms = raw_atoms.split('\n')
     bonds     = bonds.split('\n')
-    #pprint (header)
-    #pprint (raw_atoms)
-    #pprint (bonds )
-    atoms, frames = get_atom_list_from_mol2_frame(raw_atoms)
-    return atoms, frames
-    
-   #    firstmolecule =  firstmolecule.split('@<TRIPOS>ATOM')
-   #    
-   #    atoms     =  get_atom_list_from_mol2_frame(firstmolecule)
-   #    frames    =  get_trajectory_coordinates_from_pdb_frames (raw_frames = frames)
-   #
-   #final   = time.time() 
-   #print ('ending parse_pdb: ', final - initial, '\n')
-   #return atoms, frames
 
-    	
+
+    atoms, frames = get_atom_list_from_mol2_frame(raw_atoms)
+    
+    """ Bonds """
+    try:
+        bonds = get_bonds (raw_bonds = bonds)
+        bonds_indexes         = bonds[0]
+        bonds_pair_of_indexes = bonds[1]
+    except:   
+        bonds_indexes, bonds_pair_of_indexes  =  full_generate_bonds(atoms)
+
+    
+    
+    name = os.path.basename(infile)
+    vismol_object  = VismolObject.VismolObject(name        = name, 
+                                               atoms       = atoms, 
+                                               VMSession   = VMSession, 
+                                               trajectory  = frames)
+    
+    
+    vismol_object._generate_atomtree_structure()
+    vismol_object._generate_atom_unique_color_id()
+    vismol_object.index_bonds       = bonds_indexes
+    vismol_object.index_bonds_pairs = bonds_pair_of_indexes
+    
+    vismol_object._generate_non_bonded_list()
+    return vismol_object
+
+
+
+
+
+
+
+
+
+
+
+def get_atom_list_from_mol2_frame (raw_atoms, frame = True):
+    """ Function doc """
+    #nCPUs =  multiprocessing.cpu_count()
+    #pool  = multiprocessing.Pool(nCPUs)
+    #pdb_file_lines  = frame.split('\n')   
+    #atoms = (pool.map(parse_pdb_line, pdb_file_lines))
+    
+    atoms  = []
+    frames = []
+    frame_coordinates = []
+    #print (raw_atoms)
+    for line in raw_atoms:
+        line = line.split()
+        if len(line) > 1:
+            #print (line) 
+            index    = int(line[0])-1
+            
+            at_name  = line[1]
+            
+            at_pos   = np.array([float(line[2]), float(line[3]), float(line[4])])
+            
+            at_res_i = int(line[6])
+            
+            at_res_n = line[6]
+            
+            at_ch    = 'X'          
+            
+            cov_rad  = at.get_cov_rad (at_name)
+
+            atoms.append([index, at_name, cov_rad,  at_pos, at_res_i, at_res_n, at_ch])
+            
+            #atom     = Atom(name      =  at_name, 
+            #                index     =  index, 
+            #                pos       =  at_pos, 
+            #                resi      =  at_res_i, 
+            #                resn      =  at_res_n, 
+            #                chain     =  at_ch, 
+            #                )
+            #atoms.append(atom)
+            frame_coordinates.append(float(line[2]))
+            frame_coordinates.append(float(line[3]))
+            frame_coordinates.append(float(line[4]))
+    frame_coordinates = np.array(frame_coordinates, dtype=np.float32)
+    frames.append(frame_coordinates)
+    #print (frames)
+    #print (atoms)
+    return atoms, frames#, coords
+
+def get_bonds (raw_bonds):
+    """ Function doc """
+    index_bonds              = []
+    index_bonds_pairs        = []
+    index_bonds_pairs_orders = []
+    
+    #print (raw_bonds)
+    print ('Obtain bonds from original MOL2 file')
+    for line in raw_atoms:
+        line = line.split()
+        if len(line) == 4:
+            index    = int(line[0])            
+            atom1    = int(line[1]-1)
+            atom2    = int(line[2]-1)
+            order    = line[3]
+
+            index_bonds      .append(atom1)
+            index_bonds      .append(atom2)
+            index_bonds_pairs.append([atom1,atom2])
+            
+            index_bonds_pairs_orders.append(order)
+
+    return [index_bonds, index_bonds_pairs]
+
+
+'''  	
 def get_trajectory_coordinates_from_pdb_frames (raw_frames = None):
     """ Function doc """
     n_processor = multiprocessing.cpu_count()
@@ -177,50 +274,5 @@ def get_pdb_frame_coordinates (frame):
         return None
     
     return frame_coordinates
-
+'''
 	
-def get_atom_list_from_mol2_frame (raw_atoms, frame = True):
-    """ Function doc """
-    #nCPUs =  multiprocessing.cpu_count()
-    #pool  = multiprocessing.Pool(nCPUs)
-    #pdb_file_lines  = frame.split('\n')   
-    #atoms = (pool.map(parse_pdb_line, pdb_file_lines))
-    
-    atoms  = []
-    frames = []
-    frame_coordinates = []
-    print (raw_atoms)
-    for line in raw_atoms:
-        line = line.split()
-        if len(line) > 1:
-            #print (line) 
-            index    = int(line[0])
-            
-            at_name  = line[1]
-            
-            at_pos   = np.array([float(line[2]), float(line[3]), float(line[4])])
-            
-            at_res_i = int(line[6])
-            
-            at_res_n = line[6]
-            
-            at_ch    = 'X'          
-        
-            atom     = Atom(name      =  at_name, 
-                            index     =  index, 
-                            pos       =  at_pos, 
-                            resi      =  at_res_i, 
-                            resn      =  at_res_n, 
-                            chain     =  at_ch, 
-                            )
-            atoms.append(atom)
-            frame_coordinates.append(float(line[2]))
-            frame_coordinates.append(float(line[3]))
-            frame_coordinates.append(float(line[4]))
-    frame_coordinates = np.array(frame_coordinates, dtype=np.float32)
-    frames.append(frame_coordinates)
-    print (frames)
-    print (atoms)
-    return atoms, frames#, coords
-
-
