@@ -47,7 +47,7 @@ def load_pdb_files (infile = None, VMSession =  None):
 
         atoms  =  get_atom_list_from_pdb_frame(frames[0])
         frames =  get_trajectory_coordinates_from_pdb_frames (raw_frames = frames)
-        bonds_indexes, bonds_pair_of_indexes  =  full_generate_bonds(atoms)
+        bonds_indexes, bonds_pair_of_indexes, non_bonded_atoms =  full_generate_bonds(atoms)
     
     final   = time.time() 
     print ('ending parse_pdb: ', final - initial, '\n')
@@ -66,8 +66,7 @@ def load_pdb_files (infile = None, VMSession =  None):
     vismol_object._generate_atom_unique_color_id()
     vismol_object.index_bonds       = bonds_indexes
     vismol_object.index_bonds_pairs = bonds_pair_of_indexes
-    
-    vismol_object._generate_non_bonded_list()
+    vismol_object.non_bonded_atoms  = non_bonded_atoms
 
     return vismol_object
     	
@@ -126,7 +125,7 @@ def get_atom_list_from_pdb_frame (frame):
             
             cov_rad      = at.get_cov_rad (at_name)
             
-            atoms.append([index, at_name, cov_rad,  at_pos, at_res_i, at_res_n, at_ch])
+            atoms.append([index, at_name, cov_rad,  at_pos, at_res_i, at_res_n, at_ch, False])
             
             index += 1
             #atom     = Atom(name      =  at_name, 

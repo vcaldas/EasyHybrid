@@ -132,13 +132,13 @@ def load_mol2_files (infile = None, VMSession =  None):
 
     atoms, frames = get_atom_list_from_mol2_frame(raw_atoms)
     
-    """ Bonds """
-    try:
-        bonds = get_bonds (raw_bonds = bonds)
-        bonds_indexes         = bonds[0]
-        bonds_pair_of_indexes = bonds[1]
-    except:   
-        bonds_indexes, bonds_pair_of_indexes  =  full_generate_bonds(atoms)
+    #""" Bonds """
+    #try:
+    #    bonds = get_bonds (raw_bonds = bonds)
+    #    bonds_indexes         = bonds[0]
+    #    bonds_pair_of_indexes = bonds[1]
+    #except:   
+    bonds_indexes, bonds_pair_of_indexes, non_bonded_atoms =  full_generate_bonds(atoms)
 
     
     
@@ -153,7 +153,8 @@ def load_mol2_files (infile = None, VMSession =  None):
     vismol_object._generate_atom_unique_color_id()
     vismol_object.index_bonds       = bonds_indexes
     vismol_object.index_bonds_pairs = bonds_pair_of_indexes
-    
+    vismol_object.non_bonded_atoms  = non_bonded_atoms
+
     vismol_object._generate_non_bonded_list()
     return vismol_object
 

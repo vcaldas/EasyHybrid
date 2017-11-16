@@ -13,7 +13,7 @@ import multiprocessing
 
 
 #'''
-cpdef C_generate_bonds2(atoms):
+cpdef list C_generate_bonds2(list atoms):
     """
         Calculate the distances and bonds 
         between atoms within a single element 
@@ -99,7 +99,7 @@ cpdef C_generate_bonds2(atoms):
     return index_bonds2#, index_bonds
 
 #'''
-cpdef C_generate_bonds_between_sectors2(atoms1, atoms2):
+cpdef list C_generate_bonds_between_sectors2(list atoms1, list atoms2):
     """
    
     Calculate the distances and connections 
@@ -128,7 +128,7 @@ cpdef C_generate_bonds_between_sectors2(atoms1, atoms2):
     index_bonds2 [[a,b],[b,c], ...] where a and b are indexes. 
     returns a list of pair of indexes "index_bonds2"
     """
-    index_bonds2 = []
+    cdef list index_bonds2 = []
 
     cdef int i
     cdef int j
@@ -185,7 +185,7 @@ cpdef C_generate_bonds_between_sectors2(atoms1, atoms2):
     return index_bonds2#, index_bonds
 
 
-cpdef build_atomic_grid (atoms, int grid_size = 3):
+cpdef dict build_atomic_grid (list atoms, int grid_size = 3):
     """  fucntion build_atomic_grid
     
     This function organizes the atoms in their respective position 
@@ -217,8 +217,7 @@ cpdef build_atomic_grid (atoms, int grid_size = 3):
     grid element = list of atoms
     """
     #int grid_size
-    
-    atomic_grid = {}
+    cdef dict  atomic_grid = {}
     
     for atom in atoms:
         a = int((atom[3][0]) / grid_size)
@@ -233,7 +232,7 @@ cpdef build_atomic_grid (atoms, int grid_size = 3):
     return atomic_grid
 
     
-cpdef determine_the_paired_atomic_grid_elements(atomic_grid):
+cpdef list determine_the_paired_atomic_grid_elements(dict atomic_grid):
     '''
     There is also an array vOff that specifies the offsets of each of the 14 neighbor
     cells. The array covers half the neighboring cells, together with the cell itself; its
@@ -277,6 +276,11 @@ cpdef determine_the_paired_atomic_grid_elements(atomic_grid):
     returns a list contain lists of atoms [[atoms1],atoms2], ...]
 
     '''
+    cdef list pair_of_sectors2
+    cdef list grid_offset
+    #cdef list element
+    #cdef list offset_element
+    
     initial = time.time()
     
     pair_of_sectors2 = []
@@ -316,20 +320,21 @@ cpdef determine_the_paired_atomic_grid_elements(atomic_grid):
     return pair_of_sectors2
     
 
-cpdef calculate_distances_between_grid_elements_parallel2(pair_of_grid_elements):
-    
+cpdef list calculate_distances_between_grid_elements_parallel2(list pair_of_grid_elements):
+    cdef list index_bonds
     index_bonds = C_generate_bonds_between_sectors2(pair_of_grid_elements[0], 
                                                     pair_of_grid_elements[1])
     
     return index_bonds
 
 
-cpdef calculate_distances_per_grid_element_parallel2 (grid_element):
+cpdef list calculate_distances_per_grid_element_parallel2 (list grid_element):
+    cdef list index_bonds
     index_bonds = C_generate_bonds2(grid_element)
     return index_bonds
 
     
-cpdef full_generate_bonds (atoms):
+cpdef full_generate_bonds (list atoms):
     """ 
         (1)Calculate the distances and bonds 
         between atoms within a single element 
@@ -367,6 +372,12 @@ cpdef full_generate_bonds (atoms):
         |-------|-------|-------|
     
     """
+    cdef dict atomic_grid
+    #cdef list full_index_bonds_pairs, full_index_bonds
+    cdef int nCPUs
+    cdef float initial, final
+    
+    
     atomic_grid = build_atomic_grid (atoms)
     
     full_index_bonds_pairs = []
@@ -386,8 +397,9 @@ cpdef full_generate_bonds (atoms):
     #--------------------------------------------------------------------------------------------------
     pool          = multiprocessing.Pool(nCPUs)        
     grid_elements = atomic_grid.values()
-    
+    #with nogil:
     pool_of_index_bonds = (pool.map(C_generate_bonds2, grid_elements))
+    #pool_of_index_bonds   = np.array(pool_of_index_bonds, dtype=np.int32)
     
     for index_bonds in pool_of_index_bonds:
         for pair_of_indexes in index_bonds:
@@ -410,7 +422,8 @@ cpdef full_generate_bonds (atoms):
 
     pair_of_grid_elements = determine_the_paired_atomic_grid_elements(atomic_grid)
     pool_of_index_bonds   = (pool.map(calculate_distances_between_grid_elements_parallel2, pair_of_grid_elements))
-
+    
+    #pool_of_index_bonds   = np.array(pool_of_index_bonds, dtype=np.int32)
     for index_bonds in pool_of_index_bonds:
         for pair_of_indexes in index_bonds:
             full_index_bonds.append(pair_of_indexes[0])
@@ -420,8 +433,179 @@ cpdef full_generate_bonds (atoms):
     final = time.time()    
     print ('Cython PARALLEL C_generate connections between atoms between different elements of the atomic grid total time: ', final - initial, '\n')  
     #--------------------------------------------------------------------------------------------------
-    return  full_index_bonds , full_index_bonds_pairs
     
+    full_index_bonds       = np.array(full_index_bonds      , dtype=np.int32)
+    full_index_bonds_pairs = np.array(full_index_bonds_pairs, dtype=np.int32)
+    
+    list_of_atoms          = range(0, len(atoms))
+    list_of_atoms          = np.array(list_of_atoms         , dtype=np.int32)
+    non_bonded_atoms       = generate_non_bonded_list (list_of_atoms, full_index_bonds)
+    return  full_index_bonds , full_index_bonds_pairs, non_bonded_atoms
+    
+
+cpdef generate_non_bonded_list (list_of_atoms, full_index_bonds):
+    
+    
+    
+
+    non_bonded_atoms   =  []
+    #initial = time.time()
+    #
+    #for atom_index in list_of_atoms:
+    #    if atom_index in full_index_bonds:
+    #        pass
+    #    else:
+    #        non_bonded_atoms.append(atom_index)
+    non_bonded_atoms = np.array(non_bonded_atoms, dtype=np.uint32)
+    #final = time.time()    
+    #print ('Cython PARALLEL _generate_non_bonded_list total time: ', final - initial, '\n') 
+    
+    return non_bonded_atoms
+
+
+
+
+
+
+'''
+
+
+
+
+
+
+
+#'''
+
+
+
+
+#'''
+#cpdef full_generate_bonds (list atoms):
+#cpdef full_generate_bonds (int [:] index  , 
+#                         float [:] cov_rad, 
+#                         float [:] X      ,  
+#                         float [:] Y      , 
+#                         float [:] Z      ):
+#
+#    """ 
+#        (1)Calculate the distances and bonds 
+#        between atoms within a single element 
+#        of the atomic grid
+#        |-------|-------|-------|
+#        |       |       |       |
+#        |       |       |       |
+#        |       |       |       |
+#        |-------|-------|-------|
+#        |       |       |       |
+#        |       | i<->j |       |
+#        |       |       |       |
+#        |-------|-------|-------|
+#        |       |       |       |
+#        |       |       |       |
+#        |       |       |       |
+#        |-------|-------|-------|
+#        
+#        
+#        (2)Calculate the distances and connections 
+#        between atoms between different elements 
+#        of the atomic grid
+#        |-------|-------|-------|
+#        |       |       |       |
+#        |       |       |       |
+#        |       |       |       |
+#        |-------|-------|-------|
+#        |       |   i   |       |
+#        |       |    \  |       |
+#        |       |     \ |       |
+#        |-------|------\|-------|
+#        |       |       \       |
+#        |       |       |\      |
+#        |       |       | j     |
+#        |-------|-------|-------|
+#    
+#    """
+#    cdef dict atomic_grid
+#    cdef list full_index_bonds_pairs, full_index_bonds, grid_elements
+#    cdef int nCPUs
+#    cdef float initial, final
+#    
+#    atomic_grid = build_atomic_grid (index, 
+#                                     X    ,      
+#                                     Y    ,      
+#                                     Z    )     
+#
+#    full_index_bonds_pairs = []
+#    full_index_bonds       = []
+#    
+#    nCPUs  =  multiprocessing.cpu_count()
+#    
+#    print ('Delta compression using up to', nCPUs ,'threads.')
+#    #--------------------------------------------------------------------------------------------------
+#    
+#    
+#    
+#    #'''
+#    #--------------------------------------------------------------------------------------------------
+#    #  (1)      P A R A L L E L        Calculate distances between atoms in a sector
+#    #--------------------------------------------------------------------------------------------------
+#    initial       = time.time()
+#    #--------------------------------------------------------------------------------------------------
+#    pool          = multiprocessing.Pool(nCPUs)        
+#    grid_elements = atomic_grid.values()
+#    
+#    pool_of_index_bonds = (pool.map(C_generate_bonds2, grid_elements))
+#    #pool_of_index_bonds   = np.array(pool_of_index_bonds, dtype=np.int32)
+#    for index_bonds in pool_of_index_bonds:
+#        for pair_of_indexes in index_bonds:
+#            full_index_bonds.append(pair_of_indexes[0])
+#            full_index_bonds.append(pair_of_indexes[1]) 
+#            full_index_bonds_pairs.append(pair_of_indexes)      
+#    
+#    #--------------------------------------------------------------------------------------------------
+#    final = time.time()    
+#    print ('Cython PARALLEL C_generate connections between atoms within a single element of the atomic grid total time: ', final - initial, '\n')
+#    #--------------------------------------------------------------------------------------------------
+#    
+#
+#    #'''
+#    #--------------------------------------------------------------------------------------------------
+#    #  (2)      P A R A L L E L        Calculate distances between atoms in neighboring sectors  
+#    #--------------------------------------------------------------------------------------------------
+#    initial = time.time()
+#    #--------------------------------------------------------------------------------------------------
+#
+#    pair_of_grid_elements = determine_the_paired_atomic_grid_elements(atomic_grid)
+#    pool_of_index_bonds   = (pool.map(calculate_distances_between_grid_elements_parallel2, pair_of_grid_elements))
+#    
+#    #pool_of_index_bonds   = np.array(pool_of_index_bonds, dtype=np.int32)
+#    for index_bonds in pool_of_index_bonds:
+#        for pair_of_indexes in index_bonds:
+#            full_index_bonds.append(pair_of_indexes[0])
+#            full_index_bonds.append(pair_of_indexes[1]) 
+#            full_index_bonds_pairs.append(pair_of_indexes)
+#    #--------------------------------------------------------------------------------------------------
+#    final = time.time()    
+#    print ('Cython PARALLEL C_generate connections between atoms between different elements of the atomic grid total time: ', final - initial, '\n')  
+#    #--------------------------------------------------------------------------------------------------
+#    
+#    full_index_bonds       = np.array(full_index_bonds      , dtype=np.int32)
+#    full_index_bonds_pairs = np.array(full_index_bonds_pairs, dtype=np.int32)
+#    
+#    list_of_atoms          = range(0, len(atoms))
+#    list_of_atoms          = np.array(list_of_atoms         , dtype=np.int32)
+#    non_bonded_atoms       = generate_non_bonded_list (list_of_atoms, full_index_bonds)
+#    return  full_index_bonds , full_index_bonds_pairs, non_bonded_atoms
+#
+
+
+
+
+
+
+
+
+
 
 
 
