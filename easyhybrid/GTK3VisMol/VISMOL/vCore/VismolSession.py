@@ -32,7 +32,7 @@
 #from GLarea.GLWidget   import GLWidget
 from VISMOL.vModel import VismolObject
 #from VISMOL.vBabel import PDBFiles
-from VISMOL.vBabel import PDBFiles2
+from VISMOL.vBabel import PDBFiles
 
 from VISMOL.vBabel import MOL2Files
 
@@ -327,7 +327,7 @@ class VisMolSession (ShowHideVisMol):
     def _load_pdb_file (self, infile):
         """ Function doc """      
         print(infile)
-        vismol_object  = PDBFiles2.load_pdb_files (infile = infile, VMSession = self)     
+        vismol_object  = PDBFiles.load_pdb_file (infile = infile, VMSession = self)     
         vismol_object.set_model_matrix(self.glwidget.vm_widget.model_mat)        
         self.vismol_objects.append(vismol_object)
      

@@ -134,7 +134,7 @@ class VismolObject:
         self.lines_show_list     = True
 
         """   D O T S   """
-        self.dots_actived = False
+        self.dots_actived = True
 
         """   C I R C L E S   """
         self.circles_actived = False

@@ -9,6 +9,6 @@ setup(
 
 setup(
     #ext_modules = cythonize("cfunctions.pyx")
-    ext_modules = cythonize("cfunctions.pyx")
+    ext_modules = cythonize("cDistances.pyx")
 )
 

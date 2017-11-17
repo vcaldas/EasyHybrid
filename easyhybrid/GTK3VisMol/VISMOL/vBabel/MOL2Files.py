@@ -26,7 +26,7 @@ import time
 import multiprocessing
 import numpy as np
 import VISMOL.vModel.atom_types as at 
-from   VISMOL.vModel.cfunctions import  * #calculate_distances, calculate_distances_offset#, C_generate_bonds #C_generate_bonds, C_generate_bonds2, C_generate_bonds_between_sectors
+import VISMOL.vModel.cDistances as cdist
 from   VISMOL.vModel import VismolObject
 
 
