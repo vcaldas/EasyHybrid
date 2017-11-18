@@ -109,28 +109,55 @@ USER_CHARGES
 @<TRIPOS>SUBSTRUCTURE
 '''
 
-def load_mol2_files (infile = None, VMSession =  None, gridsize = 3):
+def load_xyz_file (infile = None, VMSession =  None, gridsize = 3):
     """ Function doc """
     print ('\nstarting: parse_mol2')
 
     #initial = time.time()
 
-    with open(infile, 'r') as mol2_file:
-        pdbtext = mol2_file.read()
+    with open(infile, 'r') as xyz_file:
+        
+        #pdbtext          = xyz_file.readlines()
+        #totalsize        = len(pdbtext)
+        #framesize        = int(pdbtext[0])
+        #number_of_frames = totalsize/(framesize+2)
+        
+        
+        xyz_lines        = xyz_file.readlines()
+        total_size       = len(xyz_lines)    
+        xyz_model_size   = int(xyz_lines[0])
+        model_size       = xyz_model_size+2
+        number_of_frames = total_size/(xyz_model_size+2)
 
-        molecules     =  pdbtext.split('@<TRIPOS>MOLECULE')
-        firstmolecule =  molecules[1].split('@<TRIPOS>ATOM')
-        header        =  firstmolecule[0]
-        firstmolecule =  firstmolecule[1].split('@<TRIPOS>BOND')
-        raw_atoms     =  firstmolecule[0]
-        bonds         =  firstmolecule[1]
+        
+        frame0           = xyz_lines[2: model_size]
+        
+        
+        atoms, frames    = get_atom_list_from_xyz_frame (raw_atoms= frame0, frame = True, gridsize = 3)
+        
+        models     = []
+        
+        for i in range(0, int(number_of_frames)): 
+            #print (i*model_size) , (i+1)*model_size
+            model = xyz_lines[(i*model_size) : (i+1)*model_size]
+            models.append(model)
+        
+        n = 1
+        for model_i  in models[1:]:
+            frame = []
+            for line in model_i[2:]:
+                line2 = line.split()
+                #print line2, [float(line[1]), float(line[2]), float(line[3])]
+                #at_name  = line2[0].strip()
+                #at_pos   = np.array([float(line2[1]), float(line2[2]), float(line2[3])])
+                frame.append(float(line2[1]))
+                frame.append(float(line2[2]))
+                frame.append(float(line2[3]))
+                
+            frame = np.array(frame, dtype=np.float32)
+            frames.append(frame)
+            n += 1
 
-    header    = header.split('\n')
-    raw_atoms = raw_atoms.split('\n')
-    bonds     = bonds.split('\n')
-
-
-    atoms, frames = get_atom_list_from_mol2_frame(raw_atoms = raw_atoms, frame = True,  gridsize = gridsize)
     
     #-------------------------------------------------------------------------------------------
     #                                Bonded and NB lists 
@@ -167,7 +194,7 @@ def load_mol2_files (infile = None, VMSession =  None, gridsize = 3):
 
 
 
-def get_atom_list_from_mol2_frame (raw_atoms, frame = True, gridsize = 3):
+def get_atom_list_from_xyz_frame (raw_atoms, frame = True, gridsize = 3):
     """ Function doc """
     #nCPUs =  multiprocessing.cpu_count()
     #pool  = multiprocessing.Pool(nCPUs)
@@ -178,50 +205,42 @@ def get_atom_list_from_mol2_frame (raw_atoms, frame = True, gridsize = 3):
     frames = []
     frame_coordinates = []
     #print (raw_atoms)
+    index  = 0
     for line in raw_atoms:
         line = line.split()
         if len(line) > 1:
             #print (line) 
-            index    = int(line[0])-1
+            #index    = int(line[0])-1
             
-            at_name  = line[1]
+            at_name = line[0]
             
-            at_pos   = np.array([float(line[2]), float(line[3]), float(line[4])])
+            at_pos  = np.array([float(line[1]), float(line[2]), float(line[3])])
             
-            at_resi = int(line[6])
+            at_resi = 1
             
-            at_resn = line[6]
+            at_resn = 'UNK'
             
             at_ch   = 'X'          
             
 
-            at_symbol= line[5].split('.')
-            at_symbol= at_symbol[0]
-            cov_rad  = at.get_cov_rad (at_symbol)
+            #at_symbol = line[5].split('.')
+            at_symbol = at_name
+            cov_rad   = at.get_cov_rad (at_name)
 
 
 
             gridpos  = [int(at_pos[0]/gridsize), int(at_pos[1]/gridsize), int(at_pos[2]/gridsize)]
             
             atoms.append([index, at_name, cov_rad,  at_pos, at_resi, at_resn, at_ch, at_symbol, [], gridpos ])
+            index += 1
 
-
-
-            #atoms.append([index, at_name, cov_rad,  at_pos, at_res_i, at_res_n, at_ch])
-            
-            #atom     = Atom(name      =  at_name, 
-            #                index     =  index, 
-            #                pos       =  at_pos, 
-            #                resi      =  at_res_i, 
-            #                resn      =  at_res_n, 
-            #                chain     =  at_ch, 
-            #                )
-            #atoms.append(atom)
+            frame_coordinates.append(float(line[1]))
             frame_coordinates.append(float(line[2]))
             frame_coordinates.append(float(line[3]))
-            frame_coordinates.append(float(line[4]))
+    
     frame_coordinates = np.array(frame_coordinates, dtype=np.float32)
     frames.append(frame_coordinates)
+    
     #print (frames)
     print (atoms)
     return atoms, frames#, coords

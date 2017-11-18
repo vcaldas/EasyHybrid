@@ -35,6 +35,7 @@ from VISMOL.vModel import VismolObject
 from VISMOL.vBabel import PDBFiles
 
 from VISMOL.vBabel import MOL2Files
+from VISMOL.vBabel import XYZFiles
 
 from VISMOL.vCore.VismolSelections  import VisMolPickingSelection as vPick
 from VISMOL.vCore.VismolSelections  import VisMolViewingSelection as vSele
@@ -303,6 +304,9 @@ class VisMolSession (ShowHideVisMol):
         
         if infile[-4:] == 'mol2':
             self._load_mol2_file(infile = infile)
+        
+        if infile[-3:] == 'xyz':
+            self._load_xyz_file(infile = infile)
         #if infile[-3:] == 'xyz':
         #
         #    Vobject, self.atom_dic_id = parse_xyz(infile     = infile,  
@@ -340,6 +344,13 @@ class VisMolSession (ShowHideVisMol):
         self.vismol_objects.append(vismol_object)
         
     
+    def _load_xyz_file (self, infile):
+        """ Function doc """
+        #load_xyz_file
+        print(infile)
+        vismol_object  = XYZFiles.load_xyz_file (infile = infile, VMSession = self)
+        vismol_object.set_model_matrix(self.glwidget.vm_widget.model_mat)        
+        self.vismol_objects.append(vismol_object)
     
     def delete_by_index(self, index = None):
         """ Function doc """
