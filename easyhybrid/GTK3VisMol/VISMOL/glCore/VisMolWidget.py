@@ -1015,22 +1015,21 @@ class VisMolWidget():
         import time
         pos = np.array([atom_pos[0],atom_pos[1],atom_pos[2],1],dtype=np.float32)
         model_pos = vismol_object.model_mat.T.dot(pos)
+        self.model_mat = mop.my_glTranslatef(self.model_mat, -model_pos[:3])
         unit_vec = op.unit_vector(model_pos)
         dist = op.get_euclidean(model_pos, [0.0,0.0,0.0])
         step = dist/15.0
-        to_move = unit_vec * step
         for i in range(15):
             to_move = unit_vec * step
-            self.model_mat = mop.my_glTranslatef(self.model_mat, -to_move[:3])
             for visObj in self.vismolSession.vismol_objects:
                 visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move[:3])
             self.parent_widget.get_window().invalidate_rect(None, False)
             self.parent_widget.get_window().process_updates(False)
-            #self.get_window().invalidate_rect(None, False)
-            #self.get_window().process_updates(False)
             time.sleep(self.vismolSession.gl_parameters['center_on_coord_sleep_time'])
+        for visObj in self.vismolSession.vismol_objects:
+            model_pos = visObj.model_mat.T.dot(pos)
+            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -model_pos[:3])
         self.parent_widget.queue_draw()
-        #self.queue_draw()
     
     def _print_matrices(self):
         """ Function doc
