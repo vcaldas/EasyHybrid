@@ -275,9 +275,12 @@ class VisMolSession (ShowHideVisMol):
         """ Function doc """
         cmd = entry.split()
         print (cmd)
+        
         obj     = int(cmd[1]            )
         _indexes = cmd[2].split('+')
         indexes = []
+        
+        
         for index in _indexes:
             indexes.append(int(index))
         

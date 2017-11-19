@@ -409,11 +409,17 @@ class VisMolWidget():
                     else:
                         self._draw_dots(visObj = visObj, indexes = False)
                 
-                if visObj.circles_actived:
-                    if visObj.circles_vao is None:
-                        shapes._make_gl_circles(self.circles_program, vismol_object = visObj)
+                if visObj.ribbons_actived:
+                    if visObj.ribbons_vao is None:
+                        shapes._make_gl_ribbon_lines(self.ribbons_program, vismol_object = visObj)
                     else:
-                        self._draw_circles(visObj = visObj, indexes = False)
+                        self._draw_ribbons(visObj = visObj)
+                
+                #if visObj.circles_actived:
+                #    if visObj.circles_vao is None:
+                #        shapes._make_gl_circles(self.circles_program, vismol_object = visObj)
+                #    else:
+                #        self._draw_circles(visObj = visObj, indexes = False)
         
         # Selection 
         #-------------------------------------------------------------------------------
@@ -452,6 +458,8 @@ class VisMolWidget():
         #                               NON BONDED ATOMS
         #-------------------------------------------------------------------------------        
         for visObj in self.vismolSession.vismol_objects:
+            pass
+            '''
             if visObj.circles_vao is None:
                 shapes._make_gl_circles(self.circles_program, vismol_object = visObj)
             
@@ -501,6 +509,7 @@ class VisMolWidget():
             GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
             GL.glUseProgram(0)
             GL.glDisable(GL.GL_DEPTH_TEST)
+            '''
         #-------------------------------------------------------------------------------
 
 
@@ -562,6 +571,8 @@ class VisMolWidget():
         self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
         #self.lines_program = self.load_shaders(vm_shader.vertex_shader_antialias, vm_shader.fragment_shader_antialias, vm_shader.geometry_shader_antialias)
         self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
+        
+        self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_ribbons, vm_shader.fragment_shader_ribbons, vm_shader.geometry_shader_ribbons)
     
     def load_shaders(self, vertex, fragment, geometry=None):
         """ Here the shaders are loaded and compiled to an OpenGL program. By default
@@ -749,7 +760,7 @@ class VisMolWidget():
             else:
                 GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dot_buffers[1])
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
-                                visObj.frames[self.frame], GL.GL_STATIC_DRAW)
+                                                    visObj.frames[self.frame], GL.GL_STATIC_DRAW)
                 if  indexes:
                     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dot_buffers[2])
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
@@ -782,6 +793,62 @@ class VisMolWidget():
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
+    
+    def _draw_ribbons(self, visObj = None):
+        """ Function doc
+        """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.ribbons_program)
+        GL.glLineWidth(800/abs(self.dist_cam_zrp))
+
+        self.load_matrices(self.ribbons_program, visObj.model_mat)
+        self.load_fog(self.ribbons_program)
+        
+        if visObj.ribbons_vao is not None:
+            GL.glBindVertexArray(visObj.ribbons_vao)
+            if self.modified_view:
+                pass
+                #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[0])
+                #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
+                #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_INT, None)
+                #GL.glBindVertexArray(0)
+                #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+                #self.modified_data = False
+                
+                #- - - - -  SHOW HIDE - - - - -
+                #id self.modified_show:
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[0])
+                    #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
+                    #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_INT, None)
+                    #GL.glBindVertexArray(0)
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+                    #self.modified_data = False
+                
+                # - - - - - COLOR - - - - -
+                #if self.modified_color:
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_buffers[2])
+                    #GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.line_indexes.itemsize*int(len(visObj.line_indexes)), visObj.line_indexes, GL.GL_DYNAMIC_DRAW)
+                    #GL.glDrawElements(GL.GL_LINES, int(len(visObj.line_indexes)), GL.GL_UNSIGNED_INT, None)
+                    #GL.glBindVertexArray(0)
+                    #GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+                    #self.modified_data = False
+           
+            else:
+                #coord_vbo = GL.glGenBuffers(1)
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.ribbons_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                visObj.frames[self.frame], 
+                                GL.GL_STATIC_DRAW)              
+                #GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+                GL.glDrawElements(GL.GL_LINES, int(len(visObj.ribbons_Calpha_indexes_rep)*2), GL.GL_UNSIGNED_INT, None)
+        GL.glBindVertexArray(0)
+        GL.glLineWidth(1)
+        GL.glUseProgram(0)
+        #GL.glDisable(GL.GL_LINE_SMOOTH)
+        #GL.glDisable(GL.GL_BLEND)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
+
     
     def _draw_lines(self, visObj = None):
         """ Function doc

@@ -57,6 +57,7 @@ cpdef load_pdb_file (infile = None, gridsize = 3, VMSession =  None):
     vismol_object.index_bonds       = bonds_full_indexes
     vismol_object.index_bonds_pairs = bonds_pair_of_indexes
     vismol_object.non_bonded_atoms  = NB_indexes_list
+    #vismol_object.get_backbone_indexes()
     #-------------------------------------------------------------------------------------------
     return vismol_object
     

@@ -107,6 +107,7 @@ class VismolObject:
         self.atoms              = []
         self.residues           = []
         self.chains             = {}
+        #self.chains             = []
                                 
         
         self.frames             = trajectory
@@ -119,7 +120,17 @@ class VismolObject:
         self.index_bonds_rep    = []
         self.index_bonds_pairs  = []
         
+        #-----------------------#
+        #       Nonbonded       #
+        #-----------------------#
         self.non_bonded_atoms   = None
+        
+        #-----------------------#
+        #    Calpha  Ribbons    #
+        #-----------------------#
+        self.ribbons_Calpha_pairs_full  = []
+        self.ribbons_Calpha_pairs_rep   = []
+        self.ribbons_Calpha_indexes_rep = []
         #-----------------------------------------------------------------
 
 
@@ -134,20 +145,28 @@ class VismolObject:
         self.lines_show_list     = True
 
         """   D O T S   """
-        self.dots_actived = True
+        self.dots_actived = False
 
         """   C I R C L E S   """
         self.circles_actived = False
 
-        print ('frames:     ', len(self.frames))
-        print ('frame size: ', len(self.frames[0]))
+        """   R I B B O N S   """
+        self.ribbons_actived = True
+        
+        
+        #print ('frames:     ', len(self.frames))
+        #print ('frame size: ', len(self.frames[0]))
         #-----------------------------------------------------------------
         self.dots_vao        = None
         self.lines_vao       = None
         self.circles_vao     = None
+        self.ribbons_vao     = None
+
         self.dot_buffers     = None
         self.line_buffers    = None
         self.circles_buffers = None
+        self.ribbons_buffers = None
+
         self.dot_indexes     = None
         
         self.selection_dots_vao      = None
@@ -178,6 +197,9 @@ class VismolObject:
         
         print ('\ngenerate_chain_structure starting')
         initial          = time.time()
+        
+        parser_chi   = None
+        parser_chn   = None
 
         parser_resi  = None
         parser_resn  = None
@@ -212,18 +234,11 @@ class VismolObject:
             
             atom.atom_id = self.vismol_session.atom_id_counter
             atom.Vobject = self
-
-            if atom.chain in self.chains.keys():
-                ch = self.chains[atom.chain]
-           
-            else:
-                ch = Chain(name = atom.chain, label = 'UNK')
-                self.chains[atom.chain] = ch
-            
-            if atom.resi == parser_resi:# and at_res_n == parser_resn:
+            '''
+            if atom.chain == parser_chn:# and at_res_n == parser_resn:
                 atom.residue = ch.residues[-1]
                 ch.residues[-1].atoms.append(atom)
-                frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
+                #frame.append([atom.pos[0].,atom.pos[1],atom.pos[2]])
 
             else:
                 residue = Residue(name=atom.resn, index=atom.resi, chain=atom.chain)
@@ -231,7 +246,30 @@ class VismolObject:
                 residue.atoms.append(atom)
                 
                 ch.residues.append(residue)
-                frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
+                #frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
+                parser_resi  = atom.resi
+                parser_resn  = atom.resn
+            '''
+            
+            if atom.chain in self.chains.keys():
+                ch = self.chains[atom.chain]
+            
+            else:
+                ch = Chain(name = atom.chain, label = 'UNK')
+                self.chains[atom.chain] = ch
+            
+            if atom.resi == parser_resi:# and at_res_n == parser_resn:
+                atom.residue = ch.residues[-1]
+                ch.residues[-1].atoms.append(atom)
+                #frame.append([atom.pos[0].,atom.pos[1],atom.pos[2]])
+
+            else:
+                residue = Residue(name=atom.resn, index=atom.resi, chain=atom.chain)
+                atom.residue     = residue
+                residue.atoms.append(atom)
+                
+                ch.residues.append(residue)
+                #frame.append([atom.pos[0],atom.pos[1],atom.pos[2]])
                 parser_resi  = atom.resi
                 parser_resn  = atom.resn
 
@@ -246,7 +284,7 @@ class VismolObject:
             sum_z += atom.pos[2]
             
             self.vismol_session.atom_dic_id[self.vismol_session.atom_id_counter] = atom
-            index +=1
+            #index +=1
             self.vismol_session.atom_id_counter +=1
         
 
@@ -257,6 +295,7 @@ class VismolObject:
 
         final = time.time() 
         print ('_generate_atomtree_structure end -  total time: ', final - initial, '\n')
+        self.get_backbone_indexes()
         return True
 
 
@@ -345,6 +384,54 @@ class VismolObject:
         self.model_mat = np.copy(mat)
         return True
     
+
+    def get_backbone_indexes (self):
+        """ Function doc """
+        chains_list   = []
+        bonds_pairs   = [] 
+        bonds_indexes = [] 
+        
+        for chain in self.chains.values():
+            #bonds_indexes = [] 
+            chain_list    = []
+
+            resi       = None
+            atomi      = None
+            
+            for atom in chain.backbone:
+                
+                if resi is None:
+                    resi  = atom.resi
+                    atomi = atom.index
+                    chain_list.append([atom.resi, atom.index])
+                
+                else:
+                    
+                    if resi == atom.resi-1:
+                        
+                        bonds_pairs.append([atomi,atom.index])
+                        bonds_indexes.append(atomi)
+                        bonds_indexes.append(atom.index)
+
+                        chain_list.append([atom.resi, atom.index])
+                        
+                        resi  = atom.resi
+                        atomi = atom.index
+                    
+                    else:
+                        
+                        chain_list.append([atom.resi, atom.index])
+                        resi  = atom.resi
+                        atomi = atom.index
+                
+                chains_list.append(chain_list)
+
+        
+        bonds_indexes = np.array(bonds_indexes, dtype=np.uint32)
+        self.ribbons_Calpha_pairs_full  = bonds_pairs
+        self.ribbons_Calpha_pairs_rep   = bonds_pairs
+        self.ribbons_Calpha_indexes_rep = bonds_indexes
+        
 
 '''
 def determine_the_paired_atomic_grid_elements_parallel(atomic_grid):
