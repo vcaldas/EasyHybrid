@@ -123,7 +123,7 @@ class VismolObject:
         #-----------------------#
         #       Nonbonded       #
         #-----------------------#
-        self.non_bonded_atoms   = None
+        self.non_bonded_atoms   = []
         
         #-----------------------#
         #    Calpha  Ribbons    #

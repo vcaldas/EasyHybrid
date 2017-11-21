@@ -119,7 +119,7 @@ iCode = ""
             
             at_name  = line[12:16].strip()
             at_pos   = np.array([float(line[30:38]), float(line[38:46]), float(line[46:54])])
-            at_resi  = int(line[22:26])
+            at_resi  = int(line[22:27])
             at_resn  = line[17:20].strip()
             at_ch    = line[21]             
             at_symbol= line[76:78]

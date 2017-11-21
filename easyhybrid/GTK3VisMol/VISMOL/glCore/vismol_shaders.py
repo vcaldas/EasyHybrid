@@ -22,22 +22,24 @@
 #  
 #  
 
-
+#'''    #gl_PointSize = 15;
+#        gl_PointSize = 15 - 10*(vert_ext_linewidth );
 vertex_shader_picking_dots = """
 #version 330
 
 uniform mat4 model_mat;
 uniform mat4 view_mat;
 uniform mat4 proj_mat;
+uniform float vert_ext_linewidth;
 
 in vec3  vert_coord;
 in vec3  vert_color;
-
+varying float frag_ext_linewidth;
 out vec3 index_color;
 
 void main(){
     gl_Position  = proj_mat * view_mat * model_mat * vec4(vert_coord, 1.0);
-    gl_PointSize = 15;
+    
     index_color = vert_color;
 }
 """
@@ -51,6 +53,109 @@ void main(){
 }
 
 """
+#'''
+
+
+
+
+'''
+vertex_shader_picking_dots = """
+#version 330
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+uniform mat4 proj_mat;
+uniform float vert_ext_linewidth;
+uniform float vert_int_antialias;
+uniform float vert_dot_factor;
+
+in vec3 vert_coord;
+in vec3 vert_color;
+in float vert_dot_size;
+out vec4 frag_coord;
+attribute vec4 bckgrnd_color;
+
+varying float frag_dot_size;
+varying float frag_ext_linewidth;
+varying float frag_int_antialias;
+varying vec4 frag_dot_color;
+varying vec4 frag_bckgrnd_color;
+
+void main(){
+    frag_dot_size = vert_dot_size * vert_dot_factor;
+    frag_ext_linewidth = vert_ext_linewidth;
+    frag_int_antialias = vert_int_antialias;
+    frag_dot_color = vec4(vert_color, 1.0);
+    frag_bckgrnd_color = bckgrnd_color;
+    frag_coord = view_mat * model_mat * vec4(vert_coord, 1);
+    gl_Position = proj_mat * view_mat * model_mat * vec4(vert_coord, 1);
+    gl_PointSize = vert_dot_size + 2*(vert_ext_linewidth + 1.5*vert_int_antialias);
+}
+"""
+fragment_shader_picking_dots = """
+#version 330
+
+uniform vec4 fog_color;
+uniform float fog_start;
+uniform float fog_end;
+
+in vec4 frag_coord;
+out vec4 final_color;
+
+varying vec4 frag_bckgrnd_color;
+varying vec4 frag_dot_color;
+varying float frag_dot_size;
+varying float frag_ext_linewidth;
+varying float frag_int_antialias;
+
+float disc(vec2 P, float size)
+{
+     float r = length((P.xy - vec2(0.5,0.5))*size);
+     r -= frag_dot_size/2;
+     return r;
+}
+
+void main(){
+    // Calculate the distance of the object
+    float dist =  abs(frag_coord.z);
+    float size = frag_dot_size +2*(frag_ext_linewidth + 1.5*frag_int_antialias);
+    float t = frag_ext_linewidth/2.0-frag_int_antialias;
+    
+    // gl_PointCoord is the pixel in the coordinate
+    float r = disc(gl_PointCoord, size);
+    float d = abs(r) - t;
+    
+    // This if else statement makes the circle ilusion
+    if( r > (frag_ext_linewidth/2.0+frag_int_antialias)){
+        discard;
+    }
+    else{
+        if( d < 0.0 ){
+            final_color = frag_bckgrnd_color;
+        }
+        else{
+            float alpha = d/frag_int_antialias;
+            alpha = exp(-alpha*alpha);
+            if (r > 0){
+                final_color = frag_bckgrnd_color;
+            }
+            else{
+                if (dist > fog_start){
+                    float fog_factor = (fog_end-dist)/(fog_end-fog_start);
+                    vec4 my_color = mix(frag_dot_color, frag_bckgrnd_color, alpha);
+                    final_color = mix(fog_color, my_color, fog_factor);
+                }
+                else{
+                    final_color = mix(frag_dot_color, frag_bckgrnd_color, alpha);
+                }
+            }
+        }
+    }
+}
+"""
+#'''
+
+
 
 vertex_shader_dots = """
 #version 330

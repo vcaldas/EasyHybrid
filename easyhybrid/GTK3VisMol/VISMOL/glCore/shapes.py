@@ -347,9 +347,10 @@ def _make_gl_dots(program, vismol_object = None, bckgrnd_color= [0.0,0.0,0.0,1.0
     bckgrnd_color = np.array(bckgrnd_color, dtype=np.float32)
     #indexes = vismol_object.non_bonded_atoms
     
-    indexes = []
-    for i in range(dot_qtty):
-        indexes.append(i)
+    #indexes = []
+    indexes = vismol_object.non_bonded_atoms
+    #for i in range(dot_qtty):
+    #    indexes.append(i)
     indexes = np.array(indexes,dtype=np.uint32)
     
     #try:
@@ -470,14 +471,21 @@ def _make_gl_selection_dots(program, vismol_object = None):
 
 
 
-def _make_gl_picking_dots(program, vismol_object = None):
+def _make_gl_picking_dots(program, vismol_object = None, bckgrnd_color= [0.0,0.0,0.0,1.0]):
     """ Function doc
     """
     colors    = vismol_object.color_indexes
     #dot_sizes = vismol_object.vdw_dot_sizes
+    
     coords    = vismol_object.frames[0]
     
+    #dot_sizes = vismol_object.vdw_dot_sizes
+    
     dot_qtty      = int(len(coords)/3)
+    
+    #bckgrnd_color = [bckgrnd_color[0],bckgrnd_color[1],
+    #                 bckgrnd_color[2],bckgrnd_color[3]]*dot_qtty
+    #bckgrnd_color = np.array(bckgrnd_color, dtype=np.float32)
     
     indexes = []
     for i in range(dot_qtty):
@@ -505,10 +513,29 @@ def _make_gl_picking_dots(program, vismol_object = None):
     GL.glEnableVertexAttribArray(att_colors)
     GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
     
+    #dot_vbo = GL.glGenBuffers(1)
+    #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, dot_vbo)
+    #GL.glBufferData(GL.GL_ARRAY_BUFFER, dot_sizes.itemsize*len(dot_sizes), dot_sizes, GL.GL_STATIC_DRAW)
+    #att_size = GL.glGetAttribLocation(program, 'vert_dot_size')
+    #GL.glEnableVertexAttribArray(att_size)
+    #GL.glVertexAttribPointer(att_size, 1, GL.GL_FLOAT, GL.GL_FALSE, dot_sizes.itemsize, ctypes.c_void_p(0))
+    #
+    #bckgrnd_vbo = GL.glGenBuffers(1)
+    #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, bckgrnd_vbo)
+    #GL.glBufferData(GL.GL_ARRAY_BUFFER, bckgrnd_color.itemsize*len(bckgrnd_color), bckgrnd_color, GL.GL_STATIC_DRAW)
+    #att_bck_color = GL.glGetAttribLocation(program, 'bckgrnd_color')
+    #GL.glEnableVertexAttribArray(att_bck_color)
+    #GL.glVertexAttribPointer(att_bck_color, 4, GL.GL_FLOAT, GL.GL_FALSE, 4*bckgrnd_color.itemsize, ctypes.c_void_p(0))
+    
+    
+    
     #vao_list.append(vao)
     GL.glBindVertexArray(0)
     GL.glDisableVertexAttribArray(att_position)
     GL.glDisableVertexAttribArray(att_colors)
+    #GL.glDisableVertexAttribArray(att_size)
+    #GL.glDisableVertexAttribArray(att_bck_color)
+
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
     

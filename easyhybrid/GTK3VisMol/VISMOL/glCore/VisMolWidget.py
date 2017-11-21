@@ -427,6 +427,9 @@ class VisMolWidget():
             if visObj.selection_dots_vao is None:
                 shapes._make_gl_selection_dots(self.picking_dots_program, vismol_object = visObj)
             
+            
+            #GL.glPointSize(400/(abs(self.dist_cam_zrp))/2)
+            GL.glPointSize(15)
             #GL.glEnable(GL.GL_DEPTH_TEST)
             GL.glUseProgram(self.picking_dots_program)
             GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
@@ -773,6 +776,7 @@ class VisMolWidget():
     def _draw_picking_dots(self, visObj = None,  indexes = False):
         """ Function doc
         """
+        GL.glPointSize(100/abs(self.dist_cam_zrp))
         if visObj.picking_dots_vao is not None:
             GL.glBindVertexArray(visObj.picking_dots_vao)
             
