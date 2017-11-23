@@ -3,7 +3,7 @@
 #
 #  matrix_operations.py
 #  
-#  Copyright 2016 Labio <labio@labio-XPS-8300>
+#  Copyright 2016 Carlos Eduardo Sequeiros Borja <casebor@gmail.com>
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -26,14 +26,14 @@ import math
 import numpy as np
 
 def my_glSideVectorAbs(in_matrix):
-    """ Uses a 4x4 matrix as input to obtain the side vector untransformed,
+    """ Uses a numpy array as input to obtain the side vector untransformed,
         i.e. when you apply a modification to a vector using a matrix,
         its coordinates are changed, so this function returns the
         "original" vector or the vector in tha ABSOLUTE coordinates
-        system.
+        system. The entry numpy array has shape (4, 4), size of 16 and ndim=2.
         
         Keyword arguments:
-        in_matrix -- a 4x4 matrix that can be the PROJECTION, VIEW or 
+        in_matrix -- a numpy array that can be the PROJECTION, VIEW or 
                      MODEL matrix.
         
         Returns:
