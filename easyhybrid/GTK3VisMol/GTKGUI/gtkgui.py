@@ -3,6 +3,55 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
 
 
+
+
+class ConsoleWindow:
+    """ Class doc """
+    
+    def __init__ (self, main_window):
+        """ Class initialiser """
+        self.actived =  False
+        self.main_window = main_window
+        #self.EMSession =  GTKSession.EMSession
+
+    
+    def open_window (self, text = None):
+        """ Function doc """
+        if self.actived  ==  False:
+            self.builder = Gtk.Builder()
+            self.builder.add_from_file('GTK3VisMol/GTKGUI/VismolConsole.glade')
+            self.window = self.builder.get_object('console_window')
+            
+            textarea = self.builder.get_object('textview1')
+            textarea.connect('key-press-event', self.on_key_pressed)
+            self.textbuffer = textarea.get_buffer()
+            self.textbuffer.set_text('>>>')
+            
+            
+            
+            self.builder.connect_signals(self)
+            self.window.show_all()
+            self.window.set_keep_above (self.window)
+    
+    def on_console_window_destroy(self, widget):
+        """ Function doc """
+        self.actived  =  False
+        self.main_window.builder.get_object('toolbutton1').set_active(False)
+
+    def on_key_pressed (self,  widget, event):
+        """ Function doc """
+        if event.keyval == Gdk.keyval_from_name('Return'):
+            start = self.textbuffer.get_iter_at_line(0)
+            lineend = start.get_chars_in_line()
+            end = self.textbuffer.get_end_iter()
+            source = self.textbuffer.get_text(start, end, False)
+            print (source)
+            #"""run our code in the textview widget, put output in the terminal we may want to put this into the gui somewhere"""
+            #print self.interpreter.runsource(source, "<<console>>")
+
+
+
+
 class AnimatedWindow:
     """ Class doc """
     
@@ -155,6 +204,37 @@ class GTKGUI ():
             n = n + 1
         print ('load fuction finished')
     
+    def on_terminal_button (self, widget, click=None):
+        """ Function doc """
+        #print ("terminal")
+        if widget.get_active():
+            self.vismolConsole.open_window()
+            self.vismolConsole.actived =  True
+        else:
+            print ('desligado')
+            self.vismolConsole.window.destroy()
+            self.vismolConsole.actived =  False
+        
+        
+        #    #self.gtkTerminalGui.TerminalBox.show()
+        #    self.textarea.show()
+        #else:
+        #    #self.gtkTerminalGui.TerminalBox.hide()
+        #    self.textarea.hide()
+        #
+        #if widget == self.builder.get_object('toolbutton_trajectory_tool'):
+        #    if widget.get_active() == True:
+        #        self.TrajectoryTool.open_window()
+        #        self.TrajectoryTool.actived =  True
+        #    else:
+        #        print ('desligado')
+        #        self.TrajectoryTool.window.destroy()
+        #        self.TrajectoryTool.actived =  False
+
+
+
+
+
     def on_treeview_Objects_button_release_event(self, tree, event):
         if event.button == 3:
             selection     = tree.get_selection()
@@ -278,17 +358,21 @@ class GTKGUI ():
         self.window.show_all()
         #animated_window = AnimatedWindow(self)
         self.TrajectoryTool = AnimatedWindow(self)
+        self.vismolConsole  = ConsoleWindow(self)
         #self.window.set_keep_above (self.window)
         #self.builder.get_object('notebook2').hide()
         #self.builder.get_object('notebook1').hide()
         #self.builder.get_object('statusbar1').hide()
         
-        
+        self.textarea = Gtk.TextView()
         #  -------------- GTK Terminal GUI --------------
-        self.gtkTerminalGui = GTKTerminalGUI(vismolSession)
-        self.builder.get_object('notebook2').append_page(self.gtkTerminalGui.TerminalBox, 
-                                                         self.gtkTerminalGui.TerminalLabel)
+        #self.gtkTerminalGui = GTKTerminalGUI(vismolSession)
+        #self.builder.get_object('notebook2').append_page(self.gtkTerminalGui.TerminalBox, 
+        #                                                 self.gtkTerminalGui.TerminalLabel)
+        self.container2 = self.builder.get_object('paned_V')
+        self.container2.add(self.textarea)
         #print (a ,b, " <----------aqui oh")
+        #self.gtkTerminalGui.TerminalBox.hide()
         Gtk.main()
         
         
