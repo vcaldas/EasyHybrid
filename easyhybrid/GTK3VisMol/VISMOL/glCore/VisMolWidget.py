@@ -774,7 +774,7 @@ class VisMolWidget():
     def _draw_picking_dots(self, visObj = None,  indexes = False):
         """ Function doc
         """
-        #GL.glPointSize(100/abs(self.dist_cam_zrp))
+        GL.glPointSize(100/abs(self.dist_cam_zrp))
         if visObj.picking_dots_vao is not None:
             GL.glBindVertexArray(visObj.picking_dots_vao)
             
