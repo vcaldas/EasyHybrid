@@ -240,21 +240,21 @@ class VisMolWidget():
         if self.ctrl:
             if not self.editing_mols:
                 if up:
-                    self.model_mat = mop.my_glTranslatef(self.model_mat, [0.0, 0.0, -self.scroll])
+                    self.model_mat = mop.my_glTranslatef(self.model_mat, np.array([0.0, 0.0, -self.scroll]))
                 if down:
-                    self.model_mat = mop.my_glTranslatef(self.model_mat, [0.0, 0.0, self.scroll])
+                    self.model_mat = mop.my_glTranslatef(self.model_mat, np.array([0.0, 0.0, self.scroll]))
                 for visObj in self.vismolSession.vismol_objects:
                     if up:
-                        visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, -self.scroll])
+                        visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, np.array([0.0, 0.0, -self.scroll]))
                     if down:
-                        visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, self.scroll])
+                        visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, np.array([0.0, 0.0, self.scroll]))
             else:
                 for visObj in self.vismolSession.vismol_objects:
                     if visObj.editing:
                         if up:
-                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, -self.scroll])
+                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, np.array([0.0, 0.0, -self.scroll]))
                         if down:
-                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, [0.0, 0.0, self.scroll])
+                            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, np.array([0.0, 0.0, self.scroll]))
         else:
             pos_z = self.glcamera.get_position()[2]
             if up:
@@ -289,16 +289,16 @@ class VisMolWidget():
             if self.ctrl:
                 if abs(dx) >= abs(dy):
                     if (y-self.height/2.0) < 0:
-                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, dx])
+                        rot_mat = mop.my_glRotatef(np.identity(4), angle, np.array([0.0, 0.0, dx]))
                     else:
-                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, -dx])
+                        rot_mat = mop.my_glRotatef(np.identity(4), angle, np.array([0.0, 0.0, -dx]))
                 else:
                     if (x-self.width/2.0) < 0:
-                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, -dy])
+                        rot_mat = mop.my_glRotatef(np.identity(4), angle, np.array([0.0, 0.0, -dy]))
                     else:
-                        rot_mat = mop.my_glRotatef(np.identity(4), angle, [0.0, 0.0, dy])
+                        rot_mat = mop.my_glRotatef(np.identity(4), angle, np.array([0.0, 0.0, dy]))
             else:
-                rot_mat = mop.my_glRotatef(np.identity(4), angle, [-dy, -dx, 0.0])
+                rot_mat = mop.my_glRotatef(np.identity(4), angle, np.array([-dy, -dx, 0.0]))
             if not self.editing_mols:
                 self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, rot_mat)
                 for visObj in self.vismolSession.vismol_objects:
@@ -313,16 +313,16 @@ class VisMolWidget():
                 if self.ctrl:
                     if abs(dx) >= abs(dy):
                         if (y-self.height/2.0) < 0:
-                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, dx])
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, np.array([0.0, 0.0, dx]))
                         else:
-                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, -dx])
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, np.array([0.0, 0.0, -dx]))
                     else:
                         if (x-self.width/2.0) < 0:
-                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, -dy])
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, np.array([0.0, 0.0, -dy]))
                         else:
-                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [0.0, 0.0, dy])
+                            self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, np.array([0.0, 0.0, dy]))
                 else:
-                    self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, [dy, dx, 0.0])
+                    self.axis.model_mat = mop.my_glRotatef(self.axis.model_mat, angle, np.array([dy, dx, 0.0]))
                 self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, self.axis.zrp)
             # Axis operations, this code only affects the gizmo axis
         return True
@@ -330,10 +330,10 @@ class VisMolWidget():
     def _pan_view(self, x, y):
         """ Function doc """
         px, py, pz = self.pos(x, y)
-        pan_mat = mop.my_glTranslatef(np.identity(4, dtype=np.float32),
+        pan_mat = mop.my_glTranslatef(np.identity(4, dtype=np.float32),np.array(
             [(px-self.drag_pos_x)*self.glcamera.z_far/10.0, 
              (py-self.drag_pos_y)*self.glcamera.z_far/10.0, 
-             (pz-self.drag_pos_z)*self.glcamera.z_far/10.0])
+             (pz-self.drag_pos_z)*self.glcamera.z_far/10.0]))
         if not self.editing_mols:
             self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, pan_mat)
             for visObj in self.vismolSession.vismol_objects:
@@ -351,7 +351,7 @@ class VisMolWidget():
         """ Function doc """
         delta = (((self.glcamera.z_far-self.glcamera.z_near)/2.0)+self.glcamera.z_near)/200.0
         move_z = dy * delta
-        moved_mat = mop.my_glTranslatef(self.glcamera.view_matrix, [0.0, 0.0, move_z])
+        moved_mat = mop.my_glTranslatef(self.glcamera.view_matrix, np.array([0.0, 0.0, move_z]))
         moved_pos = mop.get_xyz_coords(moved_mat)
         if moved_pos[2] > 0.101:
             self.glcamera.set_view_matrix(moved_mat)
@@ -1008,7 +1008,7 @@ class VisMolWidget():
         """ Function doc
         """
         self.vismolSession._hide_lines (visObj = self.vismolSession.vismol_objects[0], 
-                                       indexes = range(0,20))       
+                                       indexes = range(0,20))
         self.ctrl = True
         return True
     
