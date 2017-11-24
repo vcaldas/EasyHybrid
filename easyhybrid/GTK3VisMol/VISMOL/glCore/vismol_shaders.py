@@ -1189,7 +1189,7 @@ void main(){
 }
 """
 
-vertex_shader_non_bonded_atoms = """
+vertex_shader_non_bonded_atoms_OLD = """
 #version 330
 
 uniform mat4 model_mat;
@@ -1206,7 +1206,7 @@ void main(){
     geom_coord = view_mat * model_mat * vec4(vert_coord, 1.0);
 }
 """
-geometry_shader_non_bonded_atoms = """
+geometry_shader_non_bonded_atoms_OLD = """
 #version 330
 
 const float xyz_offset = 0.5;
@@ -1214,8 +1214,6 @@ const float xyz_offset = 0.5;
 layout (points) in;
 layout (line_strip, max_vertices = 6) out;
 
-//uniform mat4 model_mat;
-//uniform mat4 view_mat;
 uniform mat4 proj_mat;
 
 in vec3 geom_color[];
@@ -1252,6 +1250,88 @@ void main(){
     gl_Position = proj_mat * vec4(geom_coord[0].x, geom_coord[0].y, (geom_coord[0].z + xyz_offset), 1.0);
     frag_color = geom_color[0];
     frag_coord = geom_coord[0];
+    EmitVertex();
+    EndPrimitive();
+}
+"""
+vertex_shader_non_bonded_atoms = """
+#version 330
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+
+const float xyz_offset = 0.5;
+
+in vec3 vert_coord;
+in vec3 vert_color;
+
+out vec3 geom_color;
+out vec4 geom_coord_1;
+out vec4 geom_coord_2;
+out vec4 geom_coord_3;
+out vec4 geom_coord_4;
+out vec4 geom_coord_5;
+out vec4 geom_coord_6;
+
+void main(){
+    geom_color = vert_color;
+    geom_coord_1 = view_mat * model_mat * vec4((vert_coord.x - xyz_offset), vert_coord.y, vert_coord.z, 1.0);
+    geom_coord_2 = view_mat * model_mat * vec4((vert_coord.x + xyz_offset), vert_coord.y, vert_coord.z, 1.0);
+    geom_coord_3 = view_mat * model_mat * vec4(vert_coord.x, (vert_coord.y - xyz_offset), vert_coord.z, 1.0);
+    geom_coord_4 = view_mat * model_mat * vec4(vert_coord.x, (vert_coord.y + xyz_offset), vert_coord.z, 1.0);
+    geom_coord_5 = view_mat * model_mat * vec4(vert_coord.x, vert_coord.y, (vert_coord.z - xyz_offset), 1.0);
+    geom_coord_6 = view_mat * model_mat * vec4(vert_coord.x, vert_coord.y, (vert_coord.z + xyz_offset), 1.0);
+}
+"""
+geometry_shader_non_bonded_atoms = """
+#version 330
+
+const float xyz_offset = 0.5;
+
+layout (points) in;
+layout (line_strip, max_vertices = 6) out;
+
+uniform mat4 proj_mat;
+
+in vec3 geom_color[];
+in vec4 geom_coord_1[];
+in vec4 geom_coord_2[];
+in vec4 geom_coord_3[];
+in vec4 geom_coord_4[];
+in vec4 geom_coord_5[];
+in vec4 geom_coord_6[];
+
+out vec3 frag_color;
+out vec4 frag_coord;
+
+void main(){
+    gl_Position = proj_mat * geom_coord_1[0];
+    frag_color = geom_color[0];
+    frag_coord = geom_coord_1[0];
+    EmitVertex();
+    gl_Position = proj_mat * geom_coord_2[0];
+    frag_color = geom_color[0];
+    frag_coord = geom_coord_2[0];
+    EmitVertex();
+    EndPrimitive();
+    
+    gl_Position = proj_mat * geom_coord_3[0];
+    frag_color = geom_color[0];
+    frag_coord = geom_coord_3[0];
+    EmitVertex();
+    gl_Position = proj_mat * geom_coord_4[0];
+    frag_color = geom_color[0];
+    frag_coord = geom_coord_4[0];
+    EmitVertex();
+    EndPrimitive();
+    
+    gl_Position = proj_mat * geom_coord_5[0];
+    frag_color = geom_color[0];
+    frag_coord = geom_coord_5[0];
+    EmitVertex();
+    gl_Position = proj_mat * geom_coord_6[0];
+    frag_color = geom_color[0];
+    frag_coord = geom_coord_6[0];
     EmitVertex();
     EndPrimitive();
 }
