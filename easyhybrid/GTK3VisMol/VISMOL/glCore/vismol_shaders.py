@@ -1222,34 +1222,31 @@ out vec3 frag_color;
 out vec4 frag_coord;
 
 void main(){
-    gl_Position = view_mat * model_mat * proj_mat * vec4((geom_coord[0].x - xyz_offset), geom_coord[0].y, geom_coord[0].z, 1.0);
-    geom_coord[0];
+    gl_Position = proj_mat * view_mat * model_mat * vec4((geom_coord[0].x - xyz_offset), geom_coord[0].y, geom_coord[0].z, 1.0);
     frag_color = geom_color[0];
     frag_coord = geom_coord[0];
     EmitVertex();
-    gl_Position = view_mat * model_mat * proj_mat * vec4((geom_coord[0].x + xyz_offset), geom_coord[0].y, geom_coord[0].z, 1.0);
-    frag_color = geom_color[0];
-    frag_coord = geom_coord[0];
-    EmitVertex();
-    EndPrimitive();
-    
-    gl_Position = view_mat * model_mat * proj_mat * vec4(geom_coord[0].x, (geom_coord[0].y - xyz_offset), geom_coord[0].z, 1.0);
-    geom_coord[0];
-    frag_color = geom_color[0];
-    frag_coord = geom_coord[0];
-    EmitVertex();
-    gl_Position = view_mat * model_mat * proj_mat * vec4(geom_coord[0].x, (geom_coord[0].y + xyz_offset), geom_coord[0].z, 1.0);
+    gl_Position = proj_mat * view_mat * model_mat * vec4((geom_coord[0].x + xyz_offset), geom_coord[0].y, geom_coord[0].z, 1.0);
     frag_color = geom_color[0];
     frag_coord = geom_coord[0];
     EmitVertex();
     EndPrimitive();
     
-    gl_Position = view_mat * model_mat * proj_mat * vec4(geom_coord[0].x, geom_coord[0].y, (geom_coord[0].z - xyz_offset), 1.0);
-    geom_coord[0];
+    gl_Position = proj_mat * view_mat * model_mat * vec4(geom_coord[0].x, (geom_coord[0].y - xyz_offset), geom_coord[0].z, 1.0);
     frag_color = geom_color[0];
     frag_coord = geom_coord[0];
     EmitVertex();
-    gl_Position = view_mat * model_mat * proj_mat * vec4(geom_coord[0].x, geom_coord[0].y, (geom_coord[0].z + xyz_offset), 1.0);
+    gl_Position = proj_mat * view_mat * model_mat * vec4(geom_coord[0].x, (geom_coord[0].y + xyz_offset), geom_coord[0].z, 1.0);
+    frag_color = geom_color[0];
+    frag_coord = geom_coord[0];
+    EmitVertex();
+    EndPrimitive();
+    
+    gl_Position = proj_mat * view_mat * model_mat * vec4(geom_coord[0].x, geom_coord[0].y, (geom_coord[0].z - xyz_offset), 1.0);
+    frag_color = geom_color[0];
+    frag_coord = geom_coord[0];
+    EmitVertex();
+    gl_Position = proj_mat * view_mat * model_mat * vec4(geom_coord[0].x, geom_coord[0].y, (geom_coord[0].z + xyz_offset), 1.0);
     frag_color = geom_color[0];
     frag_coord = geom_coord[0];
     EmitVertex();

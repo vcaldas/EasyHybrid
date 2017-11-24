@@ -413,6 +413,13 @@ class VisMolWidget():
                     else:
                         self._draw_ribbons(visObj = visObj)
                 
+                if visObj.non_bonded_actived:
+                    if visObj.non_bonded_vao is None:
+                        print(visObj.non_bonded_atoms)
+                        shapes._make_gl_non_bonded(self.non_bonded_program, vismol_object = visObj)
+                    else:
+                        self._draw_non_bonded(visObj = visObj)
+                
                 #if visObj.circles_actived:
                 #    if visObj.circles_vao is None:
                 #        shapes._make_gl_circles(self.circles_program, vismol_object = visObj)
@@ -572,6 +579,7 @@ class VisMolWidget():
         self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
         #self.lines_program = self.load_shaders(vm_shader.vertex_shader_antialias, vm_shader.fragment_shader_antialias, vm_shader.geometry_shader_antialias)
         self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
+        self.non_bonded_program = self.load_shaders(vm_shader.vertex_shader_non_bonded_atoms, vm_shader.fragment_shader_non_bonded_atoms, vm_shader.geometry_shader_non_bonded_atoms)
         
         self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_ribbons, vm_shader.fragment_shader_ribbons, vm_shader.geometry_shader_ribbons)
     
@@ -709,6 +717,35 @@ class VisMolWidget():
         GL.glUniform1fv(a_length, 1, 0.05)
         bck_col = GL.glGetUniformLocation(program, 'alias_color')
         GL.glUniform3fv(bck_col, 1, self.bckgrnd_color[:3])
+    
+    def _draw_non_bonded(self, visObj = None, indexes = False):
+        """ Function doc
+        """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.non_bonded_program)
+        self.load_matrices(self.non_bonded_program, visObj.model_mat)
+        self.load_fog(self.non_bonded_program)
+        if visObj.non_bonded_vao is not None:
+            GL.glBindVertexArray(visObj.non_bonded_vao)
+            if self.modified_view:
+                pass
+            #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_buffers[0])
+            #    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, visObj.dot_indexes.itemsize*int(len(visObj.dot_indexes)), visObj.dot_indexes, GL.GL_DYNAMIC_DRAW)
+            #    GL.glDrawElements(GL.GL_POINTS, int(len(visObj.dot_indexes)), GL.GL_UNSIGNED_INT, None)
+            #    GL.glBindVertexArray(0)
+            #    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+            #    self.modified_view = False
+            else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.non_bonded_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                visObj.frames[self.frame], GL.GL_STATIC_DRAW)
+                if  indexes:
+                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.non_bonded_buffers[2])
+                    GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
     
     def _draw_circles(self, visObj = None, indexes = False):
         """ Function doc
