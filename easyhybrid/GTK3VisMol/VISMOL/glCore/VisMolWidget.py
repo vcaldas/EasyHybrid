@@ -57,18 +57,16 @@ class VisMolWidget():
                          programs will be created and use system resources. If the OpenGL
                          program will be changed change this value to True
         """
-        w = float(self.width)
-        h = float(self.height)
         self.model_mat = np.identity(4, dtype=np.float32)
         self.normal_mat = np.identity(3, dtype=np.float32)
         self.zero_reference_point = np.array([0.0, 0.0, 0.0],dtype=np.float32)
-        self.glcamera = cam.GLCamera(10.0, w/h, np.array([0,0,10],dtype=np.float32), self.zero_reference_point)
+        self.glcamera = cam.GLCamera(10.0, self.width/self.height, np.array([0,0,10],dtype=np.float32), self.zero_reference_point)
         self.axis = glaxis.GLAxis()
         self.parent_widget.set_has_depth_buffer(True)
         self.parent_widget.set_has_alpha(True)
         self.frame = 0
         self.scroll = 0.3
-        self.right = w/h
+        self.right = self.width/self.height
         self.left = -self.right
         self.top = 1.0
         self.bottom = -1.0

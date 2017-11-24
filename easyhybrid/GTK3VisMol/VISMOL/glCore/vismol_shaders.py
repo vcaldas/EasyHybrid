@@ -1189,6 +1189,98 @@ void main(){
 }
 """
 
+vertex_shader_non_bonded_atoms = """
+#version 330
+
+uniform mat4 model_mat;
+uniform mat4 view_mat;
+
+in vec3 vert_coord;
+in vec3 vert_color;
+
+out vec3 geom_color;
+out vec4 geom_coord;
+
+void main(){
+    geom_color = vert_color;
+    geom_coord = view_mat * model_mat * vec4(vert_coord, 1.0);
+}
+"""
+geometry_shader_non_bonded_atoms = """
+#version 330
+
+const float xyz_offset = 0.5;
+
+layout (points) in;
+layout (line_strip, max_vertices = 6) out;
+
+uniform mat4 proj_mat;
+
+in vec3 geom_color[];
+in vec4 geom_coord[];
+
+out vec3 frag_color;
+out vec4 frag_coord;
+
+void main(){
+    gl_Position = proj_mat * vec4((geom_coord[0].x - xyz_offset), geom_coord[0].y, geom_coord[0].z, 1.0);
+    geom_coord[0];
+    frag_color = geom_color[0];
+    frag_coord = geom_coord[0];
+    EmitVertex();
+    gl_Position = proj_mat * vec4((geom_coord[0].x + xyz_offset), geom_coord[0].y, geom_coord[0].z, 1.0);
+    frag_color = geom_color[0];
+    frag_coord = geom_coord[0];
+    EmitVertex();
+    EndPrimitive();
+    
+    gl_Position = proj_mat * vec4(geom_coord[0].x, (geom_coord[0].y - xyz_offset), geom_coord[0].z, 1.0);
+    geom_coord[0];
+    frag_color = geom_color[0];
+    frag_coord = geom_coord[0];
+    EmitVertex();
+    gl_Position = proj_mat * vec4(geom_coord[0].x, (geom_coord[0].y + xyz_offset), geom_coord[0].z, 1.0);
+    frag_color = geom_color[0];
+    frag_coord = geom_coord[0];
+    EmitVertex();
+    EndPrimitive();
+    
+    gl_Position = proj_mat * vec4(geom_coord[0].x, geom_coord[0].y, (geom_coord[0].z - xyz_offset), 1.0);
+    geom_coord[0];
+    frag_color = geom_color[0];
+    frag_coord = geom_coord[0];
+    EmitVertex();
+    gl_Position = proj_mat * vec4(geom_coord[0].x, geom_coord[0].y, (geom_coord[0].z + xyz_offset), 1.0);
+    frag_color = geom_color[0];
+    frag_coord = geom_coord[0];
+    EmitVertex();
+    EndPrimitive();
+}
+"""
+fragment_shader_non_bonded_atoms = """
+#version 330
+
+uniform vec4 fog_color;
+uniform float fog_start;
+uniform float fog_end;
+
+in vec3 frag_color;
+in vec4 frag_coord;
+
+out vec4 final_color;
+
+void main(){
+    float dist = abs(frag_coord.z);
+    if(dist>=fog_start){
+        float fog_factor = (fog_end-dist)/(fog_end-fog_start);
+        final_color = mix(fog_color, vec4(frag_color, 1.0), fog_factor);
+    }
+    else{
+       final_color = vec4(frag_color, 1.0);
+    }
+}
+"""
+
 
 ############################### VisMolDrawWidget ###############################
 

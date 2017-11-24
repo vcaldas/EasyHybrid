@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 #  glaxis.py
@@ -29,11 +29,22 @@ import VISMOL.glCore.matrix_operations as mop
 from OpenGL import GL
 
 class GLAxis:
-    """ Class doc
+    """ This class contains all necessary components for the creation of a
+        gizmo axis, including shaders, matrices, coordinates and functions to
+        represent it in OpenGL. This class was created with the purpose of
+        being completely independent from the VisMol widget, i.e. you could
+        take this class and implement it in your own window.
+        As this class is intended to be independent, almost all the methods
+        receive no arguments.
     """
     
     def __init__ (self, cam_pos=np.array([0,0,0],dtype=np.float32)):
-        """ Class initialiser
+        """ For creating a GLAxis object you only need to supply the position
+            of your camera or eye as an numpy array of XYZ components.
+            The default position for the camera is 0x, 0y, 0z.
+            The default position of the gismo is at the bottom left of the
+            window, you can change this location by multiplying the coordinates
+            by a translation matrix, or using another set of coordinates.
         """
         self.axis_vertices = {'x_axis' : np.array(
         [-0.85000000, -0.87500000,  0.00000000,
@@ -46,7 +57,7 @@ class GLAxis:
          -0.85000000, -0.88232233,  0.01767767,
          -0.81250000, -0.90000000,  0.00000000,
          -0.85000000, -0.90000000,  0.00000000], dtype=np.float32),
-         'y_axis' : np.array(
+        'y_axis' : np.array(
         [-0.90000000, -0.85000000, -0.02500000,
          -0.88232233, -0.85000000, -0.01767767,
          -0.87500000, -0.85000000,  0.00000000,
@@ -79,7 +90,7 @@ class GLAxis:
          -0.60000032,  0.56568521,  0.56568539,
           1.00000000,  0.00000000,  0.00000000,
          -1.00000000,  0.00000000,  0.00000000], dtype=np.float32),
-         'y_axis' : np.array(
+        'y_axis' : np.array(
         [ 0.00000000, -0.60000026, -0.79999983,
           0.56568521, -0.60000032, -0.56568539,
           0.79999954, -0.60000062,  0.00000000,
@@ -133,60 +144,6 @@ class GLAxis:
         self.light_ambient_coef = 0.2
         self.light_specular_coef = 0.7
         self.light_shininess = 32.0
-        self.vertex_shader_axis2 = """
-#version 330
-
-uniform mat4 model_mat;
-
-in vec3 vert_coord;
-in vec3 vert_color;
-in vec3 vert_norm;
-
-//out vec3 frag_coord;
-out vec3 frag_color;
-out vec3 frag_norm;
-
-void main(){
-    vec3 frag_coord = vec3(model_mat * vec4(vert_coord, 1.0));
-    frag_norm = mat3(transpose(inverse(model_mat))) * vert_norm;
-    frag_color = vert_color;
-    gl_Position = vec4(frag_coord, 1.0);
-}
-"""
-        self.fragment_shader_axis2 = """
-#version 330
-
-struct Light {
-   vec3 position;
-   vec3 color;
-   float ambient_coef;
-   float specular_coef;
-   float shininess;
-};
-
-uniform Light my_light;
-uniform vec3 cam_pos;
-
-//in vec3 frag_coord;
-in vec3 frag_color;
-in vec3 frag_norm;
-
-out vec4 final_color;
-
-void main(){
-    vec3 N = normalize(frag_norm);
-    vec3 L = normalize(my_light.position);
-    vec3 E = vec3(0, 0, 1);
-    vec3 H = normalize(L + E);
-    
-    float df = max(0.0, dot(N, L));
-    float sf = max(0.0, dot(N, H));
-    sf = pow(sf, my_light.shininess);
-
-    vec3 color = frag_color * 0.2 + df * frag_color + sf * vec3(.5);
-    final_color = vec4(color, 1.0);
-}
-"""
         self.vertex_shader_axis = """
 #version 330
 
@@ -196,13 +153,12 @@ in vec3 vert_coord;
 in vec3 vert_color;
 in vec3 vert_norm;
 
-out vec3 frag_coord;
 out vec3 frag_color;
 out vec3 frag_norm;
 
 void main(){
-    frag_coord = vec3(model_mat * vec4(vert_coord, 1.0));
-    frag_norm = -mat3(transpose(inverse(model_mat))) * vert_norm;
+    vec3 frag_coord = vec3(model_mat * vec4(vert_coord, 1.0));
+    frag_norm = mat3(transpose(inverse(model_mat))) * vert_norm;
     frag_color = vert_color;
     gl_Position = vec4(frag_coord, 1.0);
 }
@@ -221,30 +177,23 @@ struct Light {
 uniform Light my_light;
 uniform vec3 cam_pos;
 
-in vec3 frag_coord;
 in vec3 frag_color;
 in vec3 frag_norm;
 
 out vec4 final_color;
 
 void main(){
-    vec3 normal = normalize(frag_norm);
-    vec3 vert_to_light = normalize(my_light.position - frag_coord);
+    vec3 N = normalize(frag_norm);
+    vec3 L = normalize(my_light.position);
+    vec3 E = vec3(0, 0, 1);
+    vec3 H = normalize(L + E);
     
-    // Ambient Component
-    vec3 ambient = my_light.ambient_coef * frag_color * my_light.color;
-    
-    // Diffuse component
-    float diffuse_coef = max(dot(normal, vert_to_light), 0.0);
-    vec3 diffuse = diffuse_coef * my_light.color;
-    
-    // Specular component
-    vec3 vert_to_cam = normalize(cam_pos - frag_coord);
-    vec3 reflect_dir = reflect(-vert_to_light, normal);
-    float spec = pow(max(dot(vert_to_light, reflect_dir), 0.0), my_light.shininess);
-    vec3 specular = my_light.specular_coef * spec * my_light.color;
-    
-    final_color = vec4((ambient + diffuse + specular) * frag_color, 1.0);
+    float df = max(0.0, dot(N, L));
+    float sf = max(0.0, dot(N, H));
+    sf = pow(sf, my_light.shininess);
+
+    vec3 color = frag_color * 0.2 + df * frag_color + sf * vec3(.5);
+    final_color = vec4(color, 1.0);
 }
 """
         self.vertex_shader_lines = """
@@ -277,14 +226,17 @@ void main()
 """
     
     def initialize_gl(self):
-        """ Function doc """
+        """ First function, called right after the object creation. Creates the
+            OpenGL programs and Vertex Array Objects.
+        """
         self._make_axis_program()
         self._make_lines_program()
         self._make_vaos()
         return True
     
     def _make_vaos(self):
-        """ Function doc
+        """ Creates the Vertex Array Objects for the XYZ axis. Initially creates
+            the vaos for the cones of the axis and then for the lines.
         """
         self.x_vao = self._get_vao('x_axis')
         self.y_vao = self._get_vao('y_axis')
@@ -293,13 +245,14 @@ void main()
         return True
     
     def _make_axis_program(self):
-        """ Function doc
+        """ Compiles the cone shaders. This function compiles only the cones
+            of the gizmo axis.
         """
         v_shader = GL.glCreateShader(GL.GL_VERTEX_SHADER)
-        GL.glShaderSource(v_shader, self.vertex_shader_axis2)
+        GL.glShaderSource(v_shader, self.vertex_shader_axis)
         GL.glCompileShader(v_shader)
         f_shader = GL.glCreateShader(GL.GL_FRAGMENT_SHADER)
-        GL.glShaderSource(f_shader, self.fragment_shader_axis2)
+        GL.glShaderSource(f_shader, self.fragment_shader_axis)
         GL.glCompileShader(f_shader)
         self.gl_axis_program = GL.glCreateProgram()
         GL.glAttachShader(self.gl_axis_program, v_shader)
@@ -314,7 +267,8 @@ void main()
         return True
     
     def _make_lines_program(self):
-        """ Function doc
+        """ Compiles the lines shaders. This function compiles only the lines
+            of the gizmo axis.
         """
         v_shader = GL.glCreateShader(GL.GL_VERTEX_SHADER)
         GL.glShaderSource(v_shader, self.vertex_shader_lines)
@@ -326,10 +280,24 @@ void main()
         GL.glAttachShader(self.gl_lines_program, v_shader)
         GL.glAttachShader(self.gl_lines_program, f_shader)
         GL.glLinkProgram(self.gl_lines_program)
+        if GL.glGetShaderiv(v_shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
+            print("Error compiling the shader: ", "GL_VERTEX_SHADER")
+            raise RuntimeError(GL.glGetShaderInfoLog(v_shader))
+        if GL.glGetShaderiv(f_shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
+            print("Error compiling the shader: ", "GL_FRAGMENT_SHADER")
+            raise RuntimeError(GL.glGetShaderInfoLog(f_shader))
         return True
     
     def _get_vao(self, axis):
-        """ Function doc
+        """ Creates the Vertex Array Object, Vertex Buffer Objects and fill the
+            shaders with the data of the corresponding axis.
+            
+            Input parameters:
+            axis -- a string describing the corresponding axis, its values can
+                    be x_axis, y_axis or z_axis.
+        
+            Returns:
+                The Vertex Array Object of the corresponding axis.
         """
         colors = self.axis_colors[axis] * int(len(self.axis_vertices[axis]))
         colors = np.array(colors, dtype=np.float32)
@@ -372,7 +340,12 @@ void main()
         return vao
     
     def _get_vao_lines(self):
-        """ Function doc
+        """ Creates the Vertex Array Object, Vertex Buffer Objects and fill the
+            shaders with the data of the gizmo's lines. It takes no arguments
+            since the lines are taken as one entity
+            
+            Returns:
+                The Vertex Array Object of the corresponding axis.
         """
         vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(vao)
@@ -401,7 +374,8 @@ void main()
         return vao
     
     def load_params(self):
-        """ Function doc
+        """ This function load the model matrix of the gizmo, the camera
+            position and the light parameters in the cones OpenGL program.
         """
         model = GL.glGetUniformLocation(self.gl_axis_program, 'model_mat')
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
@@ -420,9 +394,10 @@ void main()
         return True
     
     def load_lines_params(self):
-        """ Function doc
+        """ Load the model matrix of the gizmo's lines in the lines OpenGL
+            program.
         """
-        model = GL.glGetUniformLocation(self.gl_axis_program, 'model_mat')
+        model = GL.glGetUniformLocation(self.gl_lines_program, 'model_mat')
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
         return True
     
