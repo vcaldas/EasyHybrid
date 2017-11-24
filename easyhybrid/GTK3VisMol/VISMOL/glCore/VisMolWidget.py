@@ -415,7 +415,6 @@ class VisMolWidget():
                 
                 if visObj.non_bonded_actived:
                     if visObj.non_bonded_vao is None:
-                        print(visObj.non_bonded_atoms)
                         shapes._make_gl_non_bonded(self.non_bonded_program, vismol_object = visObj)
                     else:
                         self._draw_non_bonded(visObj = visObj)
@@ -742,7 +741,7 @@ class VisMolWidget():
                 if  indexes:
                     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.non_bonded_buffers[2])
                     GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
-                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.non_bonded_atoms)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
