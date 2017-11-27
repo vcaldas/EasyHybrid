@@ -131,7 +131,7 @@ class GLAxis:
                             'y_axis' : [0.0, 1.0, 0.0],
                             'z_axis' : [0.0, 0.0, 1.0]}
         self.model_mat = np.identity(4, dtype=np.float32)
-        self.gl_axis_program = None
+        self.gizmo_axis_program = None
         self.gl_lines_program = None
         self.x_vao = None
         self.y_vao = None
@@ -231,10 +231,10 @@ void main()
         """
         self._make_axis_program()
         self._make_lines_program()
-        self._make_vaos()
+        self._make_gl_gizmo_axis()
         return True
     
-    def _make_vaos(self):
+    def _make_gl_gizmo_axis(self):
         """ Creates the Vertex Array Objects for the XYZ axis. Initially creates
             the vaos for the cones of the axis and then for the lines.
         """
@@ -254,10 +254,10 @@ void main()
         f_shader = GL.glCreateShader(GL.GL_FRAGMENT_SHADER)
         GL.glShaderSource(f_shader, self.fragment_shader_axis)
         GL.glCompileShader(f_shader)
-        self.gl_axis_program = GL.glCreateProgram()
-        GL.glAttachShader(self.gl_axis_program, v_shader)
-        GL.glAttachShader(self.gl_axis_program, f_shader)
-        GL.glLinkProgram(self.gl_axis_program)
+        self.gizmo_axis_program = GL.glCreateProgram()
+        GL.glAttachShader(self.gizmo_axis_program, v_shader)
+        GL.glAttachShader(self.gizmo_axis_program, f_shader)
+        GL.glLinkProgram(self.gizmo_axis_program)
         if GL.glGetShaderiv(v_shader, GL.GL_COMPILE_STATUS) != GL.GL_TRUE:
             print("Error compiling the shader: ", "GL_VERTEX_SHADER")
             raise RuntimeError(GL.glGetShaderInfoLog(v_shader))
@@ -290,7 +290,9 @@ void main()
     
     def _get_vao(self, axis):
         """ Creates the Vertex Array Object, Vertex Buffer Objects and fill the
-            shaders with the data of the corresponding axis.
+            shaders with the data of the corresponding axis. The buffers are not
+            stored anywhere since the data will be the same always, so does the
+            drawing method is GL_STATIC_DRAW and not GL_DYNAMIC_DRAW.
             
             Input parameters:
             axis -- a string describing the corresponding axis, its values can
@@ -312,21 +314,21 @@ void main()
         vert_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vert_vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, self.axis_vertices[axis].itemsize*int(len(self.axis_vertices[axis])), self.axis_vertices[axis], GL.GL_STATIC_DRAW)
-        att_position = GL.glGetAttribLocation(self.gl_axis_program, 'vert_coord')
+        att_position = GL.glGetAttribLocation(self.gizmo_axis_program, 'vert_coord')
         GL.glEnableVertexAttribArray(att_position)
         GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.axis_vertices[axis].itemsize, ctypes.c_void_p(0))
         
         col_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*int(len(colors)), colors, GL.GL_STATIC_DRAW)
-        att_colors = GL.glGetAttribLocation(self.gl_axis_program, 'vert_color')
+        att_colors = GL.glGetAttribLocation(self.gizmo_axis_program, 'vert_color')
         GL.glEnableVertexAttribArray(att_colors)
         GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
         
         norm_vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, norm_vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, self.axis_normals[axis].itemsize*len(self.axis_normals[axis]), self.axis_normals[axis], GL.GL_STATIC_DRAW)
-        att_norm = GL.glGetAttribLocation(self.gl_axis_program, 'vert_norm')
+        att_norm = GL.glGetAttribLocation(self.gizmo_axis_program, 'vert_norm')
         GL.glEnableVertexAttribArray(att_norm)
         GL.glVertexAttribPointer(att_norm, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.axis_normals[axis].itemsize, ctypes.c_void_p(0))
         
@@ -377,19 +379,19 @@ void main()
         """ This function load the model matrix of the gizmo, the camera
             position and the light parameters in the cones OpenGL program.
         """
-        model = GL.glGetUniformLocation(self.gl_axis_program, 'model_mat')
+        model = GL.glGetUniformLocation(self.gizmo_axis_program, 'model_mat')
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
-        cam_pos = GL.glGetUniformLocation(self.gl_axis_program, 'cam_pos')
+        cam_pos = GL.glGetUniformLocation(self.gizmo_axis_program, 'cam_pos')
         GL.glUniform3fv(cam_pos, 1, self.camera_position)
-        light_pos = GL.glGetUniformLocation(self.gl_axis_program, 'my_light.position')
+        light_pos = GL.glGetUniformLocation(self.gizmo_axis_program, 'my_light.position')
         GL.glUniform3fv(light_pos, 1, self.light_position)
-        light_col = GL.glGetUniformLocation(self.gl_axis_program, 'my_light.color')
+        light_col = GL.glGetUniformLocation(self.gizmo_axis_program, 'my_light.color')
         GL.glUniform3fv(light_col, 1, self.light_color)
-        amb_coef = GL.glGetUniformLocation(self.gl_axis_program, 'my_light.ambient_coef')
+        amb_coef = GL.glGetUniformLocation(self.gizmo_axis_program, 'my_light.ambient_coef')
         GL.glUniform1fv(amb_coef, 1, self.light_ambient_coef)
-        spec_coef = GL.glGetUniformLocation(self.gl_axis_program, 'my_light.specular_coef')
+        spec_coef = GL.glGetUniformLocation(self.gizmo_axis_program, 'my_light.specular_coef')
         GL.glUniform1fv(spec_coef, 1, self.light_specular_coef)
-        shiny = GL.glGetUniformLocation(self.gl_axis_program, 'my_light.shininess')
+        shiny = GL.glGetUniformLocation(self.gizmo_axis_program, 'my_light.shininess')
         GL.glUniform1fv(shiny, 1, self.light_shininess)
         return True
     
@@ -399,5 +401,47 @@ void main()
         """
         model = GL.glGetUniformLocation(self.gl_lines_program, 'model_mat')
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, self.model_mat)
+        return True
+    
+    def _draw_gizmo_axis(self, flag):
+        """ Function called to draw the gizmo axis in an OpenGL window.
+            To drawing method is inside the class to make the class completely
+            independent.
+            
+            Input parameters:
+            flag -- a boolean to determine if the cones or the lines are going
+                    to be drawed up. True for draw the cones, False to draw
+                    the lines.
+            
+            IMPORTANT!!!
+            THIS FUNCTION MUST BE CALLED ONLY WHEN AN OPENGL CONTEXT WINDOW HAS
+            BEEN CREATED AND INITIALIZED, OTHERWISE WILL RAISE AN ERROR IN THE
+            OPENGL WRAPPER!!!
+            YOU HAVE BEEN WARNED
+        """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        if flag:
+            GL.glUseProgram(self.gizmo_axis_program)
+            self.load_params()
+            GL.glBindVertexArray(self.x_vao)
+            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis_indexes), GL.GL_UNSIGNED_INT, None)
+            GL.glBindVertexArray(0)
+            GL.glBindVertexArray(self.y_vao)
+            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis_indexes), GL.GL_UNSIGNED_INT, None)
+            GL.glBindVertexArray(0)
+            GL.glBindVertexArray(self.z_vao)
+            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis_indexes), GL.GL_UNSIGNED_INT, None)
+            GL.glBindVertexArray(0)
+            GL.glUseProgram(0)
+        else:
+            GL.glUseProgram(self.gl_lines_program)
+            GL.glLineWidth(3)
+            self.load_lines_params()
+            GL.glBindVertexArray(self.lines_vao)
+            GL.glDrawArrays(GL.GL_LINES, 0, len(self.lines_vertices))
+            GL.glBindVertexArray(0)
+            GL.glLineWidth(1)
+            GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
         return True
     

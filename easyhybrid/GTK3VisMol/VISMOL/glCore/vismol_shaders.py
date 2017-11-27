@@ -999,30 +999,7 @@ void main(){
 }
 """
 
-vertex_shader_selection_box = """
-#version 330
 
-in vec2 vert_coord;
-in vec3 vert_color;
-
-out vec3 frag_color;
-
-void main(){
-    gl_Position = vec4(vert_coord, 0.0, 1.0);
-    frag_color = vert_color;
-}
-"""
-fragment_shader_selection_box = """
-#version 330
-
-in vec3 frag_color;
-
-out vec4 final_color;
-
-void main(){
-    final_color = vec4(frag_color, 0.6);
-}
-"""
 
 
 vertex_shader_antialias = """
@@ -1189,71 +1166,6 @@ void main(){
 }
 """
 
-vertex_shader_non_bonded_atoms_OLD = """
-#version 330
-
-uniform mat4 model_mat;
-uniform mat4 view_mat;
-
-in vec3 vert_coord;
-in vec3 vert_color;
-
-out vec3 geom_color;
-out vec4 geom_coord;
-
-void main(){
-    geom_color = vert_color;
-    geom_coord = view_mat * model_mat * vec4(vert_coord, 1.0);
-}
-"""
-geometry_shader_non_bonded_atoms_OLD = """
-#version 330
-
-const float xyz_offset = 0.5;
-
-layout (points) in;
-layout (line_strip, max_vertices = 6) out;
-
-uniform mat4 proj_mat;
-
-in vec3 geom_color[];
-in vec4 geom_coord[];
-
-out vec3 frag_color;
-out vec4 frag_coord;
-
-void main(){
-    gl_Position = proj_mat * vec4((geom_coord[0].x - xyz_offset), geom_coord[0].y, geom_coord[0].z, 1.0);
-    frag_color = geom_color[0];
-    frag_coord = geom_coord[0];
-    EmitVertex();
-    gl_Position = proj_mat * vec4((geom_coord[0].x + xyz_offset), geom_coord[0].y, geom_coord[0].z, 1.0);
-    frag_color = geom_color[0];
-    frag_coord = geom_coord[0];
-    EmitVertex();
-    EndPrimitive();
-    
-    gl_Position = proj_mat * vec4(geom_coord[0].x, (geom_coord[0].y - xyz_offset), geom_coord[0].z, 1.0);
-    frag_color = geom_color[0];
-    frag_coord = geom_coord[0];
-    EmitVertex();
-    gl_Position = proj_mat * vec4(geom_coord[0].x, (geom_coord[0].y + xyz_offset), geom_coord[0].z, 1.0);
-    frag_color = geom_color[0];
-    frag_coord = geom_coord[0];
-    EmitVertex();
-    EndPrimitive();
-    
-    gl_Position = proj_mat * vec4(geom_coord[0].x, geom_coord[0].y, (geom_coord[0].z - xyz_offset), 1.0);
-    frag_color = geom_color[0];
-    frag_coord = geom_coord[0];
-    EmitVertex();
-    gl_Position = proj_mat * vec4(geom_coord[0].x, geom_coord[0].y, (geom_coord[0].z + xyz_offset), 1.0);
-    frag_color = geom_color[0];
-    frag_coord = geom_coord[0];
-    EmitVertex();
-    EndPrimitive();
-}
-"""
 vertex_shader_non_bonded_atoms = """
 #version 330
 

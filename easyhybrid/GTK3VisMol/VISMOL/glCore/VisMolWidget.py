@@ -338,6 +338,7 @@ class VisMolWidget():
             self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, pan_mat)
             for visObj in self.vismolSession.vismol_objects:
                 visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, pan_mat)
+            self.zero_reference_point = mop.get_xyz_coords(self.model_mat)
         else:
             for visObj in self.vismolSession.vismol_objects:
                 if visObj.editing:
@@ -378,6 +379,7 @@ class VisMolWidget():
         """
         if self.shader_flag:
             self.create_gl_programs()
+            self.selection_box.initialize_gl()
             self.axis.initialize_gl()
             self.shader_flag = False
         
@@ -554,13 +556,13 @@ class VisMolWidget():
         
         if self.show_selection_box and self.shift:
             if self.selection_box.vao is None:
-                shapes._make_gl_selection_box(self.selection_box_program, self.selection_box)
+                self.selection_box._make_gl_selection_box()
             else:
-                self._draw_selection_box(self.selection_box)
+                self._draw_selection_box()
         
         if self.show_axis:
-            self._draw_axis(True)
-            self._draw_axis(False)
+            self._draw_gizmo_axis(True)
+            self._draw_gizmo_axis(False)
         return True
     
     def create_gl_programs(self):
@@ -574,12 +576,9 @@ class VisMolWidget():
             print('OpenGL major version not found')
         self.dots_program = self.load_shaders(vm_shader.vertex_shader_dots, vm_shader.fragment_shader_dots)
         self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
-        self.selection_box_program = self.load_shaders(vm_shader.vertex_shader_selection_box, vm_shader.fragment_shader_selection_box)
         self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
-        #self.lines_program = self.load_shaders(vm_shader.vertex_shader_antialias, vm_shader.fragment_shader_antialias, vm_shader.geometry_shader_antialias)
         self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
         self.non_bonded_program = self.load_shaders(vm_shader.vertex_shader_non_bonded_atoms, vm_shader.fragment_shader_non_bonded_atoms, vm_shader.geometry_shader_non_bonded_atoms)
-        
         self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_ribbons, vm_shader.fragment_shader_ribbons, vm_shader.geometry_shader_ribbons)
     
     def load_shaders(self, vertex, fragment, geometry=None):
@@ -991,54 +990,17 @@ class VisMolWidget():
     
 
 
-    def _draw_axis(self, flag):
-        """ Function doc
+    def _draw_gizmo_axis(self, flag):
+        """ Drawing method for the gizmo axis, see the glaxis.py documentation
+            for more details about this function.
         """
-        GL.glEnable(GL.GL_DEPTH_TEST)
-        if flag:
-            GL.glUseProgram(self.axis.gl_axis_program)
-            self.axis.load_params()
-            GL.glBindVertexArray(self.axis.x_vao)
-            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_INT, None)
-            GL.glBindVertexArray(0)
-            GL.glBindVertexArray(self.axis.y_vao)
-            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_INT, None)
-            GL.glBindVertexArray(0)
-            GL.glBindVertexArray(self.axis.z_vao)
-            GL.glDrawElements(GL.GL_TRIANGLES, len(self.axis.axis_indexes), GL.GL_UNSIGNED_INT, None)
-            GL.glBindVertexArray(0)
-            GL.glUseProgram(0)
-        else:
-            GL.glUseProgram(self.axis.gl_lines_program)
-            GL.glLineWidth(3)
-            self.axis.load_lines_params()
-            GL.glBindVertexArray(self.axis.lines_vao)
-            GL.glDrawArrays(GL.GL_LINES, 0, len(self.axis.lines_vertices))
-            GL.glBindVertexArray(0)
-            GL.glLineWidth(1)
-            GL.glUseProgram(0)
-        GL.glDisable(GL.GL_DEPTH_TEST)
+        self.axis._draw_gizmo_axis(flag)
     
-    def _draw_selection_box(self, sel_box):
-        """ Function doc """
-        GL.glUseProgram(self.selection_box_program)
-        GL.glLineWidth(1)
-        GL.glBindVertexArray(sel_box.vao)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, sel_box.buffers[1])
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, sel_box.points.itemsize*int(len(sel_box.points)), sel_box.points, GL.GL_DYNAMIC_DRAW)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, sel_box.buffers[0])
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, sel_box.indexes.itemsize*int(len(sel_box.indexes)), sel_box.indexes, GL.GL_DYNAMIC_DRAW)
-        GL.glDrawElements(GL.GL_LINE_STRIP, int(len(sel_box.indexes)), GL.GL_UNSIGNED_INT, None)
-        GL.glEnable(GL.GL_DEPTH_TEST)
-        GL.glEnable(GL.GL_BLEND)
-        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_SRC_ALPHA)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, sel_box.buffers[0])
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, sel_box.triangles.itemsize*int(len(sel_box.triangles)), sel_box.triangles, GL.GL_DYNAMIC_DRAW)
-        GL.glDrawElements(GL.GL_TRIANGLE_STRIP, int(len(sel_box.triangles)), GL.GL_UNSIGNED_INT, None)
-        GL.glDisable(GL.GL_BLEND)
-        GL.glDisable(GL.GL_DEPTH_TEST)
-        GL.glBindVertexArray(0)
-        GL.glUseProgram(0)
+    def _draw_selection_box(self):
+        """ Drawing method for the selection box, see the selection_box.py
+            documentation for more details about this function.
+        """
+        self.selection_box._draw_selection_box()
     
     def _pressed_Control_L(self):
         """ Function doc
@@ -1099,8 +1061,10 @@ class VisMolWidget():
         """ Function doc
         """
         coords = atom.coords()
-        coords = np.array(coords, dtype=np.float32) 
-        self.center_on_coordinates(atom.Vobject, coords)
+        if self.zero_reference_point[0]!=coords[0] or self.zero_reference_point[1]!=coords[1] or self.zero_reference_point[2]!=coords[2]:
+            coords = np.array(coords, dtype=np.float32)
+            self.zero_reference_point = coords
+            self.center_on_coordinates(atom.Vobject, coords)
         return True
     
     def center_on_coordinates(self, vismol_object, atom_pos):
@@ -1119,21 +1083,21 @@ class VisMolWidget():
         """
         import time
         pos = np.array([atom_pos[0],atom_pos[1],atom_pos[2],1],dtype=np.float32)
-        model_pos = vismol_object.model_mat.T.dot(pos)
-        self.model_mat = mop.my_glTranslatef(self.model_mat, -model_pos[:3])
+        model_pos = vismol_object.model_mat.T.dot(pos)[:3]
+        self.model_mat = mop.my_glTranslatef(self.model_mat, -model_pos)
         unit_vec = op.unit_vector(model_pos)
         dist = op.get_euclidean(model_pos, [0.0,0.0,0.0])
         step = dist/15.0
         for i in range(15):
             to_move = unit_vec * step
             for visObj in self.vismolSession.vismol_objects:
-                visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move[:3])
+                visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move)
             self.parent_widget.get_window().invalidate_rect(None, False)
             self.parent_widget.get_window().process_updates(False)
             time.sleep(self.vismolSession.gl_parameters['center_on_coord_sleep_time'])
         for visObj in self.vismolSession.vismol_objects:
-            model_pos = visObj.model_mat.T.dot(pos)
-            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -model_pos[:3])
+            model_pos = visObj.model_mat.T.dot(pos)[:3]
+            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -model_pos)
         self.parent_widget.queue_draw()
     
     def _print_matrices(self):

@@ -25,92 +25,65 @@
 import numpy as np
 import math
 
-def generate_bonds(atoms):
-    """ Make calculations for the bonds, this part of the code must be more efficient.
+def get_euclidean(point_A, point_B):
+    """ Returns the distance between two points in the 3D spoint_Ace. If one of the
+        points has less than three components (XYZ), it fills the empty spoint_Aces
+        with zeros.
+        
+        Input point_Arameters:
+            point_A -- an array with the XYZ position of point A.
+            point_B -- an array with the XYZ position of point B.
+        
+        Returns:
+            a float with the distance of point_A to point_B.
     """
-    bonds_list = []
-    print('BEGINS TO CALCULATE DISTANCES')
-    arr1 = np.array([0, 1, 0])
-    for i in range(len(atoms)-1):
-        if i+25 >= int(len(atoms)):
-            limit = int(len(atoms))
-        else:
-            limit = i+25
-        for j in range(i+1, limit):
-            if get_euclidean(atoms[i].pos, atoms[j].pos) <= (atoms[i].cov_rad + atoms[j].cov_rad):
-                arr2 = unit_vector(atoms[j].pos - atoms[i].pos)
-                mid_point = (atoms[i].pos+atoms[j].pos)/2
-                angle = get_angle(arr1, arr2)
-                vec_o = np.cross(arr1, arr2)
-                length = get_euclidean(atoms[i].pos, atoms[j].pos)/2
-                bond = (atoms[i], length, angle, vec_o, mid_point)
-                bond2 = (atoms[j], length, angle+180, vec_o, mid_point)
-                bonds_list.append(bond)
-                bonds_list.append(bond2)
-    print('ENDS!')
-    return bonds_list
-
-def generate_ribbons(backbone):
-    """ Calculates the distances and angles for the ribbon representation.
-    """
-    arr1 = np.array([0, 1, 0])
-    ribbon_list = []
-    for i in range(int(len(backbone))-1):
-        arr2 = unit_vector(backbone[i+1].pos - backbone[i].pos)
-        angle = get_angle(arr1, arr2)
-        vec_o = np.cross(arr1, arr2)
-        length = get_euclidean(backbone[i].pos, backbone[i+1].pos)
-        temp = (backbone[i], length, angle, vec_o)
-        ribbon_list.append(temp)
-    #ribbon_list.append((backbone[-1], 0, 0, [0,0,0]))
-    return ribbon_list
-
-def get_mass_center(atoms):
-    """ Returns the mass center of a molecule.
-    """
-    mass_c = np.zeros(3)
-    for atom in atoms:
-        mass_c += atom.pos
-    mass_c /= int(len(atoms))
-    return mass_c
-
-def get_euclidean(pa, pb):
-    """ Returns the distance between two points in R3
-    """
-    import math
-    if int(len(pa)) == 1:
-        pa = [pa[0], 0.0, 0.0]
-    if int(len(pa)) == 2:
-        pa = [pa[0], pa[1], 0.0]
-    if int(len(pb)) == 1:
-        pb = [pb[0], 0.0, 0.0]
-    if int(len(pb)) == 2:
-        pb = [pb[0], pb[1], 0.0]
-    return math.sqrt((pb[0]-pa[0])**2 + (pb[1]-pa[1])**2 + (pb[2]-pa[2])**2)
+    assert(len(point_A)>=0 and len(point_A)<=3)
+    assert(len(point_B)>=0 and len(point_B)<=3)
+    if int(len(point_A)) == 0:
+        point_A = [0.0, 0.0, 0.0]
+    if int(len(point_A)) == 1:
+        point_A = [point_A[0], 0.0, 0.0]
+    if int(len(point_A)) == 2:
+        point_A = [point_A[0], point_A[1], 0.0]
+    if int(len(point_B)) == 0:
+        point_B = [0.0, 0.0, 0.0]
+    if int(len(point_B)) == 1:
+        point_B = [point_B[0], 0.0, 0.0]
+    if int(len(point_B)) == 2:
+        point_B = [point_B[0], point_B[1], 0.0]
+    return math.sqrt((point_B[0]-point_A[0])**2 + (point_B[1]-point_A[1])**2 + (point_B[2]-point_A[2])**2)
 
 def unit_vector(vector):
-    """ Returns the unit vector of the vector.
+    """ Returns the unit vector, i.e. a vector with module equals to 1.0
+        
+        Input point_Arameters:
+            vector -- an array with the XYZ coordinates of a vector.
+        
+        Returns:
+            an array with module equals to 1.0
     """
     return vector / np.linalg.norm(vector)
 
 def get_angle(vecA, vecB):
-    """ Return the angle in degrees of two vectors.
+    """ Return the angle in degrees of two vectors. Initially transform each
+        vector to a unitary vector and the obtains the angle between them.
+        
+                   vecA               vecA_u
+                  /                  /
+                 /                  / )
+                / ) angle    ==>    \ ) angle
+                \ )                  \
+                 vecB                 vecB_u
+        
+        Input point_Arameters:
+            vecA -- an array with the XYZ coordinates of a vector.
+            vecB -- an array with the XYZ coordinates of a vector.
+        
+        Returns:
+            a float with the angle in degrees formed between the vector vecA
+            and vecB. The dot product between vectors is initially clipped to
+            remain in the -1.0 to +1.0 range to avoid errors.
     """
     vecA_u = unit_vector(vecA)
     vecB_u = unit_vector(vecB)
     return np.degrees(np.arccos(np.clip(np.dot(vecA_u, vecB_u), -1.0, 1.0)))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
