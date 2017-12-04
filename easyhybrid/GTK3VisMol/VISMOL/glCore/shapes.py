@@ -469,6 +469,43 @@ def _make_gl_selection_dots(program, vismol_object = None):
     return True
 
 
+def _make_gl_cylinders(program, vismol_object = None):
+    """ Function doc
+    """
+    indexes = np.array(vismol_object.index_bonds,dtype=np.uint32)
+    coords  = vismol_object.frames[0]
+    colors  = vismol_object.colors
+    
+    vao = GL.glGenVertexArrays(1)
+    GL.glBindVertexArray(vao)
+    
+    ind_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
+    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), indexes, GL.GL_DYNAMIC_DRAW)
+    
+    coord_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, coord_vbo)
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.itemsize*int(len(coords)), coords, GL.GL_STATIC_DRAW)
+    att_position = GL.glGetAttribLocation(program, 'vert_coord')
+    GL.glEnableVertexAttribArray(att_position)
+    GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*coords.itemsize, ctypes.c_void_p(0))
+    
+    col_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*int(len(colors)), colors, GL.GL_STATIC_DRAW)
+    att_colors = GL.glGetAttribLocation(program, 'vert_color')
+    GL.glEnableVertexAttribArray(att_colors)
+    GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+    
+    GL.glBindVertexArray(0)
+    GL.glDisableVertexAttribArray(att_position)
+    GL.glDisableVertexAttribArray(att_colors)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+    
+    vismol_object.cylinders_vao       = vao
+    vismol_object.cylinders_buffers   = (ind_vbo, coord_vbo, col_vbo)
+
 
 
 def _make_gl_picking_dots(program, vismol_object = None, bckgrnd_color= [0.0,0.0,0.0,1.0]):

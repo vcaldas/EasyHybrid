@@ -421,6 +421,12 @@ class VisMolWidget():
                     else:
                         self._draw_non_bonded(visObj = visObj)
                 
+                if visObj.cylinders_actived:
+                    if visObj.cylinders_vao is None:
+                        shapes._make_gl_cylinders(self.cylinders_program, vismol_object = visObj)
+                    else:
+                        self._draw_cylinders(visObj = visObj)
+                
                 #if visObj.circles_actived:
                 #    if visObj.circles_vao is None:
                 #        shapes._make_gl_circles(self.circles_program, vismol_object = visObj)
@@ -580,6 +586,7 @@ class VisMolWidget():
         self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
         self.non_bonded_program = self.load_shaders(vm_shader.vertex_shader_non_bonded_atoms, vm_shader.fragment_shader_non_bonded_atoms, vm_shader.geometry_shader_non_bonded_atoms)
         self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_ribbons, vm_shader.fragment_shader_ribbons, vm_shader.geometry_shader_ribbons)
+        self.cylinders_program = self.load_shaders(vm_shader.vertex_shader_cylinders, vm_shader.fragment_shader_cylinders, vm_shader.geometry_shader_cylinders)
     
     def load_shaders(self, vertex, fragment, geometry=None):
         """ Here the shaders are loaded and compiled to an OpenGL program. By default
@@ -707,6 +714,23 @@ class VisMolWidget():
         GL.glUniform1fv(uni_vint_antialias, 1, antialias)
         uni_dot_size = GL.glGetUniformLocation(program, 'vert_dot_factor')
         GL.glUniform1fv(uni_dot_size, 1, dot_factor)
+        return True
+    
+    def load_lights(self, program):
+        """ Function doc
+        """
+        light_pos = GL.glGetUniformLocation(program, 'my_light.position')
+        GL.glUniform3fv(light_pos, 1, self.light_position)
+        #light_col = GL.glGetUniformLocation(program, 'my_light.color')
+        #GL.glUniform3fv(light_col, 1, self.light_color)
+        amb_coef = GL.glGetUniformLocation(program, 'my_light.ambient_coef')
+        GL.glUniform1fv(amb_coef, 1, self.light_ambient_coef)
+        shiny = GL.glGetUniformLocation(program, 'my_light.shininess')
+        GL.glUniform1fv(shiny, 1, self.light_shininess)
+        intensity = GL.glGetUniformLocation(program, 'my_light.intensity')
+        GL.glUniform3fv(intensity, 1, self.light_intensity)
+        #spec_col = GL.glGetUniformLocation(program, 'my_light.specular_color')
+        #GL.glUniform3fv(spec_col, 1, self.light_specular_color)
         return True
     
     def load_antialias_params(self, program):
@@ -986,6 +1010,28 @@ class VisMolWidget():
         GL.glUseProgram(0)
         #GL.glDisable(GL.GL_LINE_SMOOTH)
         #GL.glDisable(GL.GL_BLEND)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    def _draw_cylinders(self, visObj = None):
+        """ Function doc
+        """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.cylinders_program)
+        self.load_matrices(self.cylinders_program, visObj.model_mat)
+        self.load_fog(self.cylinders_program)
+        self.load_lights(self.cylinders_program)
+        if visObj.cylinders_vao is not None:
+            GL.glBindVertexArray(visObj.cylinders_vao)
+            if self.modified_view:
+                pass
+            else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.cylinders_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                visObj.frames[self.frame], 
+                                GL.GL_STATIC_DRAW)              
+                GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
     
 

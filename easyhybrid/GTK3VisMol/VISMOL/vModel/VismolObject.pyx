@@ -153,8 +153,11 @@ class VismolObject:
         """   R I B B O N S   """
         self.ribbons_actived = True
         
-        """   R I B B O N S   """
+        """   N O N  B O N D E D   """
         self.non_bonded_actived = True
+        
+        """   C Y L I N D E R S   """
+        self.cylinders_actived = True
         
         
         #print ('frames:     ', len(self.frames))
@@ -165,12 +168,14 @@ class VismolObject:
         self.circles_vao     = None
         self.ribbons_vao     = None
         self.non_bonded_vao  = None
+        self.cylinders_vao   = None
 
         self.dot_buffers        = None
-        self.line_buffers       = None
+        self.lines_buffers      = None
         self.circles_buffers    = None
         self.ribbons_buffers    = None
         self.non_bonded_buffers = None
+        self.cylinders_buffers  = None
 
         self.dot_indexes     = None
         
