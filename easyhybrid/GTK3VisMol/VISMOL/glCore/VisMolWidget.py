@@ -391,13 +391,8 @@ class VisMolWidget():
         
         for visObj in self.vismolSession.vismol_objects:
             if visObj.actived:
+                
                 if visObj.lines_actived:
-                    #if visObj.line_representation.vao is None:
-                    #    visObj.line_representation.make_gl_lines(self.lines_program)
-                    #
-                    #else:
-                    #    self._draw_lines2(visObj = visObj)
-                        
                     if visObj.lines_vao is None:
                         shapes._make_gl_lines(self.lines_program, vismol_object = visObj)
                     else:
@@ -590,7 +585,7 @@ class VisMolWidget():
         self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
         self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
         self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
-        self.non_bonded_program = self.load_shaders(vm_shader.vertex_shader_non_bonded_atoms, vm_shader.fragment_shader_non_bonded_atoms, vm_shader.geometry_shader_non_bonded_atoms)
+        self.non_bonded_program = self.load_shaders(vm_shader.vertex_shader_non_bonded, vm_shader.fragment_shader_non_bonded, vm_shader.geometry_shader_non_bonded)
         self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_ribbons, vm_shader.fragment_shader_ribbons, vm_shader.geometry_shader_ribbons)
         self.cylinders_program = self.load_shaders(vm_shader.vertex_shader_cylinders, vm_shader.fragment_shader_cylinders, vm_shader.geometry_shader_cylinders)
         self.spheres_program = self.load_shaders(vm_shader.vertex_shader_spheres, vm_shader.fragment_shader_spheres, vm_shader.geometry_shader_spheres)
