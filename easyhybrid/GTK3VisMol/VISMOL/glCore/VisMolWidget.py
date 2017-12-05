@@ -427,6 +427,12 @@ class VisMolWidget():
                     else:
                         self._draw_cylinders(visObj = visObj)
                 
+                if visObj.spheres_actived:
+                    if visObj.spheres_vao is None:
+                        shapes._make_gl_spheres (self.spheres_program,  vismol_object = visObj)
+                    else:
+                        self._draw_spheres(visObj = visObj, indexes = False)
+                
                 #if visObj.circles_actived:
                 #    if visObj.circles_vao is None:
                 #        shapes._make_gl_circles(self.circles_program, vismol_object = visObj)
@@ -587,6 +593,7 @@ class VisMolWidget():
         self.non_bonded_program = self.load_shaders(vm_shader.vertex_shader_non_bonded_atoms, vm_shader.fragment_shader_non_bonded_atoms, vm_shader.geometry_shader_non_bonded_atoms)
         self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_ribbons, vm_shader.fragment_shader_ribbons, vm_shader.geometry_shader_ribbons)
         self.cylinders_program = self.load_shaders(vm_shader.vertex_shader_cylinders, vm_shader.fragment_shader_cylinders, vm_shader.geometry_shader_cylinders)
+        self.spheres_program = self.load_shaders(vm_shader.vertex_shader_spheres, vm_shader.fragment_shader_spheres, vm_shader.geometry_shader_spheres)
     
     def load_shaders(self, vertex, fragment, geometry=None):
         """ Here the shaders are loaded and compiled to an OpenGL program. By default
@@ -827,6 +834,30 @@ class VisMolWidget():
                 GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
         GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+        GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    def _draw_spheres(self, visObj = None,  indexes = False):
+        """ Function doc
+        """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.spheres_program)
+        self.load_matrices(self.spheres_program, visObj.model_mat)
+        self.load_fog(self.spheres_program)
+        self.load_lights(self.spheres_program)
+        if visObj.spheres_vao is not None:
+            GL.glBindVertexArray(visObj.spheres_vao)
+            if self.modified_view:
+                pass
+            else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.spheres_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                                    visObj.frames[self.frame], GL.GL_STATIC_DRAW)
+                if  indexes:
+                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.spheres_buffers[2])
+                    GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
+        GL.glBindVertexArray(0)
         GL.glUseProgram(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
     

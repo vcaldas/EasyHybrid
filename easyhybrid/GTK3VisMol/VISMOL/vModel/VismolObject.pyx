@@ -141,8 +141,8 @@ class VismolObject:
         #                O p e n G L   a t t r i b u t e s
         #-----------------------------------------------------------------                
         """   L I N E S   """
-        self.lines_actived       = True
-        self.lines_show_list     = True
+        self.lines_actived       = False
+        self.lines_show_list     = False
 
         """   D O T S   """
         self.dots_actived = False
@@ -151,13 +151,16 @@ class VismolObject:
         self.circles_actived = False
 
         """   R I B B O N S   """
-        self.ribbons_actived = True
+        self.ribbons_actived = False
         
         """   N O N  B O N D E D   """
-        self.non_bonded_actived = True
+        self.non_bonded_actived = False
         
         """   C Y L I N D E R S   """
         self.cylinders_actived = True
+        
+        """   S P H E R E S   """
+        self.spheres_actived = True
         
         
         #print ('frames:     ', len(self.frames))
@@ -169,6 +172,7 @@ class VismolObject:
         self.ribbons_vao     = None
         self.non_bonded_vao  = None
         self.cylinders_vao   = None
+        self.spheres_vao     = None
 
         self.dot_buffers        = None
         self.lines_buffers      = None
@@ -176,6 +180,7 @@ class VismolObject:
         self.ribbons_buffers    = None
         self.non_bonded_buffers = None
         self.cylinders_buffers  = None
+        self.spheres_buffers    = None
 
         self.dot_indexes     = None
         
