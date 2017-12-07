@@ -262,7 +262,7 @@ class VisMolWidget():
                 self.glcamera.z_far += self.scroll
             if down:
                 if (self.glcamera.z_far-self.scroll) >= (self.glcamera.min_zfar):
-                    if (self.glcamera.z_far-self.scroll) > (self.glcamera.z_near+self.scroll):
+                    if (self.glcamera.z_far-self.scroll) > (self.glcamera.z_near+self.scroll+0.005):
                         self.glcamera.z_near += self.scroll
                         self.glcamera.z_far -= self.scroll
             if (self.glcamera.z_near >= self.glcamera.min_znear):
@@ -428,6 +428,12 @@ class VisMolWidget():
                     else:
                         self._draw_spheres(visObj = visObj, indexes = False)
                 
+                if visObj.dots_surface_actived:
+                    if visObj.dots_surface_vao is None:
+                        shapes._make_gl_dots_surface (self.dots_surface_program,  vismol_object = visObj)
+                    else:
+                        self._draw_dots_surface(visObj = visObj, indexes = False)
+                
                 #if visObj.circles_actived:
                 #    if visObj.circles_vao is None:
                 #        shapes._make_gl_circles(self.circles_program, vismol_object = visObj)
@@ -589,6 +595,7 @@ class VisMolWidget():
         self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_ribbons, vm_shader.fragment_shader_ribbons, vm_shader.geometry_shader_ribbons)
         self.cylinders_program = self.load_shaders(vm_shader.vertex_shader_cylinders, vm_shader.fragment_shader_cylinders, vm_shader.geometry_shader_cylinders)
         self.spheres_program = self.load_shaders(vm_shader.vertex_shader_spheres, vm_shader.fragment_shader_spheres, vm_shader.geometry_shader_spheres)
+        self.dots_surface_program = self.load_shaders(vm_shader.vertex_shader_dots_surface, vm_shader.fragment_shader_dots_surface, vm_shader.geometry_shader_dots_surface)
     
     def load_shaders(self, vertex, fragment, geometry=None):
         """ Here the shaders are loaded and compiled to an OpenGL program. By default
@@ -856,6 +863,32 @@ class VisMolWidget():
         GL.glUseProgram(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
     
+    def _draw_dots_surface(self, visObj = None,  indexes = False):
+        """ Function doc
+        """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.dots_surface_program)
+        self.load_matrices(self.dots_surface_program, visObj.model_mat)
+        self.load_fog(self.dots_surface_program)
+        self.load_lights(self.dots_surface_program)
+        GL.glPointSize(5)
+        if visObj.dots_surface_vao is not None:
+            GL.glBindVertexArray(visObj.dots_surface_vao)
+            if self.modified_view:
+                pass
+            else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dots_surface_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                                    visObj.frames[self.frame], GL.GL_STATIC_DRAW)
+                if  indexes:
+                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.dots_surface_buffers[2])
+                    GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
+        GL.glPointSize(1)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
     def _draw_picking_dots(self, visObj = None,  indexes = False):
         """ Function doc
         """
@@ -1077,8 +1110,8 @@ class VisMolWidget():
     def _pressed_Control_L(self):
         """ Function doc
         """
-        self.vismolSession._hide_lines (visObj = self.vismolSession.vismol_objects[0], 
-                                       indexes = range(0,20))
+        #self.vismolSession._hide_lines (visObj = self.vismolSession.vismol_objects[0], 
+        #                               indexes = range(0,20))
         self.ctrl = True
         return True
     
@@ -1091,8 +1124,8 @@ class VisMolWidget():
     def _pressed_Shift_L(self):
         """ Function doc
         """
-        self.vismolSession._show_lines (visObj = self.vismolSession.vismol_objects[0], 
-                                       indexes = range(0,20))
+        #self.vismolSession._show_lines (visObj = self.vismolSession.vismol_objects[0], 
+        #                               indexes = range(0,20))
         self.shift = True
         return True
     
@@ -1132,11 +1165,7 @@ class VisMolWidget():
     def center_on_atom(self, atom):
         """ Function doc
         """
-        coords = atom.coords()
-        if self.zero_reference_point[0]!=coords[0] or self.zero_reference_point[1]!=coords[1] or self.zero_reference_point[2]!=coords[2]:
-            coords = np.array(coords, dtype=np.float32)
-            self.zero_reference_point = coords
-            self.center_on_coordinates(atom.Vobject, coords)
+        self.center_on_coordinates(atom.Vobject, atom.coords())
         return True
     
     def center_on_coordinates(self, vismol_object, atom_pos):
@@ -1153,24 +1182,27 @@ class VisMolWidget():
             The effects will be applied on the model matrices of every VisMol
             object and the model matrix of the window.
         """
-        import time
-        pos = np.array([atom_pos[0],atom_pos[1],atom_pos[2],1],dtype=np.float32)
-        model_pos = vismol_object.model_mat.T.dot(pos)[:3]
-        self.model_mat = mop.my_glTranslatef(self.model_mat, -model_pos)
-        unit_vec = op.unit_vector(model_pos)
-        dist = op.get_euclidean(model_pos, [0.0,0.0,0.0])
-        step = dist/15.0
-        for i in range(15):
-            to_move = unit_vec * step
+        if self.zero_reference_point[0]!=atom_pos[0] or self.zero_reference_point[1]!=atom_pos[1] or self.zero_reference_point[2]!=atom_pos[2]:
+            import time
+            self.zero_reference_point = atom_pos
+            pos = np.array([atom_pos[0],atom_pos[1],atom_pos[2],1],dtype=np.float32)
+            model_pos = vismol_object.model_mat.T.dot(pos)[:3]
+            self.model_mat = mop.my_glTranslatef(self.model_mat, -model_pos)
+            unit_vec = op.unit_vector(model_pos)
+            dist = op.get_euclidean(model_pos, [0.0,0.0,0.0])
+            step = dist/15.0
+            for i in range(15):
+                to_move = unit_vec * step
+                for visObj in self.vismolSession.vismol_objects:
+                    visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move)
+                self.parent_widget.get_window().invalidate_rect(None, False)
+                self.parent_widget.get_window().process_updates(False)
+                time.sleep(self.vismolSession.gl_parameters['center_on_coord_sleep_time'])
             for visObj in self.vismolSession.vismol_objects:
-                visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move)
-            self.parent_widget.get_window().invalidate_rect(None, False)
-            self.parent_widget.get_window().process_updates(False)
-            time.sleep(self.vismolSession.gl_parameters['center_on_coord_sleep_time'])
-        for visObj in self.vismolSession.vismol_objects:
-            model_pos = visObj.model_mat.T.dot(pos)[:3]
-            visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -model_pos)
-        self.parent_widget.queue_draw()
+                model_pos = visObj.model_mat.T.dot(pos)[:3]
+                visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -model_pos)
+            self.parent_widget.queue_draw()
+        return True
     
     def _print_matrices(self):
         """ Function doc

@@ -157,10 +157,13 @@ class VismolObject:
         self.non_bonded_actived = False
         
         """   C Y L I N D E R S   """
-        self.cylinders_actived = True
+        self.cylinders_actived = False
         
         """   S P H E R E S   """
-        self.spheres_actived = True
+        self.spheres_actived = False
+        
+        """   S P H E R E S   """
+        self.dots_surface_actived = True
         
         
         #print ('frames:     ', len(self.frames))
@@ -173,7 +176,8 @@ class VismolObject:
         self.non_bonded_vao  = None
         self.cylinders_vao   = None
         self.spheres_vao     = None
-
+        self.dots_surface_vao = None
+    
         self.dot_buffers        = None
         self.lines_buffers      = None
         self.circles_buffers    = None
@@ -181,6 +185,7 @@ class VismolObject:
         self.non_bonded_buffers = None
         self.cylinders_buffers  = None
         self.spheres_buffers    = None
+        self.dots_surface_buffers = None
 
         self.dot_indexes     = None
         
