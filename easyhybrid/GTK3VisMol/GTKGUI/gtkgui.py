@@ -2,7 +2,7 @@ import gi, sys
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
 
-
+from VISMOL.gtkWidgets.main_treeview import GtkMainTreeView
 
 
 class ConsoleWindow:
@@ -147,62 +147,34 @@ class GTKGUI ():
         self.vismolSession.glwidget.test_gl()
         
     def on_file_open_activate (self, widget, click=None):
-
         """ Function doc """
+        filename = self.vismolSession.gtk_load()
+        self.main_treeview.refresh_gtk_main_treeview()
+        #self.vismolSession.refresh_gtk_main_treeview()
+        #liststore = self.main_treeview.builder.get_object('liststore1')
+        #model = liststore  
+        #model.clear()
+        #n = 0
+        #i = 1
+        #
+        #for vis_object in self.vismolSession.vismol_objects:
+        #    print ('\n\n',vis_object.name,'\n\n')
+        #    
+        #    if vis_object.actived:
+        #        actived = True
+        #    else:
+        #        actived = False
+        #
+        #    data = [actived, str(i)        ,
+        #           vis_object.name      , 
+        #           str(len(vis_object.atoms)) , 
+        #           str(len(vis_object.frames)),
+        #           ]
+        #    model.append(data)
+        #    i +=1
+        #    n = n + 1
+        #print ('load fuction finished')        
 
-        main = self.builder.get_object("window1")
-        filename = None
-        chooser = Gtk.FileChooserDialog("Open File...", main,0,
-                                       (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                        Gtk.STOCK_OK, Gtk.ResponseType.OK))
-
-        filter = Gtk.FileFilter()  
-        filter.set_name("PDB files - *.pdb")
-        #
-        filter.add_mime_type("PDB files")
-        filter.add_pattern("*.pdb")
-        #
-        chooser.add_filter(filter)
-        filter = Gtk.FileFilter()
-        filter.set_name("All files")
-        filter.add_pattern("*")
-        #
-        chooser.add_filter(filter)  
-
-        response = chooser.run()
-        if response == Gtk.ResponseType.OK:
-            filename = chooser.get_filename()
-        chooser.destroy()
-        
-        print (filename)
-        
-        self.vismolSession.load(filename)
-        
-        #
-        liststore = self.builder.get_object('liststore1')
-        model = liststore  
-        model.clear()
-        n = 0
-        i = 1
-    
-        
-        
-        for vis_object in self.vismolSession.vismol_objects:
-            print (vis_object.name)
-            if vis_object.actived:
-                actived = True
-            else:
-                actived = False
-        
-            data = [actived, str(i)        ,
-                   vis_object.name      , 
-                   str(len(vis_object.atoms)) , 
-                   str(len(vis_object.frames)),
-                   ]
-            model.append(data)
-            i +=1
-            n = n + 1
-        print ('load fuction finished')
     
     def on_terminal_button (self, widget, click=None):
         """ Function doc """
@@ -234,7 +206,7 @@ class GTKGUI ():
 
 
 
-
+    '''
     def on_treeview_Objects_button_release_event(self, tree, event):
         if event.button == 3:
             selection     = tree.get_selection()
@@ -286,7 +258,7 @@ class GTKGUI ():
                     model.set(iter, 0, true_or_false)
                     self.vismolSession.glwidget.queue_draw()
     
-    
+    '''
 
         
     
@@ -338,18 +310,22 @@ class GTKGUI ():
         self.builder.add_from_file('GTK3VisMol/GTKGUI/MainWindow.glade')
         self.builder.connect_signals(self)
         
-        self.window    = self.builder.get_object('window1')
-    
-    
-    
+        self.window = self.builder.get_object('window1')
+        
+        self.main_treeview =  GtkMainTreeView(vismolSession = vismolSession)
+        self.builder.get_object('notebook1').append_page(self.main_treeview.builder.get_object('scrolledwindow1'))
+                                                         #'Objects')
+
+
         self.vismolSession = vismolSession
+        self.vismolSession.build_gtkWidgets(self.builder.get_object("window1"))
+        
         if self.vismolSession is not None:
-            #self.container = self.builder.get_object('paned1')
             
             self.container = self.builder.get_object('paned2')
 
             self.container.add(self.vismolSession.glwidget)
-            self.window.connect("key-press-event", self.vismolSession.glwidget.key_pressed)
+            self.window.connect("key-press-event"  , self.vismolSession.glwidget.key_pressed)
             self.window.connect("key-release-event", self.vismolSession.glwidget.key_released)
 
         self.window.connect("delete-event",    Gtk.main_quit)
@@ -367,8 +343,7 @@ class GTKGUI ():
         self.textarea = Gtk.TextView()
         #  -------------- GTK Terminal GUI --------------
         #self.gtkTerminalGui = GTKTerminalGUI(vismolSession)
-        #self.builder.get_object('notebook2').append_page(self.gtkTerminalGui.TerminalBox, 
-        #                                                 self.gtkTerminalGui.TerminalLabel)
+
         self.container2 = self.builder.get_object('paned_V')
         self.container2.add(self.textarea)
         #print (a ,b, " <----------aqui oh")

@@ -42,6 +42,7 @@ from VISMOL.vCore.VismolSelections  import VisMolViewingSelection as vSele
 
 import VISMOL.glCore.shapes as shapes
 
+from VISMOL.gtkWidgets.main_treeview import GtkMainTreeView, FileChooser
 
 
 import os
@@ -64,30 +65,15 @@ class ShowHideVisMol:
             Vobject.flat_sphere_representation.actived = True
             Vobject.flat_sphere_representation.update()
             
-            #self.glwidget.draw_dots(Vobject)
-
-    #def _hide_flat_spheres (self, Vobjects ):
-    #    for Vobject in Vobjects:
-    #        Vobject.show_dots = False
-    #
-    #def _show_flat_spheres (self, Vobjects = []):
-    #    """ Function doc """
-    #    for Vobject in Vobjects:
-    #        Vobject.show_dots = True
-    #        #self.glwidget.draw_dots(Vobject)
-
     def _hide_ribbons (self, Vobjects ):
         """ Function doc """
         for Vobject in Vobjects:
             pass
-            #self.flat_sphere_representation.actived = False
-            #self.flat_sphere_representation.update()
     
     def _show_ribbons (self, Vobjects ):
         """ Function doc """
         for Vobject in Vobjects:
             Vobject.show_ribbons = True
-            #self.glwidget.draw_ribbon(Vobject)
         
     def _hide_lines (self, visObj = None, indexes = []):
         """ Function doc 
@@ -111,9 +97,7 @@ class ShowHideVisMol:
                 visObj.index_bonds.append(visObj.atoms[bond_pairs[0]].index-1)
                 visObj.index_bonds.append(visObj.atoms[bond_pairs[1]].index-1)
 
-        shapes.change_vbo_indexes (ind_vbo = visObj.line_buffers[0], indexes = visObj.index_bonds)
-    
-
+        shapes.change_vbo_indexes (ind_vbo = visObj.lines_buffers[0], indexes = visObj.index_bonds)
     
     def _show_lines (self, visObj = None, indexes = [] ):
         """ Function doc 
@@ -138,33 +122,7 @@ class ShowHideVisMol:
                 visObj.index_bonds.append(visObj.atoms[bond_pairs[0]].index-1)
                 visObj.index_bonds.append(visObj.atoms[bond_pairs[1]].index-1)
 
-        shapes.change_vbo_indexes (ind_vbo = visObj.line_buffers[0], indexes = visObj.index_bonds)
-    
-    
-    
-    
-    
-    #def _hide_ball_and_stick (self, Vobjects ):
-    #    """ Function doc """
-    #    for Vobject in Vobjects:
-    #        Vobject.show_ball_and_stick = False
-    #    
-    #def _show_ball_and_stick(self, Vobjects):
-    #    """ Function doc """
-    #    for Vobject in Vobjects:
-    #        Vobject.show_ball_and_stick = True
-    #        #self.glwidget.draw_ball_and_stick(Vobject)
-    #
-    #def _hide_spheres (self, Vobjects ):
-    #    """ Function doc """
-    #    for Vobject in Vobjects:
-    #        Vobject.show_spheres = False
-    #    
-    #def _show_spheres (self, Vobjects):
-    #    """ Function doc """
-    #    for Vobject in Vobjects:
-    #        Vobject.show_spheres = True
-    #        #self.glwidget.draw_spheres(Vobject)
+        shapes.change_vbo_indexes (ind_vbo = visObj.lines_buffers[0], indexes = visObj.index_bonds)
     
     def hide (self, Vobjects =  [], _type = 'lines', indexes = [] ):
         """ Function doc """    
@@ -204,7 +162,6 @@ class ShowHideVisMol:
     
         self.glwidget.updateGL()
 
-#'''
 
 class VisMolSession (ShowHideVisMol):
     """ Class doc """
@@ -239,7 +196,7 @@ class VisMolSession (ShowHideVisMol):
 				      }
         
         
-
+        self.backend = backend
         if glwidget:
             if backend == 'gtk3':
                 from VISMOL.glWidget import gtk3 as VisMolGLWidget
@@ -250,6 +207,12 @@ class VisMolSession (ShowHideVisMol):
         else:
             self.glwidget = None
         #---------------------------------------------------------------------------
+        
+        # GTK WIDGETS 
+
+        
+        
+        
         
         
         # F R A M E
@@ -271,6 +234,24 @@ class VisMolSession (ShowHideVisMol):
         #---------------------------------------------------------------
         self.picking_selections =  vPick()
         
+    
+    def build_gtkWidgets (self, gtk_mainwindow):
+        """ Function doc """
+        self.filechooser   = FileChooser(main_window = gtk_mainwindow)
+        self.main_treeview = GtkMainTreeView(vismolSession = self) 
+
+    def refresh_gtk (self, 
+                     maintreeview = True
+                     ):
+        """ Function doc """
+        if maintreeview:
+            self.main_treeview.refresh_gtk_main_treeview()
+
+    def gtk_load (self):
+        """ Function doc """
+        filename = self.filechooser.open()
+        self.load(filename)
+
     def command_line (self, entry = None):
         """ Function doc """
         cmd = entry.split()
@@ -297,7 +278,7 @@ class VisMolSession (ShowHideVisMol):
         
         print (entry)
 
-    def load (self, infile):
+    def load (self, infile, widget = None):
         """ Function doc """
         #Vobject_id = len(self.vismol_objects)
 
@@ -310,26 +291,18 @@ class VisMolSession (ShowHideVisMol):
         
         if infile[-3:] == 'xyz':
             self._load_xyz_file(infile = infile)
-        #if infile[-3:] == 'xyz':
-        #
-        #    Vobject, self.atom_dic_id = parse_xyz(infile     = infile,  
-        #                     counter     = self.atom_id_counter,  
-        #                     atom_dic_id = self.atom_dic_id,
-        #                     Vobject_id  = Vobject_id
-        #                     )
-        
-        #self.atom_id_counter += len(Vobject.atoms)
-        
-        
-        #if self.glwidget:
-        #    print ('starting _make_gl_lines') 
-        #    shapes._make_gl_lines(self.glwidget.lines_program, vismol_object = self.vismol_objects[-1])
-        #    print ('_make_gl_lines finished') 
-        #    self.glwidget.make_lines(vismol_object = self.vismol_objects[-1])
+
+
         self.vismol_objects[-1].actived = True
         self.glwidget.queue_draw()
-        #self.center_by_index (index =  -1)
-        return True
+       
+        if self.backend == 'gtk3':
+            self.refresh_gtk(widget)
+
+        
+        
+        
+
         
     def _load_pdb_file (self, infile):
         """ Function doc """      

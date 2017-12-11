@@ -31,6 +31,143 @@ import VISMOL.glCore.sphere_data as sphd
 import VISMOL.glCore.cylinder_data as cyd
 import VISMOL.glCore.matrix_operations as mop
 
+
+
+class SphereRepresentation:
+    """ Class doc """
+    
+    def __init__ (self, vismol_object = None,  level = 'level_0'):
+        """ Class initialiser """
+        self.vismol_object = vismol_object
+        
+        self.sphere_vertices_frames = []
+        self.full_sphere_triangles  = []
+        
+        
+        self.sphere_vertices       = sphd.sphere_vertices [level]
+        self.sphere_triangles      = sphd.sphere_triangles[level]
+        self.number_of_vertices    = len(self.sphere_vertices)
+
+        self.number_of_frames      = 0
+
+    def build_sphere_frames_from_coordinates_frames (self, frames = []):    
+        """ Function doc """
+        
+        for coords in frames:
+            full_sphere_vertices  = []          
+            
+            for i in range(0,len(coords),3):
+                
+                for vertice in self.sphere_vertices:
+                    
+                    full_sphere_vertices.append(vertice+coords[i])
+                    full_sphere_vertices.append(vertice+coords[i+1])
+                    full_sphere_vertices.append(vertice+coords[i+2])
+            
+            full_sphere_vertices = np.array(full_sphere_vertices ,dtype=np.float32)
+            self.sphere_vertices_frames.append(full_sphere_vertices)
+            self.number_of_frames += 1
+    
+    
+    def build_sphere_triangles (self, natoms):    
+        number_of_vertices   = len(self.sphere_triangles)
+        self.full_sphere_triangles = []
+        for i in range(natoms):
+            for index in self.sphere_triangles:
+                self.full_sphere_triangles.append(index+i*number_of_vertices)
+        
+        self.full_sphere_triangles = np.array(self.full_sphere_triangles,dtype=np.uint32)            
+    
+    def set_sphere_level (self, level ):
+        """ Function doc """
+        self.sphere_vertices       = sphd.sphere_vertices [level]
+        self.sphere_triangles      = sphd.sphere_triangles[level]
+        self.number_of_vertices    = len(sphere_vertices)
+
+
+
+    def _make_gl_true_spheres (self, shader_program):
+        """ Function doc """
+        #'''
+        #-------------------------------------------------------------------------------
+        #                               simpleSphere
+        #------------------------------------------------------------------------------- 
+        natoms = int(len(self.vismol_object.atoms))
+
+        #if self.sphere_vertices_frames == []:
+        #    self.build_sphere_frames_from_coordinates_frames (self.vismol_object.frames)
+        #
+        #if self.number_of_vertices == []:
+        #    self.build_sphere_triangles (natoms)
+        
+        
+        #self.sphere_vertices       = sphd.sphere_vertices [level]
+        #self.sphere_triangles      = sphd.sphere_triangles[level]
+        
+        
+        
+        
+        colors    = self.vismol_object.colors
+        #coords    = self.sphere_vertices_frames[0]
+        #indexes   = np.array(self.full_sphere_triangles,dtype=np.uint32) 
+        
+        
+        coords    = sphd.sphere_vertices ['level_1']
+        indexes   = sphd.sphere_triangles['level_1']
+        colors    = [0.,1.,1.]*int(len(coords))
+        colors    = np.array(colors, dtype=np.float32)
+
+        
+        self.coords  = coords
+        self.indexes = indexes
+        
+        vao = GL.glGenVertexArrays(1)
+        GL.glBindVertexArray(vao)
+        ind_vbo = GL.glGenBuffers(1)
+        
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
+        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), indexes, GL.GL_DYNAMIC_DRAW)
+        
+        coord_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, coord_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.itemsize*int(len(coords)), coords, GL.GL_STATIC_DRAW)
+        att_position = GL.glGetAttribLocation(shader_program, 'vert_coord')
+        GL.glEnableVertexAttribArray(att_position)
+        GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*coords.itemsize, ctypes.c_void_p(0))
+        
+        #ol_vbo = None
+        col_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*int(len(colors)), colors, GL.GL_STATIC_DRAW)
+        att_colors = GL.glGetAttribLocation(shader_program, 'vert_color')
+        GL.glEnableVertexAttribArray(att_colors)
+        GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+        
+        #vao_list.append(vao)
+        GL.glBindVertexArray(0)
+        GL.glDisableVertexAttribArray(att_position)
+        GL.glDisableVertexAttribArray(att_colors)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+        
+        self.spheres_vao             = vao
+        self.spheres_buffers         = (ind_vbo, coord_vbo, col_vbo)
+        
+        #vismol_object.lines_vao      = vao
+        #vismol_object.line_buffers   = (ind_vbo, coord_vbo, col_vbo)
+        return True
+
+
+
+
+
+
+
+
+
+
+
+
 def _make_gl_circles(program, vismol_object = None):
     """ Function doc
     """
@@ -232,6 +369,80 @@ def _make_gl_spheres(program, vismol_object = None):
     
     vismol_object.spheres_vao = vao
     vismol_object.spheres_buffers = (ind_vbo, coord_vbo, col_vbo)
+    return True
+
+def _make_gl_true_spheres (program, vismol_object = None, level = 'level_0'):
+    """ Function doc """
+    #'''
+    #-------------------------------------------------------------------------------
+    #                               simpleSphere
+    #------------------------------------------------------------------------------- 
+
+    #dot_sizes = vismol_object.vdw_dot_sizes
+    #coords    = vismol_object.frames[0]
+    #colors    = [0.,1.,1.]*int(len(coords)/3)
+    #colors    = np.array(colors, dtype=np.float32)
+    natoms    = int(len(coords)/3)
+    colors    = vismol_object.colors
+
+    sphere_vertices       = sphd.sphere_vertices [level]
+    sphere_triangles      = sphd.sphere_triangles[level]
+    number_of_vertices    = len(sphere_vertices)
+    
+    full_sphere_vertices  = []
+    full_sphere_triangles = []
+
+    for coords in vismol_object.frames:
+        for i in range(0,len(coords),3):
+            for vertice in sphere_vertices:
+                full_sphere_vertices.append(vertice+coords[i])
+                full_sphere_vertices.append(vertice+coords[i+1])
+                full_sphere_vertices.append(vertice+coords[i+2])
+
+
+    for i in range(natoms):
+        for index in sphere_triangles:
+            full_sphere_triangles.append(index+i*number_of_vertices)
+
+        
+
+    coords  = np.array(full_sphere_vertices ,dtype=np.float32)
+    indexes = np.array(full_sphere_triangles,dtype=np.uint32)
+    #print (full_sphere_vertices)
+    indexes = full_sphere_triangles
+
+    
+    vao = GL.glGenVertexArrays(1)
+    GL.glBindVertexArray(vao)
+    
+    ind_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
+    GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), indexes, GL.GL_DYNAMIC_DRAW)
+    
+    coord_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, coord_vbo)
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, coords.itemsize*int(len(coords)), coords, GL.GL_STATIC_DRAW)
+    att_position = GL.glGetAttribLocation(program, 'vert_coord')
+    GL.glEnableVertexAttribArray(att_position)
+    GL.glVertexAttribPointer(att_position, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*coords.itemsize, ctypes.c_void_p(0))
+    
+    col_vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*int(len(colors)), colors, GL.GL_STATIC_DRAW)
+    att_colors = GL.glGetAttribLocation(program, 'vert_color')
+    GL.glEnableVertexAttribArray(att_colors)
+    GL.glVertexAttribPointer(att_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*colors.itemsize, ctypes.c_void_p(0))
+    
+    #vao_list.append(vao)
+    GL.glBindVertexArray(0)
+    GL.glDisableVertexAttribArray(att_position)
+    GL.glDisableVertexAttribArray(att_colors)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+    
+    
+    vismol_object.lines_vao      = vao
+    vismol_object.line_buffers   = (ind_vbo, coord_vbo, col_vbo)
     return True
 
 def _make_gl_dots(program, vismol_object = None, bckgrnd_color= [0.0,0.0,0.0,1.0]):

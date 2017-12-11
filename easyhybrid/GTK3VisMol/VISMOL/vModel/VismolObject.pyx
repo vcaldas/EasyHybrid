@@ -33,6 +33,10 @@ from VISMOL.vModel.Chain      import Chain
 from VISMOL.vModel.Residue    import Residue
 
 
+
+
+
+
 class VismolObject:
     """ Class doc 
     
@@ -132,8 +136,13 @@ class VismolObject:
         self.ribbons_Calpha_pairs_rep   = []
         self.ribbons_Calpha_indexes_rep = []
         #-----------------------------------------------------------------
-
-
+        
+        #-----------------------#
+        #      True Spheres     #
+        #-----------------------#
+        self.sphere_vertices_full  = []
+        self.sphere_triangles_full = []
+        self.sphere_rep = None
 
 
 
@@ -157,13 +166,13 @@ class VismolObject:
         self.non_bonded_actived = False
         
         """   C Y L I N D E R S   """
-        self.cylinders_actived = False
+        self.cylinders_actived = True#False
         
         """   S P H E R E S   """
-        self.spheres_actived = False
+        self.spheres_actived = True#False
         
         """   S P H E R E S   """
-        self.dots_surface_actived = True
+        self.dots_surface_actived = False#True
         
         
         #print ('frames:     ', len(self.frames))
@@ -202,7 +211,6 @@ class VismolObject:
         self.picking_dots_vao      = None
         self.picking_dot_buffers   = None
         #-----------------------------------------------------------------
-    
     
     def generate_dot_indexes(self):
         """ Function doc

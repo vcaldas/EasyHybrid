@@ -423,10 +423,18 @@ class VisMolWidget():
                         self._draw_cylinders(visObj = visObj)
                 
                 if visObj.spheres_actived:
+                    #print (visObj.spheres_vao)
                     if visObj.spheres_vao is None:
-                        shapes._make_gl_spheres (self.spheres_program,  vismol_object = visObj)
+                        visObj.sphere_rep = shapes.SphereRepresentation(vismol_object = visObj,  level = 'level_0')
+                        visObj.sphere_rep._make_gl_true_spheres (self.spheres_program)
+                        
+                        visObj.spheres_vao      = visObj.sphere_rep.spheres_vao    
+                        visObj.spheres_buffers  = visObj.sphere_rep.spheres_buffers 
+                        
                     else:
                         self._draw_spheres(visObj = visObj, indexes = False)
+                    
+                    #print (len(visObj.sphere_rep.sphere_vertices_frames[0]))
                 
                 if visObj.dots_surface_actived:
                     if visObj.dots_surface_vao is None:
@@ -475,7 +483,83 @@ class VisMolWidget():
             GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
             GL.glUseProgram(0)
             GL.glDisable(GL.GL_DEPTH_TEST)
+        '''
+        #-------------------------------------------------------------------------------
+        #                               simpleSphere
+        #------------------------------------------------------------------------------- 
+        
+            sphere_vertices = np.array(
+              [ 0.850650787354,  0.525731086731,  0.000000000000,
+               -0.850650787354,  0.525731086731,  0.000000000000,
+               -0.850650787354, -0.525731086731,  0.000000000000,
+                0.850650787354, -0.525731086731,  0.000000000000,
+                0.525731086731,  0.000000000000,  0.850650787354,
+                0.525731086731,  0.000000000000, -0.850650787354,
+               -0.525731086731,  0.000000000000, -0.850650787354,
+               -0.525731086731,  0.000000000000,  0.850650787354,
+                0.000000000000,  0.850650787354,  0.525731086731,
+                0.000000000000, -0.850650787354,  0.525731086731,
+                0.000000000000, -0.850650787354, -0.525731086731,
+                0.000000000000,  0.850650787354, -0.525731086731],dtype=np.float32)
+            
+            sphere_triangles = np.array(
+              [ 4,     8,     7,     4,     7,     9,     5,     6,    11,     5,
+               10,     6,     0,     4,     3,     0,     3,     5,     2,     7,
+                1,     2,     1,     6,     8,     0,    11,     8,    11,     1,
+                9,    10,     3,     9,     2,    10,     8,     4,     0,    11,
+                0,     5,     4,     9,     3,     5,     3,    10,     7,     8,
+                1,     6,     1,    11,     7,     2,     9,     6,    10,     2],dtype=np.uint32)
+            
+            len_sphere_vertices = len(sphere_vertices)
+            
+            
+            full_sphere_vertices  = []
+            full_sphere_triangles = []
+            
+            for i in range(10):
+                for vertice in sphere_vertices:
+                    full_sphere_vertices.append(vertice+i)
+            
+            for i in range(10):
+                
+                for index in sphere_triangles:
+                    full_sphere_triangles.append(index+i*len_sphere_vertices)
+            
+                
+            
+            full_sphere_vertices  = np.array(full_sphere_vertices ,dtype=np.float32)
+            full_sphere_triangles = np.array(full_sphere_triangles,dtype=np.uint32)
+            #print (full_sphere_vertices)
+            
+            GL.glUseProgram(self.picking_dots_program)
+            GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+            self.load_matrices(self.picking_dots_program, visObj.model_mat)
 
+            indexes = full_sphere_triangles
+            #self._draw_picking_dots(visObj = visObj, indexes = False)
+            GL.glBindVertexArray(visObj.selection_dots_vao)
+
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.selection_dot_buffers[0])
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), 
+                            indexes, GL.GL_STATIC_DRAW)
+
+
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.selection_dot_buffers[1])
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, full_sphere_vertices.itemsize*int(len(full_sphere_vertices)), 
+                            full_sphere_vertices, GL.GL_STATIC_DRAW)
+
+            #GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_TRIANGLES, int(len(indexes)), GL.GL_UNSIGNED_INT, None)
+            GL.glBindVertexArray(0)
+
+            GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+            GL.glUseProgram(0)
+            GL.glDisable(GL.GL_DEPTH_TEST)
+        '''
+            
+        
+        
+        
         #-------------------------------------------------------------------------------
         #                               NON BONDED ATOMS
         #-------------------------------------------------------------------------------        
@@ -594,7 +678,7 @@ class VisMolWidget():
         self.non_bonded_program = self.load_shaders(vm_shader.vertex_shader_non_bonded, vm_shader.fragment_shader_non_bonded, vm_shader.geometry_shader_non_bonded)
         self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_ribbons, vm_shader.fragment_shader_ribbons, vm_shader.geometry_shader_ribbons)
         self.cylinders_program = self.load_shaders(vm_shader.vertex_shader_cylinders, vm_shader.fragment_shader_cylinders, vm_shader.geometry_shader_cylinders)
-        self.spheres_program = self.load_shaders(vm_shader.vertex_shader_spheres, vm_shader.fragment_shader_spheres, vm_shader.geometry_shader_spheres)
+        self.spheres_program = self.load_shaders(vm_shader.vertex_shader_true_spheres, vm_shader.fragment_shader_true_spheres)
         self.dots_surface_program = self.load_shaders(vm_shader.vertex_shader_dots_surface, vm_shader.fragment_shader_dots_surface, vm_shader.geometry_shader_dots_surface)
     
     def load_shaders(self, vertex, fragment, geometry=None):
@@ -842,23 +926,28 @@ class VisMolWidget():
     def _draw_spheres(self, visObj = None,  indexes = False):
         """ Function doc
         """
+        #print('here')
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glUseProgram(self.spheres_program)
         self.load_matrices(self.spheres_program, visObj.model_mat)
         self.load_fog(self.spheres_program)
         self.load_lights(self.spheres_program)
+        
         if visObj.spheres_vao is not None:
             GL.glBindVertexArray(visObj.spheres_vao)
             if self.modified_view:
                 pass
+            
             else:
                 GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.spheres_buffers[1])
-                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
-                                                    visObj.frames[self.frame], GL.GL_STATIC_DRAW)
-                if  indexes:
-                    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.spheres_buffers[2])
-                    GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
-                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.sphere_rep.coords.itemsize*int(len(visObj.sphere_rep.coords)), 
+                                                    visObj.sphere_rep.coords, GL.GL_STATIC_DRAW)
+                
+                #if  indexes:
+                #    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.spheres_buffers[2])
+                #    GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
+                
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.sphere_rep.indexes)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
