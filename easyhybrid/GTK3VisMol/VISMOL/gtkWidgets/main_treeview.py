@@ -117,8 +117,10 @@ class GtkMainTreeView():
             model.append(data)
             i +=1
             n = n + 1
+        treeView = self.builder.get_object('treeview1')
+        treeView.set_model(liststore)
         print ('load fuction finished')
-    
+        
     
     
     def on_treeview_Objects_button_release_event(self, tree, event):
