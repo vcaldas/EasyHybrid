@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 #  VismolObject.py
@@ -27,6 +27,8 @@ import time
 import os
 import multiprocessing
 #import threading
+
+import VISMOL.glCore.vismol_font as vmf
 
 from VISMOL.vModel.Atom       import Atom
 from VISMOL.vModel.Chain      import Chain
@@ -100,9 +102,10 @@ class VismolObject:
         self.editing        = False         # for translate and rotate  xyz coords 
         self.Type           = 'molecule'    # Not used yet
         self.name           = name          # 
+        self.vm_font        = vmf.VisMolFont()
         
         #-----------------------------------------------------------------
-        self.mass_center= None
+        self.mass_center = None
         #-----------------------------------------------------------------
 
        
@@ -171,8 +174,11 @@ class VismolObject:
         """   S P H E R E S   """
         self.spheres_actived = True#False
         
-        """   S P H E R E S   """
+        """   D O T S  S U R F A C E   """
         self.dots_surface_actived = False#True
+        
+        """   T E X T   """
+        self.text_activated = True
         
         
         #print ('frames:     ', len(self.frames))

@@ -164,7 +164,7 @@ class VisMolWidget():
             self.picking_x = mouse_x
             self.picking_y = mouse_y
             self.picking = True
-            self.parent_widget.queue_draw()
+            self.queue_draw()
             #self.queue_draw()
         if right:
             pass
@@ -189,7 +189,7 @@ class VisMolWidget():
                 self.picking_y = mouse_y
                 self.picking =  True
                 self.button = 1
-                self.parent_widget.queue_draw()
+                self.queue_draw()
                 #self.queue_draw()
             if middle:
                 if self.atom_picked is not None:
@@ -205,7 +205,7 @@ class VisMolWidget():
                     self.show_selection_box = False
                     self.selection_box.start = None
                     self.selection_box.end = None
-                    self.parent_widget.queue_draw()
+                    self.queue_draw()
         return True
     
     def mouse_motion(self, mouse_x, mouse_y):
@@ -228,7 +228,7 @@ class VisMolWidget():
             changed = self._zoom_view(dy)
         if changed:
             self.dragging = True
-            self.parent_widget.queue_draw()
+            self.queue_draw()
             #self.queue_draw()
         return True
     
@@ -275,7 +275,7 @@ class VisMolWidget():
                 self.glcamera.set_projection_matrix(mop.my_glPerspectivef(self.glcamera.field_of_view, 
                         self.glcamera.viewport_aspect_ratio, self.glcamera.min_znear, self.glcamera.z_far))
             self.glcamera.update_fog()
-        self.parent_widget.queue_draw()
+        self.queue_draw()
         #self.queue_draw()
         return True
     
@@ -442,11 +442,12 @@ class VisMolWidget():
                     else:
                         self._draw_dots_surface(visObj = visObj, indexes = False)
                 
-                #if visObj.circles_actived:
-                #    if visObj.circles_vao is None:
-                #        shapes._make_gl_circles(self.circles_program, vismol_object = visObj)
-                #    else:
-                #        self._draw_circles(visObj = visObj, indexes = False)
+                if visObj.text_activated:
+                    if visObj.vm_font.vao is None:
+                        visObj.vm_font.make_freetype_font()
+                        visObj.vm_font.make_freetype_texture(self.freetype_program)
+                    else:
+                        self._draw_freetype(visObj = visObj)
         
         # Selection 
         #-------------------------------------------------------------------------------
@@ -672,14 +673,15 @@ class VisMolWidget():
         except:
             print('OpenGL major version not found')
         self.dots_program = self.load_shaders(vm_shader.vertex_shader_dots, vm_shader.fragment_shader_dots)
-        self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
+        self.dots_surface_program = self.load_shaders(vm_shader.vertex_shader_dots_surface, vm_shader.fragment_shader_dots_surface, vm_shader.geometry_shader_dots_surface)
+        self.freetype_program = self.load_shaders(vm_shader.vertex_shader_freetype, vm_shader.fragment_shader_freetype, vm_shader.geometry_shader_freetype)
         self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
-        self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
         self.non_bonded_program = self.load_shaders(vm_shader.vertex_shader_non_bonded, vm_shader.fragment_shader_non_bonded, vm_shader.geometry_shader_non_bonded)
+        self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
         self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_ribbons, vm_shader.fragment_shader_ribbons, vm_shader.geometry_shader_ribbons)
         self.cylinders_program = self.load_shaders(vm_shader.vertex_shader_cylinders, vm_shader.fragment_shader_cylinders, vm_shader.geometry_shader_cylinders)
+        #self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
         self.spheres_program = self.load_shaders(vm_shader.vertex_shader_true_spheres, vm_shader.fragment_shader_true_spheres)
-        self.dots_surface_program = self.load_shaders(vm_shader.vertex_shader_dots_surface, vm_shader.fragment_shader_dots_surface, vm_shader.geometry_shader_dots_surface)
     
     def load_shaders(self, vertex, fragment, geometry=None):
         """ Here the shaders are loaded and compiled to an OpenGL program. By default
@@ -930,8 +932,8 @@ class VisMolWidget():
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glUseProgram(self.spheres_program)
         self.load_matrices(self.spheres_program, visObj.model_mat)
-        self.load_fog(self.spheres_program)
-        self.load_lights(self.spheres_program)
+        #self.load_fog(self.spheres_program)
+        #self.load_lights(self.spheres_program)
         
         if visObj.spheres_vao is not None:
             GL.glBindVertexArray(visObj.spheres_vao)
@@ -947,7 +949,7 @@ class VisMolWidget():
                 #    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.spheres_buffers[2])
                 #    GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
                 
-                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.sphere_rep.indexes)), GL.GL_UNSIGNED_INT, None)
+                GL.glDrawElements(GL.GL_TRIANGLES, int(len(visObj.sphere_rep.indexes)), GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
@@ -959,7 +961,7 @@ class VisMolWidget():
         GL.glUseProgram(self.dots_surface_program)
         self.load_matrices(self.dots_surface_program, visObj.model_mat)
         self.load_fog(self.dots_surface_program)
-        self.load_lights(self.dots_surface_program)
+        #self.load_lights(self.dots_surface_program)
         GL.glPointSize(5)
         if visObj.dots_surface_vao is not None:
             GL.glBindVertexArray(visObj.dots_surface_vao)
@@ -1057,7 +1059,7 @@ class VisMolWidget():
         #GL.glDisable(GL.GL_BLEND)
         GL.glDisable(GL.GL_DEPTH_TEST)
     
-
+    
     
     def _draw_lines(self, visObj = None):
         """ Function doc
@@ -1121,7 +1123,7 @@ class VisMolWidget():
         #GL.glDisable(GL.GL_BLEND)
         GL.glDisable(GL.GL_DEPTH_TEST)
     
-
+    
     def _draw_lines2(self, visObj = None):
         """ Doesn't work  - 
         """
@@ -1181,6 +1183,39 @@ class VisMolWidget():
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    
+    def _draw_freetype(self, visObj = None):
+        """ Function doc """
+        #GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        GL.glUseProgram(self.freetype_program)
+        visObj.vm_font.load_matrices(self.freetype_program, np.copy(visObj.model_mat), self.glcamera.view_matrix, self.glcamera.projection_matrix)
+        visObj.vm_font.load_font_params(self.freetype_program)
+        GL.glBindVertexArray(visObj.vm_font.vao)
+        texto = visObj.name
+        point = np.array(visObj.mass_center,np.float32)
+        x,y,z = point
+        GL.glBindTexture(GL.GL_TEXTURE_2D, visObj.vm_font.texture_id)
+        for i,c in enumerate(texto):
+            c_id = ord(c)
+            x = c_id%16
+            y = c_id//16-2
+            xyz_pos = np.array([point[0]+i*visObj.vm_font.char_width, point[1], point[2]],np.float32)
+            uv_coords = np.array([x*visObj.vm_font.text_u, y*visObj.vm_font.text_v, (x+1)*visObj.vm_font.text_u, (y+1)*visObj.vm_font.text_v],np.float32)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.vm_font.vbos[0])
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, xyz_pos.itemsize*len(xyz_pos), xyz_pos, GL.GL_DYNAMIC_DRAW)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.vm_font.vbos[1])
+            GL.glBufferData(GL.GL_ARRAY_BUFFER, uv_coords.itemsize*len(uv_coords), uv_coords, GL.GL_DYNAMIC_DRAW)
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+            GL.glDrawArrays(GL.GL_POINTS, 0, 1)
+        GL.glDisable(GL.GL_BLEND)
+        #GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+    
     
 
 
@@ -1284,13 +1319,15 @@ class VisMolWidget():
                 to_move = unit_vec * step
                 for visObj in self.vismolSession.vismol_objects:
                     visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -to_move)
+                # WARNING: Method only works with GTK!!!
                 self.parent_widget.get_window().invalidate_rect(None, False)
                 self.parent_widget.get_window().process_updates(False)
+                # WARNING: Method only works with GTK!!!
                 time.sleep(self.vismolSession.gl_parameters['center_on_coord_sleep_time'])
             for visObj in self.vismolSession.vismol_objects:
                 model_pos = visObj.model_mat.T.dot(pos)[:3]
                 visObj.model_mat = mop.my_glTranslatef(visObj.model_mat, -model_pos)
-            self.parent_widget.queue_draw()
+            self.queue_draw()
         return True
     
     def _print_matrices(self):
@@ -1300,4 +1337,8 @@ class VisMolWidget():
         for visObj in self.vismolSession.vismol_objects:
             print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
             print(visObj.model_mat,"<== visObj model_mat")
+    
+    def queue_draw(self):
+        """ Function doc """
+        self.parent_widget.queue_draw()
     

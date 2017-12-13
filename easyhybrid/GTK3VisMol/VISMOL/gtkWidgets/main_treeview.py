@@ -202,39 +202,41 @@ class GtkMainTreeView():
 
         
         if widget == self.builder.get_object('menu_show_lines'):
-            self.vismolSession.vismol_objects[(int(obj_index)-1)].lines_actived     =  True
+            visObj.lines_actived     =  True
             #self.vismolSession._show_lines (visObj = visObj)
 
 
         if widget == self.builder.get_object('menu_show_sticks'):
-            self.vismolSession.vismol_objects[(int(obj_index)-1)].cylinders_actived =  True
+            visObj.cylinders_actived =  True
 
         if widget == self.builder.get_object('menu_show_spheres'):
-            self.vismolSession.vismol_objects[(int(obj_index)-1)].spheres_actived   =  True
+            visObj.spheres_actived   =  True
 
         if widget == self.builder.get_object('menu_show_ribbons'):
-            self.vismolSession.vismol_objects[(int(obj_index)-1)].ribbons_actived   =  True
+            visObj.ribbons_actived   =  True
 
         if widget == self.builder.get_object('menu_show_dots'):
-            self.vismolSession.vismol_objects[(int(obj_index)-1)].dots_actived      =  True
+            visObj.dots_actived      =  True
+            self.vismolSession.glwidget.vm_widget.queue_draw()
 
 
         
         
         if widget == self.builder.get_object('menu_hide_lines'):
-            self.vismolSession.vismol_objects[(int(obj_index)-1)].lines_actived     = False
+            visObj.lines_actived     = False
             #self.vismolSession._hide_lines (visObj = visObj)
 
         if widget == self.builder.get_object('menu_hide_sticks'):
-            self.vismolSession.vismol_objects[(int(obj_index)-1)].cylinders_actived = False
+            visObj.cylinders_actived = False
 
         if widget == self.builder.get_object('menu_hide_spheres'):
-            self.vismolSession.vismol_objects[(int(obj_index)-1)].spheres_actived   = False
+            visObj.spheres_actived   = False
 
         if widget == self.builder.get_object('menu_hide_ribbons'):
-            self.vismolSession.vismol_objects[(int(obj_index)-1)].ribbons_actived   = False
+            visObj.ribbons_actived   = False
             
         if widget == self.builder.get_object('menu_hide_dots'):
-            self.vismolSession.vismol_objects[(int(obj_index)-1)].dots_actived      = False
-
+            visObj.dots_actived      = False
+            self.vismolSession.glwidget.vm_widget.queue_draw()
+        
 
