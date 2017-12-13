@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.18.3 -->
 <interface>
-  <requires lib="gtk+" version="3.12"/>
+  <!-- interface-requires gtk+ 3.12 -->
+  <!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkListStore" id="liststore1">
     <columns>
       <!-- column-name gboolean1 -->
@@ -27,9 +27,6 @@
         <property name="model">liststore1</property>
         <property name="search_column">0</property>
         <signal name="button-release-event" handler="on_treeview_Objects_button_release_event" swapped="no"/>
-        <child internal-child="selection">
-          <object class="GtkTreeSelection" id="treeview-selection4"/>
-        </child>
         <child>
           <object class="GtkTreeViewColumn" id="treeviewcolumn1">
             <child>
@@ -134,8 +131,8 @@
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Lines</property>
                 <property name="use_underline">True</property>
-                <signal name="activate" handler="on_treemenu_item_selection" swapped="no"/>
                 <signal name="activate-item" handler="on_treemenu_item_selection" swapped="no"/>
+                <signal name="activate" handler="on_treemenu_item_selection" swapped="no"/>
                 <signal name="button-release-event" handler="on_treemenu_item_selection" swapped="no"/>
               </object>
             </child>
@@ -156,6 +153,7 @@
                 <property name="label" translatable="yes">Spheres</property>
                 <property name="use_underline">True</property>
                 <signal name="activate" handler="on_treemenu_item_selection" swapped="no"/>
+                <signal name="button-release-event" handler="on_treemenu_item_selection" swapped="no"/>
               </object>
             </child>
             <child>
@@ -165,6 +163,7 @@
                 <property name="label" translatable="yes">Ribbons</property>
                 <property name="use_underline">True</property>
                 <signal name="activate" handler="on_treemenu_item_selection" swapped="no"/>
+                <signal name="button-release-event" handler="on_treemenu_item_selection" swapped="no"/>
               </object>
             </child>
             <child>
@@ -174,6 +173,7 @@
                 <property name="label" translatable="yes">Dots</property>
                 <property name="use_underline">True</property>
                 <signal name="activate" handler="on_treemenu_item_selection" swapped="no"/>
+                <signal name="button-release-event" handler="on_treemenu_item_selection" swapped="no"/>
               </object>
             </child>
           </object>
@@ -217,6 +217,7 @@
                 <property name="label" translatable="yes">Spheres</property>
                 <property name="use_underline">True</property>
                 <signal name="activate" handler="on_treemenu_item_selection" swapped="no"/>
+                <signal name="button-release-event" handler="on_treemenu_item_selection" swapped="no"/>
               </object>
             </child>
             <child>
@@ -226,6 +227,7 @@
                 <property name="label" translatable="yes">Ribbons</property>
                 <property name="use_underline">True</property>
                 <signal name="activate" handler="on_treemenu_item_selection" swapped="no"/>
+                <signal name="button-release-event" handler="on_treemenu_item_selection" swapped="no"/>
               </object>
             </child>
             <child>
@@ -236,6 +238,7 @@
                 <property name="use_underline">True</property>
                 <signal name="activate" handler="on_treemenu_item_selection" swapped="no"/>
                 <signal name="select" handler="on_treemenu_item_selection" swapped="no"/>
+                <signal name="button-release-event" handler="on_treemenu_item_selection" swapped="no"/>
               </object>
             </child>
           </object>
