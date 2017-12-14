@@ -931,7 +931,7 @@ out vec4 geom_coord;
 out vec4 geom_text_uv;
 
 void main(){
-    geom_coord = view_mat * model_mat * vec4(vert_coord.xy, 0.0, 1.0);
+    geom_coord = view_mat * model_mat * vec4(vert_coord, 1.0);
     geom_text_uv = vert_uv;
 }
 """

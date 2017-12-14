@@ -52,8 +52,6 @@ class VisMolFont():
     def make_freetype_font(self):
         """ Function doc
         """
-        import os
-        os.system('pwd')
         face = ft.Face(self.font_file)
         face.set_char_size(self.char_res*64)
         # Determine largest glyph size
@@ -120,7 +118,8 @@ class VisMolFont():
     
     def load_matrices(self, program, model_mat, view_mat, proj_mat):
         """ Function doc """
-        model_mat[:3,:3] = np.identity(3)
+        #model_mat[:3,:3] = np.identity(3)
+        #print(model_mat,'<- model_mat text')
         model = GL.glGetUniformLocation(program, 'model_mat')
         GL.glUniformMatrix4fv(model, 1, GL.GL_FALSE, model_mat)
         view = GL.glGetUniformLocation(program, 'view_mat')

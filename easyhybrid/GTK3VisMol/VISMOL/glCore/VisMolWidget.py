@@ -299,14 +299,14 @@ class VisMolWidget():
                         rot_mat = mop.my_glRotatef(np.identity(4), angle, np.array([0.0, 0.0, dy]))
             else:
                 rot_mat = mop.my_glRotatef(np.identity(4), angle, np.array([-dy, -dx, 0.0]))
-            if not self.editing_mols:
-                self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, rot_mat)
-                for visObj in self.vismolSession.vismol_objects:
-                    visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
-            else:
+            if self.editing_mols:
                 for visObj in self.vismolSession.vismol_objects:
                     if visObj.editing:
                         visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
+            else:
+                self.model_mat = mop.my_glMultiplyMatricesf(self.model_mat, rot_mat)
+                for visObj in self.vismolSession.vismol_objects:
+                    visObj.model_mat = mop.my_glMultiplyMatricesf(visObj.model_mat, rot_mat)
             # Axis operations, this code only affects the gizmo axis
             if not self.editing_mols:
                 self.axis.model_mat = mop.my_glTranslatef(self.axis.model_mat, -self.axis.zrp)
@@ -1192,12 +1192,12 @@ class VisMolWidget():
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         GL.glUseProgram(self.freetype_program)
+        #print(self.model_mat,'<-- model_mat widget')
         visObj.vm_font.load_matrices(self.freetype_program, np.copy(visObj.model_mat), self.glcamera.view_matrix, self.glcamera.projection_matrix)
         visObj.vm_font.load_font_params(self.freetype_program)
         GL.glBindVertexArray(visObj.vm_font.vao)
         texto = visObj.name
         point = np.array(visObj.mass_center,np.float32)
-        x,y,z = point
         GL.glBindTexture(GL.GL_TEXTURE_2D, visObj.vm_font.texture_id)
         for i,c in enumerate(texto):
             c_id = ord(c)
