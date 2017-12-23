@@ -1187,17 +1187,17 @@ class VisMolWidget():
     
     def _draw_freetype(self, visObj = None):
         """ Function doc """
-        #GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         GL.glUseProgram(self.freetype_program)
-        #print(self.model_mat,'<-- model_mat widget')
-        visObj.vm_font.load_matrices(self.freetype_program, np.copy(visObj.model_mat), self.glcamera.view_matrix, self.glcamera.projection_matrix)
+        visObj.vm_font.load_matrices(self.freetype_program, self.glcamera.view_matrix, self.glcamera.projection_matrix)
         visObj.vm_font.load_font_params(self.freetype_program)
         GL.glBindVertexArray(visObj.vm_font.vao)
         texto = visObj.name
         point = np.array(visObj.mass_center,np.float32)
+        point = np.array((point[0],point[1],point[2],1),np.float32)
+        point = np.dot(point, visObj.model_mat)
         GL.glBindTexture(GL.GL_TEXTURE_2D, visObj.vm_font.texture_id)
         for i,c in enumerate(texto):
             c_id = ord(c)
@@ -1212,7 +1212,6 @@ class VisMolWidget():
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
             GL.glDrawArrays(GL.GL_POINTS, 0, 1)
         GL.glDisable(GL.GL_BLEND)
-        #GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
     

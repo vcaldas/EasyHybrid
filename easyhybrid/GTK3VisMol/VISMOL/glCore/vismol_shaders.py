@@ -921,7 +921,6 @@ void main(){
 vertex_shader_freetype =  """
 #version 330
 
-uniform mat4 model_mat;
 uniform mat4 view_mat;
 
 in vec3 vert_coord;
@@ -931,7 +930,7 @@ out vec4 geom_coord;
 out vec4 geom_text_uv;
 
 void main(){
-    geom_coord = view_mat * model_mat * vec4(vert_coord, 1.0);
+    geom_coord = view_mat * vec4(vert_coord, 1.0);
     geom_text_uv = vert_uv;
 }
 """
