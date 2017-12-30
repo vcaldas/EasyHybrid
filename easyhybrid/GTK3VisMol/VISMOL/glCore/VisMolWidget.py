@@ -422,20 +422,6 @@ class VisMolWidget():
                     else:
                         self._draw_cylinders(visObj = visObj)
                 
-                if visObj.spheres_actived:
-                    #print (visObj.spheres_vao)
-                    if visObj.spheres_vao is None:
-                        visObj.sphere_rep = shapes.SphereRepresentation(vismol_object = visObj,  level = 'level_0')
-                        visObj.sphere_rep._make_gl_true_spheres (self.spheres_program)
-                        
-                        visObj.spheres_vao      = visObj.sphere_rep.spheres_vao    
-                        visObj.spheres_buffers  = visObj.sphere_rep.spheres_buffers 
-                        
-                    else:
-                        self._draw_spheres(visObj = visObj, indexes = False)
-                    
-                    #print (len(visObj.sphere_rep.sphere_vertices_frames[0]))
-                
                 if visObj.dots_surface_actived:
                     if visObj.dots_surface_vao is None:
                         shapes._make_gl_dots_surface (self.dots_surface_program,  vismol_object = visObj)
@@ -448,7 +434,15 @@ class VisMolWidget():
                         visObj.vm_font.make_freetype_texture(self.freetype_program)
                     else:
                         self._draw_freetype(visObj = visObj)
-        
+                
+                if visObj.spheres_actived:
+                    if visObj.sphere_rep is None:
+                        visObj.sphere_rep = shapes.SphereRepresentation(vismol_object = visObj, level = 'level_1')
+                        visObj.sphere_rep._make_gl_true_spheres(self.spheres_program)
+                    else:
+                        self._draw_spheres(visObj = visObj, indexes = False)
+                    
+                
         # Selection 
         #-------------------------------------------------------------------------------
         for visObj in self.vismolSession.selections[self.vismolSession.current_selection].selected_objects:
@@ -928,20 +922,19 @@ class VisMolWidget():
     def _draw_spheres(self, visObj = None,  indexes = False):
         """ Function doc
         """
-        #print('here')
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glUseProgram(self.spheres_program)
         self.load_matrices(self.spheres_program, visObj.model_mat)
-        #self.load_fog(self.spheres_program)
-        #self.load_lights(self.spheres_program)
+        self.load_lights(self.spheres_program)
+        self.load_fog(self.spheres_program)
         
-        if visObj.spheres_vao is not None:
-            GL.glBindVertexArray(visObj.spheres_vao)
+        if visObj.sphere_rep.spheres_vao is not None:
+            GL.glBindVertexArray(visObj.sphere_rep.spheres_vao)
             if self.modified_view:
                 pass
             
             else:
-                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.spheres_buffers[1])
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.sphere_rep.spheres_buffers[1])
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.sphere_rep.coords.itemsize*int(len(visObj.sphere_rep.coords)), 
                                                     visObj.sphere_rep.coords, GL.GL_STATIC_DRAW)
                 
@@ -949,7 +942,7 @@ class VisMolWidget():
                 #    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.spheres_buffers[2])
                 #    GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.color_indexes.itemsize*int(len(visObj.color_indexes)), visObj.color_indexes, GL.GL_STATIC_DRAW)
                 
-                GL.glDrawElements(GL.GL_TRIANGLES, int(len(visObj.sphere_rep.indexes)), GL.GL_UNSIGNED_INT, None)
+                GL.glDrawElements(GL.GL_TRIANGLES, visObj.sphere_rep.triangles, GL.GL_UNSIGNED_INT, None)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
         GL.glDisable(GL.GL_DEPTH_TEST)
