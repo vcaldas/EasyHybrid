@@ -35,6 +35,7 @@ import VISMOL.glCore.sphere_data as sph_d
 import VISMOL.glCore.vismol_shaders as vm_shader
 import VISMOL.glCore.matrix_operations as mop
 import VISMOL.glCore.selection_box as sb
+import VISMOL.glCore.sphere_representation as sph_r
 
 class VisMolWidget():
     
@@ -428,6 +429,13 @@ class VisMolWidget():
                     else:
                         self._draw_dots_surface(visObj = visObj, indexes = False)
                 
+                if visObj.spheres_actived:
+                    if visObj.sphere_rep is None:
+                        visObj.sphere_rep = sph_r.SphereRepresentation(vismol_object = visObj, level = 'level_1')
+                        visObj.sphere_rep._make_gl_true_spheres(self.spheres_program)
+                    else:
+                        self._draw_spheres(visObj = visObj, indexes = False)
+                
                 if visObj.text_activated:
                     if visObj.vm_font.vao is None:
                         visObj.vm_font.make_freetype_font()
@@ -435,13 +443,6 @@ class VisMolWidget():
                     else:
                         self._draw_freetype(visObj = visObj)
                 
-                if visObj.spheres_actived:
-                    if visObj.sphere_rep is None:
-                        visObj.sphere_rep = shapes.SphereRepresentation(vismol_object = visObj, level = 'level_1')
-                        visObj.sphere_rep._make_gl_true_spheres(self.spheres_program)
-                    else:
-                        self._draw_spheres(visObj = visObj, indexes = False)
-                    
                 
         # Selection 
         #-------------------------------------------------------------------------------
@@ -927,7 +928,6 @@ class VisMolWidget():
         self.load_matrices(self.spheres_program, visObj.model_mat)
         self.load_lights(self.spheres_program)
         self.load_fog(self.spheres_program)
-        
         if visObj.sphere_rep.spheres_vao is not None:
             GL.glBindVertexArray(visObj.sphere_rep.spheres_vao)
             if self.modified_view:
