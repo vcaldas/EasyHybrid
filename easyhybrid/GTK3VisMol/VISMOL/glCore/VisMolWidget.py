@@ -432,7 +432,7 @@ class VisMolWidget():
                 if visObj.spheres_actived:
                     if visObj.sphere_rep is None:
                         visObj.sphere_rep = sph_r.SphereRepresentation(vismol_object = visObj, level = 'level_1')
-                        visObj.sphere_rep._make_gl_true_spheres(self.spheres_program)
+                        visObj.sphere_rep._make_gl_spheres(self.spheres_program)
                     else:
                         self._draw_spheres(visObj = visObj, indexes = False)
                 
@@ -673,10 +673,9 @@ class VisMolWidget():
         self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
         self.non_bonded_program = self.load_shaders(vm_shader.vertex_shader_non_bonded, vm_shader.fragment_shader_non_bonded, vm_shader.geometry_shader_non_bonded)
         self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
-        self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_ribbons, vm_shader.fragment_shader_ribbons, vm_shader.geometry_shader_ribbons)
+        self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_cylinders, vm_shader.fragment_shader_cylinders, vm_shader.geometry_shader_cylinders)
         self.cylinders_program = self.load_shaders(vm_shader.vertex_shader_cylinders, vm_shader.fragment_shader_cylinders, vm_shader.geometry_shader_cylinders)
-        #self.circles_program = self.load_shaders(vm_shader.vertex_shader_circles, vm_shader.fragment_shader_circles, vm_shader.geometry_shader_circles)
-        self.spheres_program = self.load_shaders(vm_shader.vertex_shader_true_spheres, vm_shader.fragment_shader_true_spheres)
+        self.spheres_program = self.load_shaders(vm_shader.vertex_shader_spheres, vm_shader.fragment_shader_spheres)
     
     def load_shaders(self, vertex, fragment, geometry=None):
         """ Here the shaders are loaded and compiled to an OpenGL program. By default
