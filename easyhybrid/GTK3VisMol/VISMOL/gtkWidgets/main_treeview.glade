@@ -211,7 +211,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="menu_hide_Spheres">
+              <object class="GtkMenuItem" id="menu_hide_spheres">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Spheres</property>
