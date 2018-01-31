@@ -32,6 +32,7 @@ class Atom:
 
         self.atom_id = atom_id        # An unique number
         self.color   = at.get_color    (name)
+        self.color_id = None
         #self.color.append(0.0)  
 
         self.col_rgb      = at.get_color_rgb(name)

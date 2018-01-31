@@ -32,23 +32,24 @@ import VISMOL.glCore.sphere_data as sphd
 class SphereRepresentation:
     """ Class doc """
     
-    def __init__(self, vismol_object = None, level = 'level_0'):
+    def __init__(self, vismol_object = None, level = 'level_0', scale = 1.0):
         """ Class initialiser """
         self.vismol_object = vismol_object
         self.level = level
+        self.scale = scale
         self.number_of_frames = 0
         self.coords = None
         self.colors = None
         self.centers = None
         self.indexes = None
     
-    def _make_gl_spheres(self, program):
+    def _create_sphere_data(self):
         """ Function doc """
         init = time.time()
+        cdef Py_ssize_t a, i, qtty, elems, offset, inds_e
         qtty = int(len(self.vismol_object.atoms))
         nucleus = [0.0, 0.0, 0.0]*qtty
         colores = [0.0, 0.0, 0.0]*qtty
-        cdef Py_ssize_t a, i
         coords = sphd.sphere_vertices[self.level]*qtty
         centers = sphd.sphere_vertices[self.level]*qtty
         colors = sphd.sphere_vertices[self.level]*qtty
@@ -60,9 +61,9 @@ class SphereRepresentation:
             colors[a*offset:(a+1)*offset] = [atom.color[0],atom.color[1],atom.color[2]]*elems
             centers[a*offset:(a+1)*offset] = [atom.pos[0],atom.pos[1],atom.pos[2]]*elems
             for i in range(elems):
-                coords[a*offset+i*3] *= atom.radius
-                coords[a*offset+i*3+1] *= atom.radius
-                coords[a*offset+i*3+2] *= atom.radius
+                coords[a*offset+i*3] *= atom.radius * self.scale
+                coords[a*offset+i*3+1] *= atom.radius * self.scale
+                coords[a*offset+i*3+2] *= atom.radius * self.scale
                 coords[a*offset+i*3] += atom.pos[0]
                 coords[a*offset+i*3+1] += atom.pos[1]
                 coords[a*offset+i*3+2] += atom.pos[2]
@@ -73,45 +74,40 @@ class SphereRepresentation:
         self.centers = np.array(centers, dtype=np.float32)
         self.colors = np.array(colors, dtype=np.float32)
         self.indexes = indexes
-        
-        #init = time.time()
-        #qtty = int(len(self.vismol_object.atoms))
-        #nucleus = [0.0, 0.0, 0.0]*qtty
-        #colores = [0.0, 0.0, 0.0]*qtty
-        #cdef Py_ssize_t a, i, j
-        #for a,atom in enumerate(self.vismol_object.atoms):
-            #nucleus[a*3] = atom.pos[0]
-            #nucleus[a*3+1] = atom.pos[1]
-            #nucleus[a*3+2] = atom.pos[2]
-            #colores[a*3] = atom.color[0]
-            #colores[a*3+1] = atom.color[1]
-            #colores[a*3+2] = atom.color[2]
-        #end = time.time()
-        #print('Time used creating nucleus and colors:', end-init)
-        #init = time.time()
-        #for i,atom in enumerate(self.vismol_object.atoms):
-            #crds = np.copy(sphd.sphere_vertices[self.level])
-            #inds = np.copy(sphd.sphere_triangles[self.level])
-            #offset = int(len(crds)/3)
-            #cols = np.array(colores[i*3:(i+1)*3]*offset, dtype=np.float32)
-            #cnts = np.array(nucleus[i*3:(i+1)*3]*offset, dtype=np.float32)
-            #for j in range(offset):
-                #crds[j*3] = crds[j*3]*atom.radius + nucleus[i*3]
-                #crds[j*3+1] = crds[j*3+1]*atom.radius + nucleus[i*3+1]
-                #crds[j*3+2] = crds[j*3+2]*atom.radius + nucleus[i*3+2]
-            #inds += i*offset
-            #self.coords = np.concatenate((self.coords, crds))
-            #self.centers = np.concatenate((self.centers, cnts))
-            #self.colors = np.concatenate((self.colors, cols))
-            #self.indexes = np.concatenate((self.indexes, inds))
-        #end = time.time()
-        #print('Time used creating vertices and calculating:', end-init)
-        
-        #self.coords = np.array(coords, dtype=np.float32)
-        #self.centers = np.array(centers, dtype=np.float32)
-        #self.colors = np.array(colors, dtype=np.float32)
-        #self.indexes = np.array(indexes, dtype=np.uint32)
-        
+        return True
+    
+    def _create_sel_sphere_data(self, level):
+        """ Function doc """
+        init = time.time()
+        cdef Py_ssize_t a, i, qtty, elems, offset, inds_e
+        qtty = int(len(self.vismol_object.atoms))
+        nucleus = [0.0, 0.0, 0.0]*qtty
+        colores = [0.0, 0.0, 0.0]*qtty
+        coords = sphd.sphere_vertices[level]*qtty
+        colors = sphd.sphere_vertices[level]*qtty
+        indexes = np.array(sphd.sphere_triangles[level]*qtty, dtype=np.uint32)
+        elems = int(len(sphd.sphere_vertices[level])/3)
+        offset = int(len(sphd.sphere_vertices[level]))
+        inds_e = int(len(sphd.sphere_triangles[level]))
+        for a,atom in enumerate(self.vismol_object.atoms):
+            colors[a*offset:(a+1)*offset] = [atom.color_id[0],atom.color_id[1],atom.color_id[2]]*elems
+            for i in range(elems):
+                coords[a*offset+i*3] *= atom.radius * self.scale
+                coords[a*offset+i*3+1] *= atom.radius * self.scale
+                coords[a*offset+i*3+2] *= atom.radius * self.scale
+                coords[a*offset+i*3] += atom.pos[0]
+                coords[a*offset+i*3+1] += atom.pos[1]
+                coords[a*offset+i*3+2] += atom.pos[2]
+            indexes[a*inds_e:(a+1)*inds_e] += a*elems
+        end = time.time()
+        print('Time used creating nucleus, vertices and colors for selection:', end-init)
+        self.sel_coords = np.array(coords, dtype=np.float32)
+        self.sel_colors = np.array(colors, dtype=np.float32)
+        self.sel_indexes = indexes
+        return True
+    
+    def _make_gl_spheres(self, program):
+        """ Function doc """
         vertex_array_object = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(vertex_array_object)
         
@@ -148,5 +144,37 @@ class SphereRepresentation:
         self.spheres_vao = vertex_array_object
         self.spheres_buffers = (ind_vbo, coord_vbo, col_vbo)
         self.triangles = int(len(self.indexes))
+        return True
+    
+    def _make_sel_gl_spheres(self, program):
+        """ Function doc """
+        vertex_array_object = GL.glGenVertexArrays(1)
+        GL.glBindVertexArray(vertex_array_object)
+        
+        ind_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, ind_vbo)
+        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.sel_indexes.itemsize*int(len(self.sel_indexes)), self.sel_indexes, GL.GL_DYNAMIC_DRAW)
+        
+        coord_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, coord_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.sel_coords.itemsize*len(self.sel_coords), self.sel_coords, GL.GL_STATIC_DRAW)
+        gl_coord = GL.glGetAttribLocation(program, 'vert_coord')
+        GL.glEnableVertexAttribArray(gl_coord)
+        GL.glVertexAttribPointer(gl_coord, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.sel_coords.itemsize, ctypes.c_void_p(0))
+        
+        col_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, col_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.sel_colors.itemsize*len(self.sel_colors), self.sel_colors, GL.GL_STATIC_DRAW)
+        gl_colors = GL.glGetAttribLocation(program, 'vert_color')
+        GL.glEnableVertexAttribArray(gl_colors)
+        GL.glVertexAttribPointer(gl_colors, 3, GL.GL_FLOAT, GL.GL_FALSE, 3*self.sel_colors.itemsize, ctypes.c_void_p(0))
+        
+        GL.glBindVertexArray(0)
+        GL.glDisableVertexAttribArray(gl_coord)
+        GL.glDisableVertexAttribArray(gl_colors)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+        self.sel_spheres_vao = vertex_array_object
+        self.sel_spheres_buffers = (ind_vbo, coord_vbo, col_vbo)
+        self.sel_triangles = int(len(self.indexes))
         return True
     

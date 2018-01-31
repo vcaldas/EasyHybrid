@@ -166,7 +166,6 @@ class VisMolWidget():
             self.picking_y = mouse_y
             self.picking = True
             self.queue_draw()
-            #self.queue_draw()
         if right:
             pass
         return True
@@ -177,21 +176,26 @@ class VisMolWidget():
         
         """
         button_number = int(event.button)
-        
         left   = int(button_number) == 1
         middle = int(button_number) == 2
         right  = int(button_number) == 3
         self.mouse_rotate = False
         self.mouse_zoom = False
         self.mouse_pan = False
-        if not self.dragging:
+        if self.dragging:
+            if left:
+                if self.shift:
+                    self.show_selection_box = False
+                    self.selection_box.start = None
+                    self.selection_box.end = None
+                    self.queue_draw()
+        else:
             if left:
                 self.picking_x = mouse_x
                 self.picking_y = mouse_y
-                self.picking =  True
+                self.picking = True
                 self.button = 1
                 self.queue_draw()
-                #self.queue_draw()
             if middle:
                 if self.atom_picked is not None:
                     self.button = 2
@@ -200,13 +204,6 @@ class VisMolWidget():
             if right:
                 self.button = 3
                 self.parent_widget.glMenu.open_gl_menu(event = event)
-        else:
-            if left:
-                if self.shift:
-                    self.show_selection_box = False
-                    self.selection_box.start = None
-                    self.selection_box.end = None
-                    self.queue_draw()
         return True
     
     def mouse_motion(self, mouse_x, mouse_y):
@@ -230,7 +227,6 @@ class VisMolWidget():
         if changed:
             self.dragging = True
             self.queue_draw()
-            #self.queue_draw()
         return True
     
     def mouse_scroll(self, direction):
@@ -277,7 +273,6 @@ class VisMolWidget():
                         self.glcamera.viewport_aspect_ratio, self.glcamera.min_znear, self.glcamera.z_far))
             self.glcamera.update_fog()
         self.queue_draw()
-        #self.queue_draw()
         return True
     
     def _rotate_view(self, dx, dy, x, y):
@@ -385,7 +380,8 @@ class VisMolWidget():
             self.shader_flag = False
         
         if self.picking:
-            self._pick()
+            #self._pick()
+            self._pick2()
         
         GL.glClearColor(self.bckgrnd_color[0],self.bckgrnd_color[1], self.bckgrnd_color[2],self.bckgrnd_color[3])
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
@@ -417,11 +413,11 @@ class VisMolWidget():
                     else:
                         self._draw_non_bonded(visObj = visObj)
                 
-                if visObj.cylinders_actived:
-                    if visObj.cylinders_vao is None:
-                        shapes._make_gl_cylinders(self.cylinders_program, vismol_object = visObj)
+                if visObj.sticks_actived:
+                    if visObj.sticks_vao is None:
+                        shapes._make_gl_sticks(self.sticks_program, vismol_object = visObj)
                     else:
-                        self._draw_cylinders(visObj = visObj)
+                        self._draw_sticks(visObj = visObj)
                 
                 if visObj.dots_surface_actived:
                     if visObj.dots_surface_vao is None:
@@ -432,7 +428,10 @@ class VisMolWidget():
                 if visObj.spheres_actived:
                     if visObj.sphere_rep is None:
                         visObj.sphere_rep = sph_r.SphereRepresentation(vismol_object = visObj, level = 'level_1')
+                        visObj.sphere_rep._create_sphere_data()
                         visObj.sphere_rep._make_gl_spheres(self.spheres_program)
+                        visObj.sphere_rep._create_sel_sphere_data('level_0')
+                        visObj.sphere_rep._make_sel_gl_spheres(self.sel_spheres_program)
                     else:
                         self._draw_spheres(visObj = visObj, indexes = False)
                 
@@ -477,6 +476,7 @@ class VisMolWidget():
             GL.glBindVertexArray(0)
             
             GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+            GL.glPointSize(1)
             GL.glUseProgram(0)
             GL.glDisable(GL.GL_DEPTH_TEST)
         '''
@@ -673,9 +673,18 @@ class VisMolWidget():
         self.lines_program = self.load_shaders(vm_shader.vertex_shader_lines, vm_shader.fragment_shader_lines, vm_shader.geometry_shader_lines)
         self.non_bonded_program = self.load_shaders(vm_shader.vertex_shader_non_bonded, vm_shader.fragment_shader_non_bonded, vm_shader.geometry_shader_non_bonded)
         self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
-        self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_cylinders, vm_shader.fragment_shader_cylinders, vm_shader.geometry_shader_cylinders)
-        self.cylinders_program = self.load_shaders(vm_shader.vertex_shader_cylinders, vm_shader.fragment_shader_cylinders, vm_shader.geometry_shader_cylinders)
+        self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_sticks, vm_shader.fragment_shader_sticks, vm_shader.geometry_shader_sticks)
+        self.sticks_program = self.load_shaders(vm_shader.vertex_shader_sticks, vm_shader.fragment_shader_sticks, vm_shader.geometry_shader_sticks)
         self.spheres_program = self.load_shaders(vm_shader.vertex_shader_spheres, vm_shader.fragment_shader_spheres)
+        
+        self.sel_lines_program = self.load_shaders(vm_shader.sel_vertex_shader_lines, vm_shader.sel_fragment_shader_lines, vm_shader.sel_geometry_shader_lines)
+        self.sel_dots_program = self.load_shaders(vm_shader.sel_vertex_shader_dots, vm_shader.sel_fragment_shader_dots)
+        self.sel_non_bonded_program = self.load_shaders(vm_shader.sel_vertex_shader_non_bonded, vm_shader.sel_fragment_shader_non_bonded, vm_shader.sel_geometry_shader_non_bonded)
+        #self.sel_ribbons_program = self.load_shaders(vm_shader.sel_vertex_shader_sticks, vm_shader.sel_fragment_shader_sticks, vm_shader.sel_geometry_shader_sticks)
+        self.sel_sticks_program = self.load_shaders(vm_shader.sel_vertex_shader_sticks, vm_shader.sel_fragment_shader_sticks, vm_shader.sel_geometry_shader_sticks)
+        self.sel_dots_surface_program = self.load_shaders(vm_shader.sel_vertex_shader_dots_surface, vm_shader.sel_fragment_shader_dots_surface, vm_shader.sel_geometry_shader_dots_surface)
+        self.sel_spheres_program = self.load_shaders(vm_shader.sel_vertex_shader_spheres, vm_shader.sel_fragment_shader_spheres)
+        
     
     def load_shaders(self, vertex, fragment, geometry=None):
         """ Here the shaders are loaded and compiled to an OpenGL program. By default
@@ -749,6 +758,68 @@ class VisMolWidget():
                 self.vismolSession._selection_function (self.atom_picked)
                 self.button = None
         self.picking = False
+    
+    def _pick2(self):
+        """ Function doc """
+        GL.glClearColor(1,1,1,1)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+        for visObj in self.vismolSession.vismol_objects:
+            if visObj.actived:
+                if visObj.lines_actived:
+                    if visObj.sel_lines_vao is None:
+                        shapes._make_sel_gl_lines(self.sel_lines_program, vismol_object = visObj)
+                    else:
+                        self._draw_sel_lines(visObj = visObj)
+                
+                if visObj.dots_actived:
+                    if visObj.sel_dots_vao is None:
+                        shapes._make_sel_gl_dots (self.sel_dots_program, vismol_object = visObj)
+                    else:
+                        self._draw_sel_dots(visObj = visObj, indexes = False)
+                
+                #if visObj.ribbons_actived:
+                    #if visObj.sel_ribbons_vao is None:
+                        #shapes._make_sel_gl_ribbon_lines(self.sel_ribbons_program, vismol_object = visObj)
+                    #else:
+                        #self._draw_sel_ribbons(visObj = visObj)
+                
+                if visObj.non_bonded_actived:
+                    if visObj.sel_non_bonded_vao is None:
+                        shapes._make_sel_gl_non_bonded(self.sel_non_bonded_program, vismol_object = visObj)
+                    else:
+                        self._draw_sel_non_bonded(visObj = visObj)
+                
+                if visObj.sticks_actived:
+                    if visObj.sel_sticks_vao is None:
+                        shapes._make_sel_gl_sticks(self.sel_sticks_program, vismol_object = visObj)
+                    else:
+                        self._draw_sel_sticks(visObj = visObj)
+                
+                if visObj.dots_surface_actived:
+                    if visObj.sel_dots_surface_vao is None:
+                        shapes._make_sel_gl_dots_surface (self.sel_dots_surface_program,  vismol_object = visObj)
+                    else:
+                        self._draw_sel_dots_surface(visObj = visObj, indexes = False)
+                
+                if visObj.spheres_actived:
+                    if visObj.sphere_rep is not None:
+                        self._draw_sel_spheres(visObj = visObj, indexes = False)
+        GL.glPixelStorei(GL.GL_PACK_ALIGNMENT, 1)
+        pos = [self.picking_x, self.height - self.picking_y]
+        data = GL.glReadPixels(pos[0], (pos[1]), 1, 1, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE)
+        pickedID = data[0] + data[1] * 256 + data[2] * 256*256;
+        if pickedID == 16777215:
+            self.atom_picked = None
+            if self.button ==1:
+                self.vismolSession._selection_function (self.atom_picked)
+                self.button = None
+        else:
+            self.atom_picked = self.vismolSession.atom_dic_id[pickedID]
+            if self.button ==1:
+                self.vismolSession._selection_function (self.atom_picked)
+                self.button = None
+        self.picking = False
+        return True
     
     def load_fog(self, program):
         """ Load the fog parameters in the specified program
@@ -1154,20 +1225,20 @@ class VisMolWidget():
         #GL.glDisable(GL.GL_BLEND)
         GL.glDisable(GL.GL_DEPTH_TEST)
     
-    def _draw_cylinders(self, visObj = None):
+    def _draw_sticks(self, visObj = None):
         """ Function doc
         """
         GL.glEnable(GL.GL_DEPTH_TEST)
-        GL.glUseProgram(self.cylinders_program)
-        self.load_matrices(self.cylinders_program, visObj.model_mat)
-        self.load_fog(self.cylinders_program)
-        self.load_lights(self.cylinders_program)
-        if visObj.cylinders_vao is not None:
-            GL.glBindVertexArray(visObj.cylinders_vao)
+        GL.glUseProgram(self.sticks_program)
+        self.load_matrices(self.sticks_program, visObj.model_mat)
+        self.load_fog(self.sticks_program)
+        self.load_lights(self.sticks_program)
+        if visObj.sticks_vao is not None:
+            GL.glBindVertexArray(visObj.sticks_vao)
             if self.modified_view:
                 pass
             else:
-                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.cylinders_buffers[1])
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.sticks_buffers[1])
                 GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
                                 visObj.frames[self.frame], 
                                 GL.GL_STATIC_DRAW)              
@@ -1208,8 +1279,131 @@ class VisMolWidget():
         GL.glUseProgram(0)
     
     
-
-
+    
+    def _draw_sel_lines(self, visObj = None):
+        """ Function doc
+        """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.sel_lines_program)
+        GL.glLineWidth(80/abs(self.dist_cam_zrp))
+        self.load_matrices(self.lines_program, visObj.model_mat)
+        if visObj.sel_lines_vao is not None:
+            GL.glBindVertexArray(visObj.sel_lines_vao)
+            if self.modified_view:
+                pass
+            else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.sel_line_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                visObj.frames[self.frame], GL.GL_STATIC_DRAW)
+                GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+        GL.glBindVertexArray(0)
+        GL.glLineWidth(1)
+        GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    def _draw_sel_dots(self, visObj = None,  indexes = False):
+        """ Function doc
+        """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.sel_dots_program)
+        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+        self.load_matrices(self.sel_dots_program, visObj.model_mat)
+        self.load_dot_params(self.sel_dots_program)
+        if visObj.sel_dots_vao is not None:
+            GL.glBindVertexArray(visObj.sel_dots_vao)
+            if self.modified_view:
+                pass
+            else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.sel_dot_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                                    visObj.frames[self.frame], GL.GL_STATIC_DRAW)
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
+        GL.glBindVertexArray(0)
+        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
+        GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    def _draw_sel_non_bonded(self, visObj = None, indexes = False):
+        """ Function doc
+        """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.sel_non_bonded_program)
+        self.load_matrices(self.sel_non_bonded_program, visObj.model_mat)
+        if visObj.sel_non_bonded_vao is not None:
+            GL.glBindVertexArray(visObj.sel_non_bonded_vao)
+            if self.modified_view:
+                pass
+            else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.sel_non_bonded_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                visObj.frames[self.frame], GL.GL_STATIC_DRAW)
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.non_bonded_atoms)), GL.GL_UNSIGNED_INT, None)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    def _draw_sel_sticks(self, visObj = None):
+        """ Function doc
+        """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.sel_sticks_program)
+        self.load_matrices(self.sel_sticks_program, visObj.model_mat)
+        if visObj.sel_sticks_vao is not None:
+            GL.glBindVertexArray(visObj.sel_sticks_vao)
+            if self.modified_view:
+                pass
+            else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.sel_sticks_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                visObj.frames[self.frame], GL.GL_STATIC_DRAW)
+                GL.glDrawElements(GL.GL_LINES, int(len(visObj.index_bonds)*2), GL.GL_UNSIGNED_INT, None)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    def _draw_sel_dots_surface(self, visObj = None,  indexes = False):
+        """ Function doc
+        """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.sel_dots_surface_program)
+        self.load_matrices(self.sel_dots_surface_program, visObj.model_mat)
+        GL.glPointSize(5)
+        if visObj.sel_dots_surface_vao is not None:
+            GL.glBindVertexArray(visObj.sel_dots_surface_vao)
+            if self.modified_view:
+                pass
+            else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.sel_dots_surface_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
+                                                    visObj.frames[self.frame], GL.GL_STATIC_DRAW)
+                GL.glDrawElements(GL.GL_POINTS, int(len(visObj.index_bonds)), GL.GL_UNSIGNED_INT, None)
+        GL.glPointSize(1)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    def _draw_sel_spheres(self, visObj = None,  indexes = False):
+        """ Function doc
+        """
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glUseProgram(self.sel_spheres_program)
+        self.load_matrices(self.sel_spheres_program, visObj.model_mat)
+        if visObj.sphere_rep.sel_spheres_vao is not None:
+            GL.glBindVertexArray(visObj.sphere_rep.sel_spheres_vao)
+            if self.modified_view:
+                pass
+            
+            else:
+                GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.sphere_rep.sel_spheres_buffers[1])
+                GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.sphere_rep.sel_coords.itemsize*int(len(visObj.sphere_rep.sel_coords)), 
+                                                    visObj.sphere_rep.sel_coords, GL.GL_STATIC_DRAW)
+                GL.glDrawElements(GL.GL_TRIANGLES, visObj.sphere_rep.sel_triangles, GL.GL_UNSIGNED_INT, None)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+    
+    
+    
     def _draw_gizmo_axis(self, flag):
         """ Drawing method for the gizmo axis, see the glaxis.py documentation
             for more details about this function.

@@ -148,60 +148,82 @@ class VismolObject:
         self.sphere_rep = None
 
 
+        self.sel_sphere_rep = None
 
         #-----------------------------------------------------------------
         #                O p e n G L   a t t r i b u t e s
         #-----------------------------------------------------------------                
         """   L I N E S   """
-        self.lines_actived       = False
+        self.lines_actived       = True
         self.lines_show_list     = False
 
         """   D O T S   """
         self.dots_actived = False
 
-        """   C I R C L E S   """
-        self.circles_actived = False
-
         """   R I B B O N S   """
         self.ribbons_actived = False
         
         """   N O N  B O N D E D   """
-        self.non_bonded_actived = False
+        self.non_bonded_actived = True
         
-        """   C Y L I N D E R S   """
-        self.cylinders_actived = True#False
+        """   S T I C K S   """
+        self.sticks_actived = False
         
         """   S P H E R E S   """
-        self.spheres_actived = True#False
+        self.spheres_actived = False
         
         """   D O T S  S U R F A C E   """
-        self.dots_surface_actived = False#True
+        self.dots_surface_actived = False
         
         """   T E X T   """
         self.text_activated = True
         
+        """   S E L E C T I O N   """
+        self._sel_lines_actived = False
+        self._sel_dots_actived = False
+        self._sel_ribbons_actived = False
+        self._sel_non_bonded_actived = False
+        self._sel_sticks_actived = True
+        self._sel_spheres_actived = True
+        self._sel_dots_surface_actived = False
         
         #print ('frames:     ', len(self.frames))
         #print ('frame size: ', len(self.frames[0]))
         #-----------------------------------------------------------------
         self.dots_vao        = None
         self.lines_vao       = None
-        self.circles_vao     = None
         self.ribbons_vao     = None
         self.non_bonded_vao  = None
-        self.cylinders_vao   = None
+        self.sticks_vao   = None
         self.spheres_vao     = None
         self.dots_surface_vao = None
     
         self.dot_buffers        = None
         self.lines_buffers      = None
-        self.circles_buffers    = None
         self.ribbons_buffers    = None
         self.non_bonded_buffers = None
-        self.cylinders_buffers  = None
+        self.sticks_buffers  = None
         self.spheres_buffers    = None
         self.dots_surface_buffers = None
-
+        
+        """   S E L E C T I O N   """
+        self.sel_dots_vao = None
+        self.sel_lines_vao = None
+        self.sel_ribbons_vao = None
+        self.sel_non_bonded_vao = None
+        self.sel_sticks_vao = None
+        self.sel_spheres_vao = None
+        self.sel_dots_surface_vao = None
+        
+        self.sel_dot_buffers = None
+        self.sel_lines_buffers = None
+        self.sel_ribbons_buffers = None
+        self.sel_non_bonded_buffers = None
+        self.sel_sticks_buffers = None
+        self.sel_spheres_buffers = None
+        self.sel_dots_surface_buffers = None
+        
+        
         self.dot_indexes     = None
         
         self.selection_dots_vao      = None
@@ -391,6 +413,7 @@ class VismolObject:
             self.color_indexes.append(b/255.0)
             
             pickedID = r + g * 256 + b * 256*256
+            atom.color_id = [r/255.0, g/255.0, b/255.0]
             #print (pickedID)
             self.vismol_session.atom_dic_id[pickedID] = atom
             
