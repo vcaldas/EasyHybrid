@@ -207,7 +207,7 @@ class GtkMainTreeView():
 
 
         if widget == self.builder.get_object('menu_show_sticks'):
-            visObj.cylinders_actived =  True
+            visObj.sticks_actived =  True
 
         if widget == self.builder.get_object('menu_show_spheres'):
             visObj.spheres_actived   =  True
@@ -227,7 +227,7 @@ class GtkMainTreeView():
             #self.vismolSession._hide_lines (visObj = visObj)
 
         if widget == self.builder.get_object('menu_hide_sticks'):
-            visObj.cylinders_actived = False
+            visObj.sticks_actived = False
 
         if widget == self.builder.get_object('menu_hide_spheres'):
             visObj.spheres_actived   = False
