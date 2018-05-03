@@ -602,12 +602,14 @@ class VisMolWidget():
                 if visObj.lines_actived:
                     if visObj.sel_lines_vao is None:
                         shapes._make_sel_gl_lines(self.sel_lines_program, vismol_object = visObj)
+                        self._draw_sel_lines(visObj = visObj)
                     else:
                         self._draw_sel_lines(visObj = visObj)
                 
                 if visObj.dots_actived:
                     if visObj.sel_dots_vao is None:
                         shapes._make_sel_gl_dots (self.sel_dots_program, vismol_object = visObj)
+                        self._draw_sel_dots(visObj = visObj, indexes = False)
                     else:
                         self._draw_sel_dots(visObj = visObj, indexes = False)
                 
@@ -620,18 +622,21 @@ class VisMolWidget():
                 if visObj.non_bonded_actived:
                     if visObj.sel_non_bonded_vao is None:
                         shapes._make_sel_gl_non_bonded(self.sel_non_bonded_program, vismol_object = visObj)
+                        self._draw_sel_non_bonded(visObj = visObj)
                     else:
                         self._draw_sel_non_bonded(visObj = visObj)
                 
                 if visObj.sticks_actived:
                     if visObj.sel_sticks_vao is None:
                         shapes._make_sel_gl_sticks(self.sel_sticks_program, vismol_object = visObj)
+                        self._draw_sel_sticks(visObj = visObj)
                     else:
                         self._draw_sel_sticks(visObj = visObj)
                 
                 if visObj.dots_surface_actived:
                     if visObj.sel_dots_surface_vao is None:
                         shapes._make_sel_gl_dots_surface (self.sel_dots_surface_program,  vismol_object = visObj)
+                        self._draw_sel_dots_surface(visObj = visObj, indexes = False)
                     else:
                         self._draw_sel_dots_surface(visObj = visObj, indexes = False)
                 
@@ -1092,7 +1097,7 @@ class VisMolWidget():
         GL.glUseProgram(self.sel_lines_program)
         #GL.glLineWidth(80/abs(self.dist_cam_zrp))
         GL.glLineWidth(5)
-        self.load_matrices(self.lines_program, visObj.model_mat)
+        self.load_matrices(self.sel_lines_program, visObj.model_mat)
         if visObj.sel_lines_vao is not None:
             GL.glBindVertexArray(visObj.sel_lines_vao)
             if self.modified_view:
