@@ -1136,7 +1136,7 @@ uniform vec4 fog_color;
 uniform float fog_start;
 uniform float fog_end;
 
-const alpha = 0.5;
+const float alpha = 0.5;
 
 in vec3 frag_coord;
 in vec3 frag_color;

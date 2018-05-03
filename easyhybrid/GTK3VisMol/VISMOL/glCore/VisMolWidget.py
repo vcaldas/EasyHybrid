@@ -507,12 +507,9 @@ class VisMolWidget():
         self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_sticks, vm_shader.fragment_shader_sticks, vm_shader.geometry_shader_sticks)
         self.sticks_program = self.load_shaders(vm_shader.vertex_shader_sticks, vm_shader.fragment_shader_sticks, vm_shader.geometry_shader_sticks)
         self.spheres_program = self.load_shaders(vm_shader.vertex_shader_spheres, vm_shader.fragment_shader_spheres)
-<<<<<<< HEAD
         self.picked_program = self.load_shaders(vm_shader.vertex_shader_picked, vm_shader.fragment_shader_picked)
-=======
         self.freetype_program = self.load_shaders(vm_shader.vertex_shader_freetype, vm_shader.fragment_shader_freetype, vm_shader.geometry_shader_freetype)
         self.picking_dots_program = self.load_shaders(vm_shader.vertex_shader_picking_dots, vm_shader.fragment_shader_picking_dots)
->>>>>>> 6dbae342c4efefa4da039ad8db9edf706f8772d3
         
         self.sel_dots_program = self.load_shaders(vm_shader.sel_vertex_shader_dots, vm_shader.sel_fragment_shader_dots)
         self.sel_dots_surface_program = self.load_shaders(vm_shader.sel_vertex_shader_dots_surface, vm_shader.sel_fragment_shader_dots_surface, vm_shader.sel_geometry_shader_dots_surface)
@@ -1093,14 +1090,9 @@ class VisMolWidget():
         """
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glUseProgram(self.sel_lines_program)
-<<<<<<< HEAD
         #GL.glLineWidth(80/abs(self.dist_cam_zrp))
         GL.glLineWidth(5)
         self.load_matrices(self.lines_program, visObj.model_mat)
-=======
-        GL.glLineWidth(80/abs(self.dist_cam_zrp))
-        self.load_matrices(self.sel_lines_program, visObj.model_mat)
->>>>>>> 6dbae342c4efefa4da039ad8db9edf706f8772d3
         if visObj.sel_lines_vao is not None:
             GL.glBindVertexArray(visObj.sel_lines_vao)
             if self.modified_view:
