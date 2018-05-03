@@ -479,173 +479,6 @@ class VisMolWidget():
             GL.glPointSize(1)
             GL.glUseProgram(0)
             GL.glDisable(GL.GL_DEPTH_TEST)
-        '''
-        #-------------------------------------------------------------------------------
-        #                               simpleSphere
-        #------------------------------------------------------------------------------- 
-        
-            sphere_vertices = np.array(
-              [ 0.850650787354,  0.525731086731,  0.000000000000,
-               -0.850650787354,  0.525731086731,  0.000000000000,
-               -0.850650787354, -0.525731086731,  0.000000000000,
-                0.850650787354, -0.525731086731,  0.000000000000,
-                0.525731086731,  0.000000000000,  0.850650787354,
-                0.525731086731,  0.000000000000, -0.850650787354,
-               -0.525731086731,  0.000000000000, -0.850650787354,
-               -0.525731086731,  0.000000000000,  0.850650787354,
-                0.000000000000,  0.850650787354,  0.525731086731,
-                0.000000000000, -0.850650787354,  0.525731086731,
-                0.000000000000, -0.850650787354, -0.525731086731,
-                0.000000000000,  0.850650787354, -0.525731086731],dtype=np.float32)
-            
-            sphere_triangles = np.array(
-              [ 4,     8,     7,     4,     7,     9,     5,     6,    11,     5,
-               10,     6,     0,     4,     3,     0,     3,     5,     2,     7,
-                1,     2,     1,     6,     8,     0,    11,     8,    11,     1,
-                9,    10,     3,     9,     2,    10,     8,     4,     0,    11,
-                0,     5,     4,     9,     3,     5,     3,    10,     7,     8,
-                1,     6,     1,    11,     7,     2,     9,     6,    10,     2],dtype=np.uint32)
-            
-            len_sphere_vertices = len(sphere_vertices)
-            
-            
-            full_sphere_vertices  = []
-            full_sphere_triangles = []
-            
-            for i in range(10):
-                for vertice in sphere_vertices:
-                    full_sphere_vertices.append(vertice+i)
-            
-            for i in range(10):
-                
-                for index in sphere_triangles:
-                    full_sphere_triangles.append(index+i*len_sphere_vertices)
-            
-                
-            
-            full_sphere_vertices  = np.array(full_sphere_vertices ,dtype=np.float32)
-            full_sphere_triangles = np.array(full_sphere_triangles,dtype=np.uint32)
-            #print (full_sphere_vertices)
-            
-            GL.glUseProgram(self.picking_dots_program)
-            GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-            self.load_matrices(self.picking_dots_program, visObj.model_mat)
-
-            indexes = full_sphere_triangles
-            #self._draw_picking_dots(visObj = visObj, indexes = False)
-            GL.glBindVertexArray(visObj.selection_dots_vao)
-
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.selection_dot_buffers[0])
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), 
-                            indexes, GL.GL_STATIC_DRAW)
-
-
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.selection_dot_buffers[1])
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, full_sphere_vertices.itemsize*int(len(full_sphere_vertices)), 
-                            full_sphere_vertices, GL.GL_STATIC_DRAW)
-
-            #GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_INT, None)
-            GL.glDrawElements(GL.GL_TRIANGLES, int(len(indexes)), GL.GL_UNSIGNED_INT, None)
-            GL.glBindVertexArray(0)
-
-            GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-            GL.glUseProgram(0)
-            GL.glDisable(GL.GL_DEPTH_TEST)
-        '''
-            
-        
-        
-        
-        #-------------------------------------------------------------------------------
-        #                               NON BONDED ATOMS
-        #-------------------------------------------------------------------------------        
-        for visObj in self.vismolSession.vismol_objects:
-            pass
-            '''
-            if visObj.circles_vao is None:
-                shapes._make_gl_circles(self.circles_program, vismol_object = visObj)
-            
-            #GL.glEnable(GL.GL_DEPTH_TEST)
-            GL.glUseProgram(self.circles_program)
-            GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-            self.load_matrices(self.circles_program, visObj.model_mat)
-            
-            indexes = visObj.non_bonded_atoms
-            colors  = visObj.colors
-
-            #self._draw_picking_dots(visObj = visObj, indexes = False)
-            GL.glBindVertexArray(visObj.circles_vao)
-            
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.circles_buffers[0])
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, indexes.itemsize*int(len(indexes)), 
-                            indexes, GL.GL_STATIC_DRAW)
-            
-            
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.circles_buffers[1])
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
-                            visObj.frames[self.frame], GL.GL_STATIC_DRAW)
-
-
-            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.circles_buffers[2])
-            GL.glBufferData(GL.GL_ARRAY_BUFFER, colors.itemsize*len(colors), colors, GL.GL_STATIC_DRAW)
-
-
-            #rad_vbo = GL.glGenBuffers(1)
-            #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, rad_vbo)
-            #GL.glBufferData(GL.GL_ARRAY_BUFFER, radios.itemsize*len(radios), radios, GL.GL_STATIC_DRAW)
-            #gl_rad = GL.glGetAttribLocation(program, 'vert_rad')
-            #GL.glEnableVertexAttribArray(gl_rad)
-            #GL.glVertexAttribPointer(gl_rad, 1, GL.GL_FLOAT, GL.GL_FALSE, colors.itemsize, ctypes.c_void_p(0))
-
-
-
-
-
-
-
-
-            #GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_INT, None)
-            GL.glDrawElements(GL.GL_POINTS, int(len(indexes)), GL.GL_UNSIGNED_INT, None)
-            GL.glBindVertexArray(0)
-            
-            GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-            GL.glUseProgram(0)
-            GL.glDisable(GL.GL_DEPTH_TEST)
-            '''
-        #-------------------------------------------------------------------------------
-
-
-
-        
-        
-        #for visObj in self.vismolSession.selections[self.vismolSession.current_selection].selected_objects:
-        #    #print(vobject.name,self.vismolSession.selections[self.vismolSession.current_selection].selected_objects[vobject] )
-        #    if visObj.selection_dots_vao is None:
-        #        shapes._make_gl_selection_dots (self.dots_program,  vismol_object = visObj)
-        #    else:
-        #        GL.glEnable(GL.GL_DEPTH_TEST)
-        #        GL.glUseProgram(self.dots_program)
-        #        GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-        #        self.load_matrices(self.dots_program, visObj.model_mat)
-        #        self.load_dot_params(self.dots_program)
-        #        
-        #        #self._draw_dots(visObj = visObj, indexes = False)
-        #        
-        #        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, visObj.selection_dot_buffers[1])
-        #        GL.glBufferData(GL.GL_ARRAY_BUFFER, visObj.frames[self.frame].itemsize*int(len(visObj.frames[self.frame])), 
-        #                        visObj.frames[self.frame], GL.GL_STATIC_DRAW)   
-        #
-        #        GL.glDrawElements(GL.GL_POINTS, self.vismolSession.selections[self.vismolSession.current_selection].selected_objects[visObj], GL.GL_UNSIGNED_INT, None)
-        #        
-        #        
-        #        
-        #        
-        #        
-        #        
-        #        GL.glDisable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
-        #        GL.glUseProgram(0)
-        #        #GL.glDisable(GL.GL_DEPTH_TEST)
-        #-------------------------------------------------------------------------------
         
         if self.show_selection_box and self.shift:
             if self.selection_box.vao is None:
@@ -676,6 +509,7 @@ class VisMolWidget():
         self.ribbons_program = self.load_shaders(vm_shader.vertex_shader_sticks, vm_shader.fragment_shader_sticks, vm_shader.geometry_shader_sticks)
         self.sticks_program = self.load_shaders(vm_shader.vertex_shader_sticks, vm_shader.fragment_shader_sticks, vm_shader.geometry_shader_sticks)
         self.spheres_program = self.load_shaders(vm_shader.vertex_shader_spheres, vm_shader.fragment_shader_spheres)
+        self.picked_program = self.load_shaders(vm_shader.vertex_shader_picked, vm_shader.fragment_shader_picked)
         
         self.sel_lines_program = self.load_shaders(vm_shader.sel_vertex_shader_lines, vm_shader.sel_fragment_shader_lines, vm_shader.sel_geometry_shader_lines)
         self.sel_dots_program = self.load_shaders(vm_shader.sel_vertex_shader_dots, vm_shader.sel_fragment_shader_dots)
@@ -1285,7 +1119,8 @@ class VisMolWidget():
         """
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glUseProgram(self.sel_lines_program)
-        GL.glLineWidth(80/abs(self.dist_cam_zrp))
+        #GL.glLineWidth(80/abs(self.dist_cam_zrp))
+        GL.glLineWidth(5)
         self.load_matrices(self.lines_program, visObj.model_mat)
         if visObj.sel_lines_vao is not None:
             GL.glBindVertexArray(visObj.sel_lines_vao)
