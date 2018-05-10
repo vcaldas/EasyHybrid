@@ -2,14 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="3c566b8f-e58e-4118-a2e8-4cb534fe3a01" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/other.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/MANIFEST.in" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/readme.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/readme.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyBabel/ReadMOL2.py" beforeDir="false" afterPath="$PROJECT_DIR$/pyBabel/ReadMOL2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyBabel/ReadPDB.py" beforeDir="false" afterPath="$PROJECT_DIR$/pyBabel/ReadPDB.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -20,11 +13,6 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/easyhybrid/QtEasyMol/__init__.py">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
       <file leaf-file-name="__main__.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/easyhybrid/QtEasyMol/__main__.py">
           <provider selected="true" editor-type-id="text-editor" />
@@ -66,11 +54,23 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ReadMOL2.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="ReadMOL2.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/pyBabel/ReadMOL2.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="245">
               <caret line="160" column="44" selection-start-line="160" selection-start-column="44" selection-end-line="160" selection-end-column="44" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ReadPDB.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/pyBabel/ReadPDB.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-253">
+              <caret line="135" column="43" selection-start-line="135" selection-start-column="43" selection-end-line="135" selection-end-column="43" />
+              <folding>
+                <element signature="e#852#874#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -109,6 +109,7 @@
         <option value="$PROJECT_DIR$/MANIFEST.in" />
         <option value="$PROJECT_DIR$/setup.py" />
         <option value="$PROJECT_DIR$/pyBabel/ReadMOL2.py" />
+        <option value="$PROJECT_DIR$/pyBabel/ReadPDB.py" />
       </list>
     </option>
   </component>
@@ -339,6 +340,16 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="245">
           <caret line="160" column="44" selection-start-line="160" selection-start-column="44" selection-end-line="160" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pyBabel/ReadPDB.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-253">
+          <caret line="135" column="43" selection-start-line="135" selection-start-column="43" selection-end-line="135" selection-end-column="43" />
+          <folding>
+            <element signature="e#852#874#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

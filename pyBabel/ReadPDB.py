@@ -38,14 +38,14 @@ class Pdb (object):
     def PDBSummary (self):
         #m = self.molecules
         for m in self.molecules:
-            print "molecule name is: %s" % m.name
+            print("molecule name is: {}".format(m.name))
 
             for key in m.atoms.keys():
                 a = m.atoms[key]
                 print (a.id, a.symbol, float(a.pos[0]),float( a.pos[1]), float(a.pos[2]))
             
             for bond in m.bonds:
-                print bond.type ,bond.atom_id_1, bond.atom_id_2
+                print(bond.type ,bond.atom_id_1, bond.atom_id_2)
             """ Function doc """
 
     def readData (self):
@@ -133,7 +133,7 @@ class Pdb (object):
         except:
             pass
         
-        print newAtom.symbol, newAtom.name
+        print(newAtom.symbol, newAtom.name)
         
         newAtom.pos[0] = float(line[31:38]) # x
         newAtom.pos[1] = float(line[39:46]) # y
@@ -269,12 +269,12 @@ if __name__ == '__main__':
 	
 	
 	for m in molecules:
-		print "molecule name is: %s" % m.name
+		print("molecule name is: {}".format(m.name))
 
 		for key in m.atoms.keys():
 			a = m.atoms[key]
 			print (a.id, a.symbol, float(a.pos[0]),float( a.pos[1]), float(a.pos[2]))
 		
 		for bond in m.bonds:
-			print bond.type ,bond.atom_id_1, bond.atom_id_2
+			print(bond.type ,bond.atom_id_1, bond.atom_id_2)
 
