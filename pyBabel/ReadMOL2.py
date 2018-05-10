@@ -153,17 +153,17 @@ def parse_MOL2File (lines):
     try:
         i_HEADER = lines.index('@<TRIPOS>MOLECULE\n')
     except:
-        print ' - - invalid mol2 file - - '
+        print(' - - invalid mol2 file - - ')
     
     try:
         i_ATOMS = lines.index('@<TRIPOS>ATOM\n')
     except:
-        print ' - - invalid mol2 file - - '
+        print(' - - invalid mol2 file - - ')
 
     try:
         i_BONDS = lines.index('@<TRIPOS>BOND\n')
     except:
-        print ' - - invalid mol2 file - - '
+        print(' - - invalid mol2 file - - ')
     
     #----------------------------------#
     #              HEADER              #
